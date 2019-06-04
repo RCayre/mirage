@@ -1,0 +1,92 @@
+from mirage.libs import io,ble
+from mirage.core import module
+
+class ble_info(module.WirelessModule):
+	def init(self):
+		self.technology = "ble"
+		self.type = "info"
+		self.description = "Information module for Bluetooth Low Energy interface"
+		self.args = {
+				"INTERFACE":"hci0"
+			}
+
+	def run(self):
+		self.emitter = self.getEmitter(interface=self.args["INTERFACE"])
+		if "hcidump" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			hciInterface = self.emitter.getHCIInterface()
+			index = str(self.emitter.getDeviceIndex())
+			io.chart(["Interface","Device Index","Monitored HCI Interface"],[[interface,"#"+index,hciInterface]])
+			return self.ok({"INTERFACE":interface,
+					"INDEX":index,
+					"HCI_INTERFACE":hciInterface
+					})
+		elif "adb" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			serial = self.emitter.getSerial()
+			snoopLocation = self.emitter.getSnoopFileLocation()
+			snoopSize = str(self.emitter.getSnoopFileSize())
+			index = str(self.emitter.getDeviceIndex())
+
+			io.chart(["Interface","Device Index","Serial number","Snoop Location", "Snoop Size"],
+				[[interface,"#"+index,serial,snoopLocation,snoopSize+" bytes"]])
+			return self.ok({"INTERFACE":interface,
+					"INDEX":index,
+					"SERIAL":serial,
+					"SNOOP_LOCATION":snoopLocation,
+					"SNOOP_SIZE":snoopSize
+					})
+		elif "hci" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			address = self.emitter.getAddress()
+			mode = self.emitter.getMode()
+			manufacturer = self.emitter.getManufacturer()
+			changeableAddress = "yes" if self.emitter.isAddressChangeable() else "no"
+			io.chart(["Interface","BD Address","Current Mode","Manufacturer","Changeable Address"],
+				[[interface, address,mode, manufacturer,changeableAddress]])
+			return self.ok({
+				"INTERFACE":interface,
+				"ADDRESS":address,
+				"MODE":mode,
+				"MANUFACTURER":manufacturer,
+				"CHANGEABLE_ADDRESS":changeableAddress
+				})		
+		elif "ubertooth" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			mode = self.emitter.getMode()
+			version = self.emitter.getFirmwareVersion()
+			index = str(self.emitter.getDeviceIndex())
+			serial = self.emitter.getSerial()
+			io.chart(["Interface","Mode","Device Index","Firmware Version", "Serial Number"],
+				[[interface,mode,"#"+index,version,serial]])
+			return self.ok({
+					"INTERFACE":interface,
+					"MODE":mode, 
+					"SERIAL":serial,
+					"INDEX":index,
+					"VERSION":version
+					})
+		elif "microbit" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			versionMajor,versionMinor = self.emitter.getFirmwareVersion()
+			version = str(versionMajor)+"."+str(versionMinor)
+			index = str(self.emitter.getDeviceIndex())
+			customFirmware = "yes" if version == "3.14" else "no"
+			io.chart(["Interface","Device Index","Version","Custom Firmware"],[[interface,"#"+index,version,customFirmware]])
+			return self.ok({
+					"INTERFACE":interface,
+					"INDEX":index,
+					"VERSION":version,
+					"CUSTOM_FIRMWARE":customFirmware
+					})
+
+		elif ".pcap" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			mode = self.emitter.getMode()
+			io.chart(["Interface","Mode"],[[interface,mode]])
+			return self.ok({"INTERFACE":interface,
+					"MODE":mode
+					})
+
+		return self.nok()
+					
