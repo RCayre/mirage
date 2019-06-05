@@ -1,0 +1,5 @@
+recursive-include mirage *.py
+recursive-include mirage/core *.py
+recursive-include mirage/libs *.py
+recursive-include mirage/modules *.py
+recursive-include mirage/scenarios *.py

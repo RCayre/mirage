@@ -1,0 +1,4 @@
+#!/usr/bin/env python3.6
+
+from mirage.mirage import main
+main()
