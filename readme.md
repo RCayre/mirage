@@ -13,4 +13,14 @@ Mirage is a powerful and modular framework dedicated to the security analysis of
  * supports of tools for monitoring HCI communications, using ADB or Hcidump
  * an user-friendly development environment allowing to easily write new modules or customize existing ones
 
-The full documentation can be found here : http://homepages.laas.fr/rcayre/mirage-documentation/index.html
+Useful links
+------------
+
+ * Documentation: http://homepages.laas.fr/rcayre/mirage-documentation/index.html
+ * Documentation (sphinx source code): https://redmine.laas.fr/projects/mirage-documentation
+ * Mirage can use a custom BTLEJack firmware for the BBC Micro:Bit, adding some specific features for manipulating advertisements: https://redmine.laas.fr/projects/btlejack-custom-firmware
+
+The original BTLEJack firmware, written by Damien Cauquil, is available on github : 
+
+ * BTLEJack: https://github.com/virtualabs/btlejack
+ * BTLEJack firmware: https://github.com/virtualabs/btlejack-firmware
