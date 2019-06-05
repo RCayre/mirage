@@ -1,10 +1,6 @@
+MIRAGE - 1.0
+=============
 
-███╗   ███╗██╗██████╗  █████╗  ██████╗ ███████╗
-████╗ ████║██║██╔══██╗██╔══██╗██╔════╝ ██╔════╝
-██╔████╔██║██║██████╔╝███████║██║  ███╗█████╗
-██║╚██╔╝██║██║██╔══██╗██╔══██║██║   ██║██╔══╝
-██║ ╚═╝ ██║██║██║  ██║██║  ██║╚██████╔╝███████╗
-╚═╝     ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
 This framework is released as an opensource project using the MIT License.
 
 Mirage is a powerful and modular framework dedicated to the security analysis of wireless communications. It actually provides :
@@ -17,6 +13,4 @@ Mirage is a powerful and modular framework dedicated to the security analysis of
  * supports of tools for monitoring HCI communications, using ADB or Hcidump
  * an user-friendly development environment allowing to easily write new modules or customize existing ones
 
-
-
-
+The full documentation can be found here : http://homepages.laas.fr/rcayre/mirage-documentation/index.html
