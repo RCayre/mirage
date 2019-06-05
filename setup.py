@@ -22,7 +22,7 @@ setup(
 
     include_package_data=True,
 
-    url='http://homepages.laas.fr/rcayre/SSTIC2019',
+    url='https://redmine.laas.fr/projects/mirage',
 
 
     classifiers=[
