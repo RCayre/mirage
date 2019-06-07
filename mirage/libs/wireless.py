@@ -110,6 +110,17 @@ class Emitter(PacketQueue):
 			>>> emitter.sendp(packet1)
 		'''
 		self.send(*packets)
+	
+	def stop(self):
+		'''
+		Stops the Emitter and the associated device
+		'''
+		super().stop()
+		if self.isDeviceUp():
+			self.device.close()
+
+
+
 
 class Receiver(PacketQueue):
 	'''
@@ -351,3 +362,11 @@ class Receiver(PacketQueue):
 		Remove the callbacks attached to the Receiver.
 		'''
 		self.callbacks = []
+	
+	def stop(self):
+		'''
+		Stops the Receiver and the associated device
+		'''
+		super().stop()
+		if self.isDeviceUp():
+			self.device.close()
