@@ -679,10 +679,10 @@ class BTLEJackDevice(wireless.Device):
 			self._recoverFromAccessAddress(accessAddress=accessAddress)
 
 	def _recv(self):
-		if self.microbit.in_waiting:
-			self.lock.acquire()
+		self.lock.acquire()
+		if self.microbit is not None and self.microbit.in_waiting:	
 			self.receptionBuffer += self.microbit.read()
-			self.lock.release()
+		self.lock.release()
 
 		if len(self.receptionBuffer) > 0:
 			try:
@@ -702,7 +702,10 @@ class BTLEJackDevice(wireless.Device):
 		return None
 
 	def close(self):
+		self.lock.acquire()
 		self.microbit.close()
+		self.microbit = None
+		self.lock.release()
 
 	def isUp(self):
 		return self.microbit is not None
