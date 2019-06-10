@@ -292,7 +292,7 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			else:
 				advData = data+(31 - len(data))*b"\x00"
 
-		self._internalCommand(HCI_Cmd_LE_Set_Scan_Response_Data(data=advData,len=len(data)))
+		self._internalCommand(New_HCI_Cmd_LE_Set_Scan_Response_Data(data=advData,len=len(data)))
 		self._exitCommandMode()
 
 	def setAdvertisingParameters(self,type = "ADV_IND",destAddr = "00:00:00:00:00:00",data = b"",intervalMin = 200, intervalMax = 210, daType='public', oaType='public'):
@@ -349,9 +349,9 @@ class BLEHCIDevice(bt.BtHCIDevice):
 				advData = data[:31]
 			else:
 				advData = data+(31 - len(data))*b"\x00"
-	
+
 		self._internalCommand(HCI_Cmd_LE_Set_Advertising_Parameters(adv_type=advType, daddr=dAddr, datype=daType, oatype=oaType,interval_min=intervalMin, interval_max = intervalMax))
-		self._internalCommand(HCI_Cmd_LE_Set_Advertising_Data(data=EIR_Hdr(data)))
+		self._internalCommand(New_HCI_Cmd_LE_Set_Advertising_Data(data=EIR_Hdr(data)))
 		self._exitCommandMode()
 
 	def _setAddressMode(self,mode="public"):
@@ -694,7 +694,7 @@ class BLEEmitter(wireless.Emitter):
 								uuid=packet.uuid)
 
 					elif isinstance(packet,BLEReadByTypeResponse):
-						packet.packet /= ATT_Read_By_Type_Response(data=packet.data)
+						packet.packet /= ATT_Read_By_Type_Response(packet.data)
 
 					elif isinstance(packet,BLEHandleValueNotification):
 						packet.packet /= ATT_Handle_Value_Notification(gatt_handle=packet.handle,value=packet.value)
@@ -703,7 +703,7 @@ class BLEEmitter(wireless.Emitter):
 						packet.packet /= ATT_Find_Information_Request(start=packet.startHandle,end = packet.endHandle)
 
 					elif isinstance(packet,BLEFindInformationResponse):
-						packet.packet /= ATT_Find_Information_Response(data=packet.data,format = packet.format)
+						packet.packet /= ATT_Find_Information_Response(bytes([packet.format]) + packet.data)
 
 					elif isinstance(packet,BLEWriteRequest):
 						packet.packet /= ATT_Write_Request(gatt_handle=packet.handle,data=packet.value)
@@ -829,7 +829,7 @@ class BLEReceiver(wireless.Receiver):
 				elif ATT_Read_By_Type_Response in packet:
 					return BLEReadByTypeResponse(
 						connectionHandle = packet.handle,
-						data = packet.data
+						data = bytes(packet[ATT_Read_By_Type_Response])
 						)
 				elif ATT_Read_By_Type_Request in packet:
 					return BLEReadByTypeRequest(
@@ -867,7 +867,7 @@ class BLEReceiver(wireless.Receiver):
 				elif ATT_Find_Information_Response in packet:
 					return BLEFindInformationResponse(
 						connectionHandle = packet.handle,
-						data=packet.data,
+						data=bytes(packet[ATT_Find_Information_Response])[1:],
 						format=packet.format
 						)
 				elif SM_Security_Request in packet:
@@ -1148,7 +1148,7 @@ class BLEReceiver(wireless.Receiver):
 								)
 						elif ATT_Read_By_Type_Response in packet:
 							new = BLEReadByTypeResponse(
-								data = packet.data
+								data = bytes(packet[ATT_Read_By_Type_Response])
 								)
 						elif ATT_Read_By_Type_Request in packet:
 							new = BLEReadByTypeRequest(
@@ -1180,7 +1180,7 @@ class BLEReceiver(wireless.Receiver):
 								)
 						elif ATT_Find_Information_Response in packet:
 							new = BLEFindInformationResponse(
-								data=packet.data,
+								data=bytes(packet[ATT_Find_Information_Response])[1:],
 								format=packet.format
 								)
 						elif SM_Security_Request in packet:
