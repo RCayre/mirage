@@ -18,7 +18,7 @@ setup(
 
     description="Mirage is an offensive framework dedicated to Bluetooth Low Energy security analysis",
 
-    install_requires=["keyboard","terminaltables","pyusb","pyserial","pycryptodomex","psutil"], 
+    install_requires=["keyboard","terminaltables","pyusb","pyserial","pycryptodomex","psutil","scapy"], 
 
     include_package_data=True,
 
