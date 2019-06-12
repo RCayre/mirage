@@ -50,9 +50,18 @@ class SM_Security_Request(Packet):
     name = "Security Request"
     fields_desc = [BitField("authentication", 0, 8)]
 
+class New_ATT_Handle_Value_Notification(Packet):
+    name = "Handle Value Notification"
+    fields_desc = [ XLEShortField("gatt_handle", 0),
+                    StrField("value", ""), ]
+
+
 bind_layers(HCI_Command_Hdr, HCI_Cmd_LE_Rand, opcode=0x2018)
 bind_layers(HCI_Event_LE_Meta, HCI_LE_Meta_Enhanced_Connection_Complete, event = 0xa)
 bind_layers(SM_Hdr, SM_Security_Request, sm_command=0xb)
 
 bind_layers(HCI_Command_Hdr, New_HCI_Cmd_LE_Set_Advertising_Data, opcode=0x2008)
 bind_layers(HCI_Command_Hdr, New_HCI_Cmd_LE_Set_Scan_Response_Data, opcode=0x2009)
+
+split_layers(ATT_Hdr,ATT_Handle_Value_Notification)
+bind_layers( ATT_Hdr,New_ATT_Handle_Value_Notification, opcode=0x1b)

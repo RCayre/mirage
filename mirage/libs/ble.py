@@ -697,8 +697,7 @@ class BLEEmitter(wireless.Emitter):
 						packet.packet /= ATT_Read_By_Type_Response(packet.data)
 
 					elif isinstance(packet,BLEHandleValueNotification):
-						packet.packet /= ATT_Handle_Value_Notification(gatt_handle=packet.handle,value=packet.value)
-
+						packet.packet /= New_ATT_Handle_Value_Notification(gatt_handle=packet.handle,value=packet.value)
 					elif isinstance(packet,BLEFindInformationRequest):
 						packet.packet /= ATT_Find_Information_Request(start=packet.startHandle,end = packet.endHandle)
 
@@ -838,11 +837,11 @@ class BLEReceiver(wireless.Receiver):
 						endHandle = packet[ATT_Read_By_Type_Request].end,
 						uuid=packet[ATT_Read_By_Type_Request].uuid
 						)
-				elif ATT_Handle_Value_Notification in packet:
+				elif New_ATT_Handle_Value_Notification in packet:
 					return BLEHandleValueNotification(
 						connectionHandle = packet.handle,
-						handle = packet[ATT_Handle_Value_Notification].gatt_handle,
-						value = packet[ATT_Handle_Value_Notification].value
+						handle = packet[New_ATT_Handle_Value_Notification].gatt_handle,
+						value = packet[New_ATT_Handle_Value_Notification].value
 						)
 				elif ATT_Write_Response in packet or (ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0x13):
 					return BLEWriteResponse(connectionHandle = packet.handle)
@@ -1156,10 +1155,10 @@ class BLEReceiver(wireless.Receiver):
 								endHandle = packet[ATT_Read_By_Type_Request].end,
 								uuid=packet[ATT_Read_By_Type_Request].uuid
 								)
-						elif ATT_Handle_Value_Notification in packet:
+						elif New_ATT_Handle_Value_Notification in packet:
 							new = BLEHandleValueNotification(
-								handle = packet[ATT_Handle_Value_Notification].handle,
-								value = packet[ATT_Handle_Value_Notification].value
+								handle = packet[New_ATT_Handle_Value_Notification].handle,
+								value = packet[New_ATT_Handle_Value_Notification].value
 								)
 						elif ATT_Write_Response in packet or (ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0x13):
 							new = BLEWriteResponse()

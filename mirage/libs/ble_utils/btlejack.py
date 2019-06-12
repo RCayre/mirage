@@ -691,6 +691,7 @@ class BTLEJackDevice(wireless.Device):
 
 			except ValueError:
 				self.receptionBuffer = b""
+
 			if len(self.receptionBuffer) >= 4:
 				size = struct.unpack('<H',self.receptionBuffer[2:4])[0]
 				if len(self.receptionBuffer) >= size + 5:
