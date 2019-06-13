@@ -196,6 +196,21 @@ class ble_mitm(module.WirelessModule):
 	def disconnectSlave(self,packet):
 		io.info("Slave disconnected !")
 	
+	# TODO : documentation update
+	@module.scenarioSignal("onMasterExchangeMTURequest")
+	def exchangeMtuRequest(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Exchange MTU Request (from master) : mtu = "+str(packet.mtu))
+			io.info("Redirecting to slave ...")
+			self.a2sEmitter.sendp(ble.BLEExchangeMTURequest(mtu=packet.mtu))
+
+	# TODO : documentation update
+	@module.scenarioSignal("onSlaveExchangeMTUResponse")
+	def exchangeMtuResponse(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Exchange MTU Response (from slave) : mtu = "+str(packet.mtu))
+			io.info("Redirecting to master ...")
+			self.a2mEmitter.sendp(ble.BLEExchangeMTUResponse(mtu=packet.mtu))
 	
 	@module.scenarioSignal("onMasterWriteCommand")
 	def writeCommand(self,packet):
@@ -537,8 +552,28 @@ class ble_mitm(module.WirelessModule):
 		io.info("Redirecting to slave ...")		
 		self.a2sEmitter.sendp(ble.BLESigningInformation(csrk=packet.csrk))
 
-
+	# TODO : documentation update
+	@module.scenarioSignal("onSlaveConnectionParameterUpdateRequest")
+	def connectionParameterUpdateRequest(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Connection Parameter Update Request (from slave) : slaveLatency = "+str(packet.slaveLatency)+" / timeoutMult = "+str(packet.timeoutMult)+" / minInterval = "+str(packet.minInterval)+" / maxInterval = "+str(packet.maxInterval))
+			io.info("Sending a response to slave ...")
+			self.a2sEmitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
+			self.a2sEmitter.sendp(ble.BLEConnectionParameterUpdateResponse(
+							moveResult=0
+						))	
 	
+			
+	# TODO : documentation update
+	@module.scenarioSignal("onMasterConnectionParameterUpdateResponse")
+	def connectionParameterUpdateResponse(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Connection Parameter Update Response (from master) : moveResult = "+str(packet.moveResult))
+			io.info("Redirecting to slave ...")
+			self.a2sEmitter.sendp(ble.BLEConnectionParameterUpdateResponse(
+							moveResult=packet.moveResult
+						))	
+
 
 	def checkParametersValidity(self):
 		if self.args["ADVERTISING_STRATEGY"] not in ("btlejuice","gattacker"):
@@ -609,6 +644,17 @@ class ble_mitm(module.WirelessModule):
 			self.a2sReceiver.onEvent("BLEReadByTypeResponse",callback=self.readByTypeResponse)
 			self.a2sReceiver.onEvent("BLEReadByGroupTypeResponse", callback=self.readByGroupTypeResponse)
 			
+			# MTU Callbacks
+			self.a2mReceiver.onEvent("BLEExchangeMTURequest",callback=self.exchangeMtuRequest)
+			self.a2sReceiver.onEvent("BLEExchangeMTUResponse",callback=self.exchangeMtuResponse)
+
+			# Connection Parameter Update Callbacks
+			self.a2sReceiver.onEvent("BLEConnectionParameterUpdateRequest",
+							callback=self.connectionParameterUpdateRequest)			
+			self.a2mReceiver.onEvent("BLEConnectionParameterUpdateResponse",
+							callback=self.connectionParameterUpdateResponse)
+
+
 			# Security Manager Callbacks
 			self.a2mReceiver.onEvent("BLELongTermKeyRequest", callback=self.longTermKeyRequest)
 			self.a2mReceiver.onEvent("BLEPairingRequest", callback=self.pairingRequest)

@@ -73,7 +73,8 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		"getAddressMode",
 		"getManufacturer",
 		"isAddressChangeable",
-		"encryptLink"
+		"encryptLink",
+		"updateConnectionParameters" # TODO : documentation update
 		]
 	#TODO : capabilities
 
@@ -264,6 +265,12 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			self._setOperationMode(BLEOperationMode.NORMAL)
 		self._exitCommandMode()
 
+	# TODO : documentation update
+	def updateConnectionParameters(self,minInterval=0, maxInterval=0, latency=0, timeout=0,minCe=0, maxCe=0xFFFF):
+		self._enterCommandMode()
+		self._internalCommand(HCI_Cmd_LE_Connection_Update(handle=self.getCurrentHandle(),min_interval=minInterval, max_interval=maxInterval,latency=latency, timeout=timeout, min_ce=minCe, max_ce=maxCe),noResponse=True)
+		self._exitCommandMode()
+
 	def setScanningParameters(self, data=b""):
 		'''
 		This method sets scanning parameters according to the data provided.
@@ -383,6 +390,7 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			self.addressMode = "public"
 			self._initBLE()
 
+	
 	def encryptLink(self,rand=b"\x00\x00\x00\x00\x00\x00\x00\x00", ediv=0, ltk = b"\x00"*16):
 		'''
 		This method sends an encryption request to the current connection established and encrypts the link if possible.
@@ -590,7 +598,7 @@ class BLEEmitter(wireless.Emitter):
 						isinstance(packet,BLEConnectionParameterUpdateRequest) or
 					     	isinstance(packet,BLEConnectionParameterUpdateResponse)
 					   ):
-							packet.packet /= L2CAP_CmdHdr()
+							packet.packet /= L2CAP_Hdr()/L2CAP_CmdHdr()
 					elif (
 						isinstance(packet,BLESecurityRequest) or
 						isinstance(packet,BLEPairingRequest) or
@@ -782,7 +790,7 @@ class BLEReceiver(wireless.Receiver):
 		new = BLEPacket()
 		new.packet = packet
 		if "hci" in self.interface or "adb" in self.interface:
-			#packet.show()
+			packet.show()
 
 			if packet.type == TYPE_ACL_DATA:
 				if ATT_Exchange_MTU_Request in packet:
