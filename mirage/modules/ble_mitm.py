@@ -27,7 +27,7 @@ class ble_mitm(module.WirelessModule):
 				"CONNECTION_TYPE":"public",
 				"SLAVE_SPOOFING":"yes",
 				"MASTER_SPOOFING":"yes",
-				"ADVERTISING_STRATEGY":"btlejuice", # "btlejuice" or "gattacker"
+				"ADVERTISING_STRATEGY":"preconnect", # "preconnect" (btlejuice) or "flood" (gattacker)
 				"SHOW_SCANNING":"yes",
 				"SCENARIO":"",
 				"LTK":""
@@ -118,7 +118,7 @@ class ble_mitm(module.WirelessModule):
 		io.info("Entering CLONE stage ...")		
 		self.setStage(BLEMitmStage.CLONE)
 		
-		if self.args["ADVERTISING_STRATEGY"] == "gattacker":
+		if self.args["ADVERTISING_STRATEGY"] == "flood":
 			intervalMin = 200
 			intervalMax = 201
 
@@ -161,7 +161,7 @@ class ble_mitm(module.WirelessModule):
 			self.initiatorAddress = packet.srcAddr
 			self.initiatorAddressType = b"\x00" if packet.type == "public" else b"\x01"
 
-			if self.args["ADVERTISING_STRATEGY"] == "btlejuice":
+			if self.args["ADVERTISING_STRATEGY"] == "preconnect":
 				if utils.booleanArg(self.args["MASTER_SPOOFING"]):
 					self.a2sEmitter.sendp(ble.BLEDisconnect())
 					while self.a2sEmitter.isConnected():
@@ -178,7 +178,7 @@ class ble_mitm(module.WirelessModule):
 							)
 					while not self.a2sEmitter.isConnected():
 						utils.wait(seconds=0.01)
-			if self.args["ADVERTISING_STRATEGY"] == "gattacker":
+			if self.args["ADVERTISING_STRATEGY"] == "flood":
 				if utils.booleanArg(self.args["MASTER_SPOOFING"]):
 					self.a2sEmitter.setAddress(packet.srcAddr,random=packet.type == "random")
 				self.connectOnSlave(packet.type)
@@ -196,7 +196,7 @@ class ble_mitm(module.WirelessModule):
 	def disconnectSlave(self,packet):
 		io.info("Slave disconnected !")
 	
-	# TODO : documentation update
+
 	@module.scenarioSignal("onMasterExchangeMTURequest")
 	def exchangeMtuRequest(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
@@ -204,7 +204,6 @@ class ble_mitm(module.WirelessModule):
 			io.info("Redirecting to slave ...")
 			self.a2sEmitter.sendp(ble.BLEExchangeMTURequest(mtu=packet.mtu))
 
-	# TODO : documentation update
 	@module.scenarioSignal("onSlaveExchangeMTUResponse")
 	def exchangeMtuResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
@@ -555,13 +554,15 @@ class ble_mitm(module.WirelessModule):
 	# TODO : documentation update
 	@module.scenarioSignal("onSlaveConnectionParameterUpdateRequest")
 	def connectionParameterUpdateRequest(self,packet):
+		io.info("Connection Parameter Update Request (from slave) : slaveLatency = "+str(packet.slaveLatency)+" / timeoutMult = "+str(packet.timeoutMult)+" / minInterval = "+str(packet.minInterval)+" / maxInterval = "+str(packet.maxInterval))
+		io.info("Sending a response to slave ...")
+		self.a2sEmitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
+		self.a2sEmitter.sendp(ble.BLEConnectionParameterUpdateResponse(
+						moveResult=0
+					))
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
-			io.info("Connection Parameter Update Request (from slave) : slaveLatency = "+str(packet.slaveLatency)+" / timeoutMult = "+str(packet.timeoutMult)+" / minInterval = "+str(packet.minInterval)+" / maxInterval = "+str(packet.maxInterval))
-			io.info("Sending a response to slave ...")
-			self.a2sEmitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
-			self.a2sEmitter.sendp(ble.BLEConnectionParameterUpdateResponse(
-							moveResult=0
-						))	
+			io.info("Redirecting to master ...")
+			self.a2mEmitter.sendp(ble.BLEConnectionParameterUpdateRequest(timeoutMult=packet.timeoutMult, slaveLatency=packet.slaveLatency, minInterval=packet.minInterval, maxInterval=packet.maxInterval))
 	
 			
 	# TODO : documentation update
@@ -569,15 +570,15 @@ class ble_mitm(module.WirelessModule):
 	def connectionParameterUpdateResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Connection Parameter Update Response (from master) : moveResult = "+str(packet.moveResult))
-			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEConnectionParameterUpdateResponse(
-							moveResult=packet.moveResult
-						))	
-
+			'''
+			io.info("Sending a response to master ...")
+			if packet.moveResult == 0:
+				self.a2sEmitter.updateConnectionParameters()	
+			'''	
 
 	def checkParametersValidity(self):
-		if self.args["ADVERTISING_STRATEGY"] not in ("btlejuice","gattacker"):
-			io.fail("You have to select a valid strategy : 'gattacker' or 'btlejuice'")
+		if self.args["ADVERTISING_STRATEGY"] not in ("preconnect","flood"):
+			io.fail("You have to select a valid strategy : 'flood' or 'preconnect'")
 			return self.nok()
 		return None
 
@@ -606,7 +607,7 @@ class ble_mitm(module.WirelessModule):
 
 			self.a2sReceiver.setScan(enable=False)
 			self.a2sReceiver.removeCallbacks()
-			if self.args["ADVERTISING_STRATEGY"] == "btlejuice":
+			if self.args["ADVERTISING_STRATEGY"] == "preconnect":
 				self.connectOnSlave()
 
 			self.a2mEmitter.setAdvertising(enable=True)
