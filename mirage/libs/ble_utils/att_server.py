@@ -438,7 +438,7 @@ class ATT_Server:
 
 	This class uses the ``ATT_Database`` class in order to represent the data structure.
 	'''
-	def __init__(self,database=None,mtu=24):
+	def __init__(self,database=None,mtu=23):
 		self.database = database if database is not None else ATT_Database()
 		self.mtu = mtu
 
@@ -492,7 +492,33 @@ class ATT_Server:
 		(exist,authorized,value) = self.database.read(handle)
 		error_code = ATT_ERR_ATTR_NOT_FOUND if not exist else ATT_ERR_READ_NOT_PERMITTED
 		success = value is not None
-		body = value[:self.mtu] if success else error_code
+		body = value[:self.mtu-1] if success else error_code
+		return (success,body)
+
+
+	def readBlob(self,handle,offset):
+		'''
+		This method implements the Read Blob Request.
+	
+		:param handle: handle included in the Read Blob Request
+		:type handle: int
+		:return: tuple
+		:rtype: tuple of (bool,bytes or int)
+
+
+		.. note::
+			The returned tuple is composed of two main fields :
+
+			  * *success* : this field is a boolean indicating if the request was successful or not
+			  * *body* : this field is the response's body (array of bytes) if the request was successful or the error code (integer) if the request was not successful
+
+		'''
+		(exist,authorized,value) = self.database.read(handle)
+		error_code = ATT_ERR_ATTR_NOT_FOUND if not exist else ATT_ERR_READ_NOT_PERMITTED
+		success = value is not None
+		print(value.hex())
+		body = value[offset:offset+self.mtu-1] if success else error_code
+		print(body.hex())
 		return (success,body)
 
 	def writeCommand(self,handle,value):
@@ -672,63 +698,114 @@ class GATT_Server(ATT_Server):
 	'''
 	This class inherits from ``ATT_Server``, and provides some GATT level methods in order to easily manipulate GATT layer.
 	'''
-	def addPrimaryService(self,startHandle,endHandle,uuid):
+	def __init__(self,database=None,mtu=23):
+		super().__init__(database=database,mtu=mtu)
+		self.currentHandle = 1
+
+	def newPrimaryService(self,uuid):
+		self.addPrimaryService(self.currentHandle,None,uuid)
+		self.currentHandle += 1
+
+	def newCharacteristic(self,uuid,value,permissions=["Read"]):
+		self.addCharacteristic(self.currentHandle,uuid,self.currentHandle+1,value,permissions)
+		self.currentHandle += 2	
+
+	def newDescriptor(self,uuid,value,permissions = ["Read"]):
+		self.addDescriptor(self.currentHandle,uuid,value,permissions)
+		self.currentHandle += 1
+
+	def addPrimaryService(self,uuid,handle=None,permissions=["Read"]):
 		'''
 		This method allows to easily add a new primary service.
 		
-		:param startHandle: start handle of the service
-		:type startHandle: int
-		:param endHandle: end handle of the service
-		:type endHandle: int
 		:param uuid: value stored in the service (associated UUID)
 		:type uuid: bytes
+		:param handle: start handle of the service
+		:type handle: int
+		:param permissions: permissions associated to the service
+		:type permissions: list of str
+
+		.. note::
+
+			If no handle is provided, the service is stored as the next available handle.
+			If no permissions are provided, the service is stored with "Read" permission.
 
 		'''
-		self.addAttribute(handle=startHandle,value=uuid[::-1],type=UUID(name="Primary Service").UUID16,permissions=["Read"])
+		newHandle = self.currentHandle if handle is None else handle			
+		self.addAttribute(handle=newHandle,value=uuid[::-1],type=UUID(name="Primary Service").UUID16,permissions=permissions)
+		if handle is None:
+			self.currentHandle += 1
 	
-	def addSecondaryService(self,startHandle,endHandle,uuid):
+	def addSecondaryService(self,uuid,handle=None,permissions=["Read"]):
 		'''
 		This method allows to easily add a new secondary service.
 		
-		:param startHandle: start handle of the service
-		:type startHandle: int
-		:param endHandle: end handle of the service
-		:type endHandle: int
 		:param uuid: value stored in the service (associated UUID)
 		:type uuid: bytes
+		:param handle: start handle of the service
+		:type handle: int
+		:param permissions: permissions associated to the service
+		:type permissions: list of str
+
+		.. note::
+
+			If no handle is provided, the service is stored as the next available handle.
+			If no permissions are provided, the service is stored with "Read" permission.
 
 		'''
-		self.addAttribute(handle=startHandle,value=uuid[::-1],type=UUID(name="Secondary Service").UUID16,permissions=["Read"])
+		newHandle = self.currentHandle if handle is None else handle
+		self.addAttribute(handle=newHandle,value=uuid[::-1],type=UUID(name="Secondary Service").UUID16,permissions=permissions)
+		if handle is None:
+			self.currentHandle += 1
 
-	def addCharacteristic(self,declarationHandle,uuid, valueHandle,value, permissions):
+	def addCharacteristic(self,uuid,value=b"",declarationHandle=None,valueHandle=None,permissions=["Read","Write"]):
 		'''
 		This method allows to easily add a new characteristic.
 		
-		:param declarationHandle: declaration handle of the characteristic
-		:type declarationHandle: int
 		:param uuid: uuid associated to the characteristic
 		:type uuid: bytes
-		:param valueHandle: value handle of the characteristic
-		:type valueHandle: int
 		:param value: value of the characteristic
 		:type value: bytes
+		:param declarationHandle: declaration handle of the characteristic
+		:type declarationHandle: int
+		:param valueHandle: value handle of the characteristic
+		:type valueHandle: int
 		:param permissions: permissions associated to the characteristic
 		:type permissions: list of str
 
-		'''
-		self.addAttribute(handle=declarationHandle,type=UUID(name="Characteristic Declaration").UUID16,value=CharacteristicDeclaration(UUID=UUID(data=uuid), valueHandle=valueHandle,permissionsFlag=PermissionsFlag(permissions=permissions)).data[::-1],permissions=["Read"])
-		self.addAttribute(handle=valueHandle,type=uuid, value=value,permissions=permissions) # 0uuid -> bytes
+		.. note::
 
-	def addDescriptor(self,handle,uuid,value):
+			If no declaration handle is provided, the characteristic declaration is stored as the next available handle.
+			If no value handle is provided, the characteristic value is stored as declaration handle + 1
+			If no permissions are provided, the characteristic value is stored with "Read" & "Write" permission.
+
+		'''
+
+		newHandle = self.currentHandle if declarationHandle is None else declarationHandle
+		newValueHandle = self.currentHandle+1 if valueHandle is None else valueHandle
+		self.addAttribute(handle=newHandle,type=UUID(name="Characteristic Declaration").UUID16,value=CharacteristicDeclaration(UUID=UUID(data=uuid), valueHandle=newValueHandle,permissionsFlag=PermissionsFlag(permissions=permissions)).data[::-1],permissions=["Read"])
+		self.addAttribute(handle=newValueHandle,type=uuid, value=value,permissions=permissions) # 0uuid -> bytes
+		if declarationHandle is None:
+			self.currentHandle += 2
+
+	def addDescriptor(self,uuid,value=b"",handle=None,permissions=["Read","Write","Notify"]):
 		'''
 		This method allows to easily add a new descriptor.
 		
-		:param handle:  handle of the descriptor
-		:type handle: int
 		:param uuid: uuid associated to the descriptor
 		:type uuid: bytes
 		:param value: value of the descriptor
 		:type value: bytes
+		:param handle:  handle of the descriptor
+		:type handle: int
+
+		.. note::
+
+			If no handle is provided, the descriptor is stored as the next available handle.
+			If no permissions are provided, the descriptor is stored with "Read","Write" and "Notify" permission.
 
 		'''
-		self.addAttribute(handle=handle,type=uuid,value=value,permissions=["Read"])
+		newHandle = self.currentHandle if handle is None else handle
+		self.addAttribute(handle=newHandle,type=uuid,value=value,permissions=permissions)
+		if handle is None:
+			self.currentHandle += 1

@@ -1,4 +1,5 @@
-from mirage.core import module
+import traceback
+from mirage.core import module,app
 from mirage.libs import io
 
 class Scenario:
@@ -25,6 +26,7 @@ class Scenario:
 		self.args = module.args
 		
 
+
 	def receiveSignal(self,signal,*args, **kwargs):
 		'''
 		This method is called when a signal is received, and calls the corresponding method in the scenario if it exists.
@@ -33,8 +35,13 @@ class Scenario:
 			try:
 				defaultBehaviour = getattr(self,signal)(*args,**kwargs)
 				return defaultBehaviour
-			except TypeError:
-				io.fail("Non matching method in scenario "+self.name)
+			except Exception as e:
+				if not hasattr(self,signal):
+					io.fail("Non matching method in scenario "+self.name)
+				else:
+					io.fail("An error occured in scenario "+self.name+" !")
+					if app.App.Instance.debugMode:
+			    			traceback.print_exception(type(e), e, e.__traceback__)
 		else:
 			return True
 

@@ -14,6 +14,17 @@ class ArgParser:
 		'''
 		self.appInstance = appInstance
 
+
+	def debug(self):
+		'''
+		This method checks if the debug parameter has been provided by the user on the command line.
+		It will modify the attribute ``debugMode`` stored in the provided instance of core.app.App.
+		'''
+		if "--debug" in sys.argv:
+			self.appInstance.debugMode = True
+			sys.argv.remove("--debug")
+
+
 	def quiet(self):
 		'''
 		This method checks if the quiet parameter has been provided by the user on the command line.
@@ -117,7 +128,8 @@ class ArgParser:
 		(method ``loop`` of core.app.App)
 		- If a Mirage module has been provided by the user, it calls the method ``launcher`` of core.argParser.ArgParser.
 		
-		'''		
+		'''	
+		self.debug()	
 		self.quiet()
 		self.verbosity()
 		if self.create_module() or self.create_scenario():

@@ -40,6 +40,7 @@ class App(interpreter.Interpreter):
 						"create_scenario"
 					]
 		self.quiet = quiet
+		self.debugMode = False # TODO : update documentation
 		self.tempDir = tempDir
 		self.homeDir = homeDir
 		self.config = config.Config(homeDir + "/mirage.cfg")

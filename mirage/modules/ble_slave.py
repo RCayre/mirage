@@ -122,21 +122,21 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 					endHandle = int(infos.get("endhandle"),16)
 					uuid = bytes.fromhex(infos.get("uuid"))
 					if infos.get("servicetype") == "primary":
-						self.server.addPrimaryService(startHandle,endHandle,uuid)
+						self.server.addPrimaryService(uuid,startHandle)
 					else:
-						self.server.addSecondaryService(startHandle,endHandle,uuid)
+						self.server.addSecondaryService(uuid,startHandle)
 				elif infos.get("type") == "characteristic":
 					declarationHandle = int(element,16)
 					uuid = bytes.fromhex(infos.get("uuid"))
 					valueHandle = int(infos.get("valuehandle"),16)
 					value = bytes.fromhex(infos.get("value"))
 					permissions = infos.get("permissions").split(",")
-					self.server.addCharacteristic(declarationHandle,uuid,valueHandle, value, permissions)
+					self.server.addCharacteristic(uuid,value,declarationHandle,valueHandle,permissions)
 				elif infos.get("type") == "descriptor":
 					handle = int(element, 16)
 					uuid = bytes.fromhex(infos.get("uuid"))
 					value = bytes.fromhex(infos.get("value"))
-					self.server.addDescriptor(handle,uuid,value)
+					self.server.addDescriptor(uuid,value,handle)
 
 	@module.scenarioSignal("onMasterReadByTypeRequest")				
 	def readByTypeRequest(self,packet):
@@ -179,6 +179,17 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 			self.emitter.sendp(ble.BLEReadResponse(value=response))
 		else:
 			self.emitter.sendp(ble.BLEErrorResponse(request=0x0a, ecode=response,handle=packet.handle))
+
+
+	@module.scenarioSignal("onMasterReadBlobRequest")
+	def readBlobRequest(self,packet):
+		io.info("Read Blob Request : handle = "+hex(packet.handle) + " / offset = "+str(packet.offset))
+		(success,response) = self.server.readBlob(packet.handle,packet.offset)
+		if success:
+			self.emitter.sendp(ble.BLEReadBlobResponse(value=response))
+		else:
+			self.emitter.sendp(ble.BLEErrorResponse(request=0x0a, ecode=response,handle=packet.handle))
+
 
 	@module.scenarioSignal("onMasterWriteRequest")
 	def writeRequest(self,packet):
@@ -289,6 +300,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 		self.receiver.onEvent("BLEFindInformationRequest",callback=self.findInformationRequest)
 		self.receiver.onEvent("BLEReadByGroupTypeRequest",callback=self.readByGroupTypeRequest)
 		self.receiver.onEvent("BLEReadRequest",callback=self.readRequest)
+		self.receiver.onEvent("BLEReadBlobRequest",callback=self.readBlobRequest)
 		self.receiver.onEvent("BLEExchangeMTURequest",callback=self.exchangeMTURequest)
 		self.receiver.onEvent("BLEWriteCommand",callback=self.writeCommand)
 		self.receiver.onEvent("BLEWriteRequest",callback=self.writeRequest)
