@@ -97,14 +97,18 @@ class BtHCIDevice(wireless.Device):
 				#packet.show()
 				if self._commandModeEnabled() and packet.type == 0x04:
 					self.commandResponses.put(packet)
+					self._exitListening()
 					return None
 				else:
+					self._exitListening()
 					return packet
 			else:
+				self._exitListening()
 				utils.wait(seconds=0.0001)
 			return None
 		# An error may occur during a socket restart
 		except OSError as e:
+			self._exitListening()
 			return None
 
 	def _enterCommandMode(self):
