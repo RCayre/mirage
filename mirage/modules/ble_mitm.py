@@ -232,6 +232,20 @@ class ble_mitm(module.WirelessModule):
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEWriteResponse())
 
+	@module.scenarioSignal("onMasterReadBlobRequest")
+	def readBlob(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Read Blob Request (from master) : handle = "+hex(packet.handle)+" / offset = "+str(packet.offset))
+			io.info("Redirecting to slave ...")
+			self.a2sEmitter.sendp(ble.BLEReadBlobRequest(handle=packet.handle,offset=packet.offset))
+
+	@module.scenarioSignal("onSlaveReadBlobResponse")
+	def readBlobResponse(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Read Blob Response (from slave) : value = "+packet.value.hex())
+			io.info("Redirecting to master ...")
+			self.a2mEmitter.sendp(ble.BLEReadBlobResponse(value=packet.value))
+
 	@module.scenarioSignal("onMasterReadRequest")
 	def read(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
@@ -261,6 +275,21 @@ class ble_mitm(module.WirelessModule):
 				" / value = "+packet.value.hex())
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEHandleValueNotification(handle=packet.handle,value=packet.value))
+
+	@module.scenarioSignal("onSlaveHandleValueIndication")	
+	def indication(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Handle Value Indication (from slave) : handle = "+hex(packet.handle)+
+				" / value = "+packet.value.hex())
+			io.info("Redirecting to master ...")
+			self.a2mEmitter.sendp(ble.BLEHandleValueIndication(handle=packet.handle,value=packet.value))
+
+	@module.scenarioSignal("onMasterHandleValueConfirmation")
+	def confirmation(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Handle Value Confirmation (from master)")
+			io.info("Redirecting to slave ...")
+			self.a2sEmitter.sendp(ble.BLEHandleValueConfirmation())
 
 	@module.scenarioSignal("onMasterFindInformationRequest")
 	def findInformation(self,packet):
@@ -631,9 +660,13 @@ class ble_mitm(module.WirelessModule):
 			# Read Callbacks
 			self.a2mReceiver.onEvent("BLEReadRequest",callback=self.read)
 			self.a2sReceiver.onEvent("BLEReadResponse",callback=self.readResponse)
+			self.a2mReceiver.onEvent("BLEReadBlobRequest",callback=self.readBlob)
+			self.a2sReceiver.onEvent("BLEReadBlobResponse",callback=self.readBlobResponse)
 
 			# Notification Callback
 			self.a2sReceiver.onEvent("BLEHandleValueNotification",callback=self.notification)
+			self.a2sReceiver.onEvent("BLEHandleValueIndication",callback=self.indication)
+			self.a2mReceiver.onEvent("BLEHandleValueConfirmation",callback=self.confirmation)
 
 			# Find Information Callbacks
 			self.a2mReceiver.onEvent("BLEFindInformationRequest", callback=self.findInformation)
