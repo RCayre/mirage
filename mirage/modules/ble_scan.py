@@ -10,6 +10,7 @@ class ble_scan(module.WirelessModule):
 		self.args = {
 				"INTERFACE":"hci0",
 				"TARGET":"",
+				"DISPLAY":"address,name,company,flags,data",
 				"TIME":"20"
 			}
 		self.devicesQueue = queue.Queue()
@@ -71,14 +72,40 @@ class ble_scan(module.WirelessModule):
 			self.displayDevices()
 
 	def displayDevices(self):
+		displayMode = utils.listArg(self.args["DISPLAY"])
 		devices = [] 
 		for address,device in self.devices.items():
+			currentLine = []
 			adv_data=device["ADV_IND_data"]+" (ADV_IND)" if device["ADV_IND_data"]!="" else ""
 			if device["ADV_IND_data"]!="" and device["SCAN_RSP_data"]!="":
 				adv_data+="\n"
 			adv_data+=device["SCAN_RSP_data"]+" (SCAN_RSP)" if device["SCAN_RSP_data"]!="" else ""
-			devices.append([address,device["name"],device["company"], ",".join(device["flags"]), adv_data])
-		io.chart(["BD Address", "Name", "Company", "Flags","Advertising data"], devices, "Devices found")
+
+			if "address" in displayMode:
+				currentLine.append(address)
+			if "name" in displayMode:
+				currentLine.append(device["name"])
+			if "company" in displayMode:
+				currentLine.append(device["company"])
+			if "flags" in displayMode:
+				currentLine.append(",".join(device["flags"]))
+			if "data" in displayMode:
+				currentLine.append(adv_data)
+			devices.append(currentLine)
+		
+		headLine = []
+		if "address" in displayMode:
+			headLine.append("BD Address")
+		if "name" in displayMode:
+			headLine.append("Name")
+		if "company" in displayMode:
+			headLine.append("Company")
+		if "flags" in displayMode:
+			headLine.append("Flags")
+		if "data" in displayMode:
+			headLine.append("Advertising data")
+
+		io.chart(headLine, devices, "Devices found")
 
 	def generateOutput(self):
 		output = {}

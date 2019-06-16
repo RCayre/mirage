@@ -137,6 +137,12 @@ class ble_pair(module.WirelessModule):
 
 
 	def slavePairingResponse(self,pkt):
+
+		self.initiatorAddress = self.emitter.getAddress()
+		self.initiatorAddressType = b"\x00" if self.emitter.getAddressMode() == "public" else b"\x01"
+		self.responderAddress = self.emitter.getCurrentConnection()
+		self.responderAddressType = b"\x00" if self.emitter.getCurrentConnectionMode() == "public" else b"\x01"
+
 		pkt.show()
 		self.pairingResponse = pkt
 		self.pRes = self.pairingResponse.payload[::-1]
@@ -311,6 +317,11 @@ class ble_pair(module.WirelessModule):
 
 
 	def masterPairingRequest(self,pkt):
+		self.initiatorAddress = self.emitter.getCurrentConnection()
+		self.initiatorAddressType = b"\x00" if self.emitter.getCurrentConnectionMode() == "public" else b"\x01"
+		self.responderAddress = self.emitter.getAddress()
+		self.responderAddressType = b"\x00" if self.emitter.getAddressMode() == "public" else b"\x01"
+
 		pkt.show()
 		self.pairingRequest = pkt
 		self.pReq = self.pairingRequest.payload[::-1]
@@ -462,18 +473,12 @@ class ble_pair(module.WirelessModule):
 		self.emitter = self.getEmitter(interface=interface)
 		self.receiver = self.getReceiver(interface=interface)
 
-		if not self.emitter.isConnected():
+		if not self.emitter.isConnected() and utils.booleanArg(self.args["ACTIVE"]):
 			io.fail("A connection must be established.")
 			return self.nok()
 
 
 		if self.args["MODE"].lower() == "master":
-			self.initiatorAddress = self.emitter.getAddress()
-			self.initiatorAddressType = b"\x00" if self.emitter.getAddressMode() == "public" else b"\x01"
-			self.responderAddress = self.emitter.getCurrentConnection()
-			self.responderAddressType = b"\x00" if self.emitter.getCurrentConnectionMode() == "public" else b"\x01"
-
-
 	
 			keyboard = utils.booleanArg(self.args["KEYBOARD"])
 			yesno = utils.booleanArg(self.args["YESNO"])
@@ -525,11 +530,6 @@ class ble_pair(module.WirelessModule):
 
 			return self.ok()
 		else:
-			self.initiatorAddress = self.emitter.getCurrentConnection()
-			self.initiatorAddressType = b"\x00" if self.emitter.getCurrentConnectionMode() == "public" else b"\x01"
-			self.responderAddress = self.emitter.getAddress()
-			self.responderAddressType = b"\x00" if self.emitter.getAddressMode() == "public" else b"\x01"
-
 
 			self.receiver.onEvent("BLEPairingRequest", callback=self.masterPairingRequest)
 			self.receiver.onEvent("BLEPairingConfirm", callback=self.masterPairingConfirm)
