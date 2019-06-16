@@ -74,9 +74,8 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		"getManufacturer",
 		"isAddressChangeable",
 		"encryptLink",
-		"updateConnectionParameters" # TODO : documentation update
+		"updateConnectionParameters"
 		]
-	#TODO : capabilities
 
 
 	def _setCurrentHandle(self,handle,address="",mode="public"):
@@ -725,8 +724,17 @@ class BLEEmitter(wireless.Emitter):
 					elif isinstance(packet,BLEReadByTypeResponse):
 						packet.packet /= ATT_Read_By_Type_Response(packet.data)
 
+					elif isinstance(packet,BLEReadBlobRequest):
+						packet.packet /= New_ATT_Read_Blob_Request(gatt_handle=packet.handle,offset=packet.offset)
+					elif isinstance(packet,BLEReadBlobResponse):
+						packet.packet /= New_ATT_Read_Blob_Response(value=packet.value)
 					elif isinstance(packet,BLEHandleValueNotification):
 						packet.packet /= New_ATT_Handle_Value_Notification(gatt_handle=packet.handle,value=packet.value)
+					elif isinstance(packet,BLEHandleValueIndication):
+						packet.packet /= New_ATT_Handle_Value_Indication(gatt_handle=packet.handle,value=packet.value)
+					elif isinstance(packet,BLEHandleValueConfirmation):
+						packet.packet /= New_ATT_Handle_Value_Confirmation()
+
 					elif isinstance(packet,BLEFindInformationRequest):
 						packet.packet /= ATT_Find_Information_Request(start=packet.startHandle,end = packet.endHandle)
 
@@ -866,12 +874,32 @@ class BLEReceiver(wireless.Receiver):
 						endHandle = packet[ATT_Read_By_Type_Request].end,
 						uuid=packet[ATT_Read_By_Type_Request].uuid
 						)
+				elif New_ATT_Read_Blob_Request in packet:
+					return BLEReadBlobRequest(
+						handle = packet[New_ATT_Read_Blob_Request].gatt_handle,
+						offset = packet[New_ATT_Read_Blob_Request].offset,
+						connectionHandle = packet.handle
+						)
+				elif New_ATT_Read_Blob_Response in packet:
+					return BLEReadBlobResponse(
+						value = packet[New_ATT_Read_Blob_Response].value,
+						connectionHandle = packet.handle
+						)
 				elif New_ATT_Handle_Value_Notification in packet:
 					return BLEHandleValueNotification(
 						connectionHandle = packet.handle,
 						handle = packet[New_ATT_Handle_Value_Notification].gatt_handle,
 						value = packet[New_ATT_Handle_Value_Notification].value
 						)
+				elif New_ATT_Handle_Value_Indication in packet:
+					return BLEHandleValueIndication(
+						connectionHandle = packet.handle,
+						handle = packet[New_ATT_Handle_Value_Indication].gatt_handle,
+						value = packet[New_ATT_Handle_Value_Indication].value
+						)
+				elif New_ATT_Handle_Value_Confirmation in packet or (ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0x1e):
+					return BLEHandleValueConfirmation(connectionHandle = packet.handle)
+
 				elif ATT_Write_Response in packet or (ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0x13):
 					return BLEWriteResponse(connectionHandle = packet.handle)
 				elif ATT_Write_Request in packet:
@@ -1188,6 +1216,23 @@ class BLEReceiver(wireless.Receiver):
 							new = BLEHandleValueNotification(
 								handle = packet[New_ATT_Handle_Value_Notification].handle,
 								value = packet[New_ATT_Handle_Value_Notification].value
+								)
+						elif New_ATT_Handle_Value_Indication in packet:
+							new = BLEHandleValueIndication(
+								connectionHandle = packet.handle,
+								handle = packet[New_ATT_Handle_Value_Indication].gatt_handle,
+								value = packet[New_ATT_Handle_Value_Indication].value
+								)
+						elif New_ATT_Handle_Value_Confirmation in packet or (ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0x1e):
+							new = BLEHandleValueConfirmation(connectionHandle = packet.handle)
+						elif New_ATT_Read_Blob_Request in packet:
+							new = BLEReadBlobRequest(
+								handle = packet[New_ATT_Read_Blob_Request].gatt_handle,
+								offset = packet[New_ATT_Read_Blob_Request].offset
+								)
+						elif New_ATT_Read_Blob_Response in packet:
+							new = BLEReadBlobResponse(
+								value = packet[New_ATT_Read_Blob_Response].value
 								)
 						elif ATT_Write_Response in packet or (ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0x13):
 							new = BLEWriteResponse()

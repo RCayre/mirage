@@ -865,6 +865,103 @@ class BLEHandleValueNotification(BLEPacket):
 	def toString(self):
 		return "<< "+self.name+" | handle="+hex(self.handle)+" | value="+self.value.hex()+" >>"
 
+class BLEReadBlobRequest(BLEPacket):
+	'''
+	Mirage Bluetooth Low Energy Packet - Read Blob Request
+
+	:param handle: ATT value handle indicating the attribute linked to the request
+	:type handle: int
+	:param offset: offset of the value to read
+	:type offset: int
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	:Example:
+		
+		>>> emitter.sendp(ble.BLEReadBlobRequest(handle=0x0021, offset=26))
+
+	'''
+	def __init__(self, handle=0, offset=0, connectionHandle = -1):
+		super().__init__()
+		self.handle = handle
+		self.offset = offset
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Read Blob Request Packet"
+
+	def toString(self):
+		return "<< "+self.name+" | handle="+hex(self.handle)+" | offset="+str(self.offset)+" >>"
+
+class BLEReadBlobResponse(BLEPacket):
+	'''
+	Mirage Bluetooth Low Energy Packet - Read Blob Response
+
+	:param value: ATT value
+	:type value: bytes
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	:Example:
+		
+		>>> emitter.sendp(ble.BLEReadBlobResponse(value=bytes.fromhex("01020304")))
+
+	'''
+	def __init__(self, value=b"", connectionHandle = -1):
+		super().__init__()
+		self.value = value
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Read Blob Response Packet"
+
+	def toString(self):
+		return "<< "+self.name+" | value="+self.value.hex()+" >>"
+
+class BLEHandleValueIndication(BLEPacket):
+	'''
+	Mirage Bluetooth Low Energy Packet - Handle Value Indication
+
+	:param handle: ATT value handle indicating the attribute linked to the indication
+	:type handle: int
+	:param value: new value to notify
+	:type value: bytes
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	:Example:
+		
+		>>> emitter.sendp(ble.BLEHandleValueIndication(handle=0x0021, value=b"\x00"))
+		>>> emitter.sendp(ble.BLEHandleValueIndication(handle=0x0021, value=b"\x02"))
+
+	'''
+	def __init__(self, handle=0, value=b"", connectionHandle = -1):
+		super().__init__()
+		self.handle = handle
+		self.value = value
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Handle Value Indication Packet"
+
+	def toString(self):
+		return "<< "+self.name+" | handle="+hex(self.handle)+" | value="+self.value.hex()+" >>"
+
+class BLEHandleValueConfirmation(BLEPacket):
+	'''
+	Mirage Bluetooth Low Energy Packet - Handle Value Confirmation
+
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	:Example:
+		
+		>>> emitter.sendp(ble.BLEHandleValueConfirmation())
+
+	'''
+	def __init__(self,connectionHandle = -1):
+		super().__init__()
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Handle Value Confirmation Packet"
+
+	def toString(self):
+		return "<< "+self.name+" >>"
+
+
 class BLEReadRequest(BLEPacket):
 	'''
 	Mirage Bluetooth Low Energy Packet - Read Request
