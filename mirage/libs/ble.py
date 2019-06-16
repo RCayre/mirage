@@ -265,8 +265,29 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			self._setOperationMode(BLEOperationMode.NORMAL)
 		self._exitCommandMode()
 
-	# TODO : documentation update
 	def updateConnectionParameters(self,minInterval=0, maxInterval=0, latency=0, timeout=0,minCe=0, maxCe=0xFFFF):
+		'''
+		This method allows to update connection parameters according to the data provided.
+		It will mainly be used if an incoming BLEConnectionParameterUpdateRequest is received.
+
+		:param minInterval: minimal interval
+		:type minInterval: int
+		:param maxInterval: maximal interval
+		:type maxInterval: int
+		:param latency: connection latency
+		:type latency: int
+		:param timeout: connection timeout
+		:type timeout: int
+		:param minCe: minimum connection event length
+		:type minCe: int
+		:param maxCe: maximum connection event length
+		:type maxCe: int
+
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+		'''
 		self._enterCommandMode()
 		self._internalCommand(HCI_Cmd_LE_Connection_Update(handle=self.getCurrentHandle(),min_interval=minInterval, max_interval=maxInterval,latency=latency, timeout=timeout, min_ce=minCe, max_ce=maxCe),noResponse=True)
 		self._exitCommandMode()
