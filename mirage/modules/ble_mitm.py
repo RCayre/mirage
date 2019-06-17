@@ -580,7 +580,7 @@ class ble_mitm(module.WirelessModule):
 		io.info("Redirecting to slave ...")		
 		self.a2sEmitter.sendp(ble.BLESigningInformation(csrk=packet.csrk))
 
-	# TODO : documentation update
+
 	@module.scenarioSignal("onSlaveConnectionParameterUpdateRequest")
 	def connectionParameterUpdateRequest(self,packet):
 		io.info("Connection Parameter Update Request (from slave) : slaveLatency = "+str(packet.slaveLatency)+" / timeoutMult = "+str(packet.timeoutMult)+" / minInterval = "+str(packet.minInterval)+" / maxInterval = "+str(packet.maxInterval))
@@ -594,7 +594,6 @@ class ble_mitm(module.WirelessModule):
 			self.a2mEmitter.sendp(ble.BLEConnectionParameterUpdateRequest(timeoutMult=packet.timeoutMult, slaveLatency=packet.slaveLatency, minInterval=packet.minInterval, maxInterval=packet.maxInterval))
 	
 			
-	# TODO : documentation update
 	@module.scenarioSignal("onMasterConnectionParameterUpdateResponse")
 	def connectionParameterUpdateResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:

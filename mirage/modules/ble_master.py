@@ -121,11 +121,12 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		else:
 			io.fail("Unknown connection !")
 
-	def scan(self,seconds='6'):
+	def scan(self,seconds='6',display="address,name"):
 		if self.checkScanningCapabilities():
 			m = utils.loadModule('ble_scan')
 			m['INTERFACE'] = self.args['INTERFACE']
 			m['TIME'] = seconds
+			m['DISPLAY'] = display
 			m.execute()
 		else:
 			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to scan devices.")
@@ -240,9 +241,31 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 	@module.scenarioSignal("onEnd")
 	def endScenario(self):
 		pass
-	
+
+	@module.scenarioSignal("onSlaveConnectionParameterUpdateRequest")
+	def onConnectionParameterUpdateRequest(self,packet):
+		io.info("Updating connection parameters ...")
+		io.info(" => Timeout: "+str(packet.timeoutMult))
+		io.info(" => Latency: "+str(packet.slaveLatency))
+		io.info(" => Minimum interval: "+str(packet.minInterval))
+		io.info(" => Maximum interval: "+str(packet.maxInterval))
+		self.emitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
+		self.emitter.sendp(ble.BLEConnectionParameterUpdateResponse(moveResult=0))
+
+	@module.scenarioSignal("onSlaveHandleValueNotification")
+	def onNotification(self,packet):
+		io.info("Incoming notification : handle = "+hex(packet.handle)+" / value = "+packet.value.hex())
+
+	@module.scenarioSignal("onSlaveHandleValueIndication")
+	def onIndication(self,packet):
+		io.info("Incoming indication : handle = "+hex(packet.handle)+" / value = "+packet.value.hex())
+		self.emitter.sendp(ble.BLEHandleValueConfirmation())
+
 	def initializeCallbacks(self):
 		self.receiver.onEvent("BLEDisconnect",callback=self.onDisconnect)
+		self.receiver.onEvent("BLEConnectionParameterUpdateRequest",callback=self.onConnectionParameterUpdateRequest)
+		self.receiver.onEvent("BLEHandleValueNotification",callback=self.onNotification)
+		self.receiver.onEvent("BLEHandleValueIndication",callback=self.onIndication)
 
 	def run(self):
 		self.emitter = self.getEmitter(interface=self.args['INTERFACE'])
