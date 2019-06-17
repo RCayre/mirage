@@ -203,7 +203,9 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			return True
 		else:
 			self.addressMode = "public"
-			return super().setAddress(address)
+			rValue = super().setAddress(address)
+			self._setOperationMode(BLEOperationMode.NORMAL)
+			return rValue
 	
 	def setScan(self,enable=True, passive=False):
 		'''

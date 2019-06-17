@@ -1,5 +1,6 @@
 from scapy.all import *
 from queue import Queue
+from threading import Lock
 from mirage.core.module import WirelessModule
 from mirage.libs.bt_utils.packets import *
 from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
@@ -49,6 +50,7 @@ class BtHCIDevice(wireless.Device):
 		self.commandMode = False
 		self.currentHandle = -1
 		self.handles = []
+		self.recvLock = Lock()
 		self.commandResponses = Queue()
 		self.ready = False
 		if "hci" == self.interface[0:3]:
@@ -86,6 +88,13 @@ class BtHCIDevice(wireless.Device):
 		'''
 		self.socket.send(data)
 
+	def _recv(self):
+		self.recvLock.acquire()
+		recv = self.socket.recv()
+		self.recvLock.release()
+		return recv
+
+
 	def recv(self):
 		'''
 		This method allows to receive raw HCI packets from the HCI device.
@@ -93,15 +102,15 @@ class BtHCIDevice(wireless.Device):
 		self._enterListening()
 		try:
 			if self.socket is not None and self.socket.fileno() != -1 and self.socket.readable():
-				packet = self.socket.recv()
+				packet = self._recv()
 				#packet.show()
 				if self._commandModeEnabled() and packet.type == 0x04:
 					self.commandResponses.put(packet)
-					self._exitListening()
 					return None
 				else:
 					self._exitListening()
 					return packet
+
 			else:
 				self._exitListening()
 				utils.wait(seconds=0.0001)
@@ -111,6 +120,27 @@ class BtHCIDevice(wireless.Device):
 			self._exitListening()
 			return None
 
+
+	def _internalCommand(self,cmd,noResponse=False):
+		cmd = HCI_Hdr()/HCI_Command_Hdr()/cmd
+		while not self._commandModeEnabled():
+			utils.wait(seconds=0.05)
+		self._flushCommandResponses()
+		
+		self.send(cmd)
+		if not noResponse:
+			if self._isListening():
+				getResponse = self.commandResponses.get
+			else:
+				getResponse = self._recv
+			response = getResponse()
+			#response.show()
+			while response is None or response.type != 0x04 or response.code != 0xe:
+				response = getResponse()
+			if response.type == 0x04 and response.code == 0xe and response.opcode == cmd.opcode:
+				if response.status != 0:
+					raise BluetoothCommandError("Command %x failed with %x" % (cmd.opcode,response.status))
+				return response
 	def _enterCommandMode(self):
 		self.commandMode = True
 	def _exitCommandMode(self):
@@ -131,28 +161,6 @@ class BtHCIDevice(wireless.Device):
 		if self.socket is not None:
 			self.socket.flush()
 
-	def _internalCommand(self,cmd,noResponse=False):
-		cmd = HCI_Hdr()/HCI_Command_Hdr()/cmd
-		#cmd.show()
-		while not self._commandModeEnabled():
-			utils.wait(seconds=0.05)
-		self._flushCommandResponses()
-		
-		self.send(cmd)
-		if not noResponse:
-			if self._isListening():
-				getResponse = self.commandResponses.get
-			else:
-				getResponse = self.socket.recv
-
-			response = getResponse()
-			#response.show()
-			while response is None or response.type != 0x04 or response.code != 0xe:
-				response = getResponse()
-			if response.type == 0x04 and response.code == 0xe and response.opcode == cmd.opcode:
-				if response.status != 0:
-					raise BluetoothCommandError("Command %x failed with %x" % (cmd.opcode,response.status))
-				return response
 
 	def getCurrentHandle(self):
 		'''

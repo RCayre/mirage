@@ -231,6 +231,23 @@ class ATT_Database:
 				self.attributes.append(None)
 			self.attributes.append(ATT_Attribute(handle=handle, value=value,type=type,permissions=permissions))
 
+	def getNextHandle(self):
+		'''
+		This method returns the next free handle.
+
+		:return: next free handle
+		:rtype: int
+
+		:Example:
+
+			>>> db.getNextHandle()
+			25
+		'''
+		highestHandle = 0x0000
+		for att in self.attributes:
+			if att is not None and att.handle >= highestHandle:
+				highestHandle = att.handle
+		return highestHandle + 1
 
 	def read(self,handle):
 		'''
@@ -516,9 +533,7 @@ class ATT_Server:
 		(exist,authorized,value) = self.database.read(handle)
 		error_code = ATT_ERR_ATTR_NOT_FOUND if not exist else ATT_ERR_READ_NOT_PERMITTED
 		success = value is not None
-		print(value.hex())
 		body = value[offset:offset+self.mtu-1] if success else error_code
-		print(body.hex())
 		return (success,body)
 
 	def writeCommand(self,handle,value):
@@ -698,21 +713,6 @@ class GATT_Server(ATT_Server):
 	'''
 	This class inherits from ``ATT_Server``, and provides some GATT level methods in order to easily manipulate GATT layer.
 	'''
-	def __init__(self,database=None,mtu=23):
-		super().__init__(database=database,mtu=mtu)
-		self.currentHandle = 1
-
-	def newPrimaryService(self,uuid):
-		self.addPrimaryService(self.currentHandle,None,uuid)
-		self.currentHandle += 1
-
-	def newCharacteristic(self,uuid,value,permissions=["Read"]):
-		self.addCharacteristic(self.currentHandle,uuid,self.currentHandle+1,value,permissions)
-		self.currentHandle += 2	
-
-	def newDescriptor(self,uuid,value,permissions = ["Read"]):
-		self.addDescriptor(self.currentHandle,uuid,value,permissions)
-		self.currentHandle += 1
 
 	def addPrimaryService(self,uuid,handle=None,permissions=["Read"]):
 		'''
@@ -731,10 +731,8 @@ class GATT_Server(ATT_Server):
 			If no permissions are provided, the service is stored with "Read" permission.
 
 		'''
-		newHandle = self.currentHandle if handle is None else handle			
+		newHandle = self.database.getNextHandle() if handle is None else handle			
 		self.addAttribute(handle=newHandle,value=uuid[::-1],type=UUID(name="Primary Service").UUID16,permissions=permissions)
-		if handle is None:
-			self.currentHandle += 1
 	
 	def addSecondaryService(self,uuid,handle=None,permissions=["Read"]):
 		'''
@@ -781,12 +779,11 @@ class GATT_Server(ATT_Server):
 
 		'''
 
-		newHandle = self.currentHandle if declarationHandle is None else declarationHandle
-		newValueHandle = self.currentHandle+1 if valueHandle is None else valueHandle
+		newHandle = self.database.getNextHandle() if declarationHandle is None else declarationHandle
+		newValueHandle = newHandle+1 if valueHandle is None else valueHandle
 		self.addAttribute(handle=newHandle,type=UUID(name="Characteristic Declaration").UUID16,value=CharacteristicDeclaration(UUID=UUID(data=uuid), valueHandle=newValueHandle,permissionsFlag=PermissionsFlag(permissions=permissions)).data[::-1],permissions=["Read"])
 		self.addAttribute(handle=newValueHandle,type=uuid, value=value,permissions=permissions) # 0uuid -> bytes
-		if declarationHandle is None:
-			self.currentHandle += 2
+
 
 	def addDescriptor(self,uuid,value=b"",handle=None,permissions=["Read","Write","Notify"]):
 		'''
@@ -805,7 +802,6 @@ class GATT_Server(ATT_Server):
 			If no permissions are provided, the descriptor is stored with "Read","Write" and "Notify" permission.
 
 		'''
-		newHandle = self.currentHandle if handle is None else handle
+		newHandle = self.database.getNextHandle() if handle is None else handle
 		self.addAttribute(handle=newHandle,type=uuid,value=value,permissions=permissions)
-		if handle is None:
-			self.currentHandle += 1
+
