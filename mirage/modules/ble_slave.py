@@ -230,6 +230,9 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 		pass
 
 	def _autocompletePairingParameters(self):
+		'''
+		This method generates the pairing parameters available in order to autocomplete "pairing" command.
+		'''
 		return [
 				"inputOutput=",
 				"authentication=",
@@ -279,6 +282,9 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 			io.fail("An error occured during pairing !")
 
 	def _autocompleteAdvertisingType(self):
+		'''
+		This method generates the advertising types in order to autocomplete "advertising" command.
+		'''
 		return [
 			"ADV_IND",
 			"ADV_DIRECT_IND",

@@ -50,6 +50,9 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		subprocess.run(["clear"])
 
 	def _autocompletePairingParameters(self):
+		'''
+		This method generates the pairing parameters available in order to autocomplete "pairing" command.
+		'''
 		return [
 				"inputOutput=",
 				"authentication=",
@@ -180,6 +183,9 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to initiate a connection.")
 
 	def _autocompleteDiscoverWhat(self):
+		'''
+		This method generates the discover parameters available in order to autocomplete "discover" command.
+		'''
 		return [
 			"all",
 			"attributes",
