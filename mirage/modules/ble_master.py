@@ -189,7 +189,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		return [
 			"all",
 			"attributes",
-			"services"
+			"services",
 			"primaryservices",
 			"secondaryservices",
 			"characteristics"

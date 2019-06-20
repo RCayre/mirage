@@ -92,6 +92,7 @@ class Interpreter:
 		self.autocompletionMode = autocompletion
 		self.suggestionMode = suggestion
 		self.suggestion = ""
+		self.usage = ""
 		self.cursorOffset = 0
 		self.availableCommands = ["exit"]
 
@@ -164,7 +165,11 @@ class Interpreter:
 		display = ""
 		width = os.get_terminal_size().columns
 		for match in matches:
-			matchValue = match.replace(start,"")+"   "
+			if len(line) > 1:
+				matchValue = match.replace(start,"")
+			else:
+				matchValue = match
+			matchValue += "   "
 			if len(display.split("\n")[-1])+len(matchValue) >= width:
 				matchValue = "\n"+matchValue 
 			display += matchValue
@@ -253,6 +258,29 @@ class Interpreter:
 
 	########################### SUGGESTION ###########################
 
+	def _moveCursorToLeft(self):
+		inputBuffer = readline.get_line_buffer()
+		currentPosition = len(inputBuffer)+self.cursorOffset
+		words = re.split('[ |_]+',inputBuffer[:currentPosition+1])
+		if len(words) > 0:
+			lastWord = words[-1]
+			words = words[:len(words)-1]
+			while lastWord in ("","?") and len(words) > 0:
+				lastWord = words[-1]
+				words = words[:-1]
+			self.cursorOffset = -1*(len(inputBuffer)-inputBuffer.rindex(lastWord))
+			if self.cursorOffset > len(inputBuffer):
+				self.cursorOffset = 0
+
+	def _moveCursorToRight(self):
+		inputBuffer = readline.get_line_buffer()
+		currentPosition = len(inputBuffer)+self.cursorOffset
+		words = re.split('[ |_]+',inputBuffer[currentPosition:])
+		if len(words) > 0:
+			firstWord = words[0]
+			self.cursorOffset = currentPosition+len(firstWord)-len(inputBuffer)
+
+
 	def _manageCursor(self,key):
 		'''
 		This method manages the cursor position.
@@ -311,6 +339,7 @@ class Interpreter:
 						else:
 							ignore -=1
 					self.suggestion = "\x1b[2m"+self.suggestion+"\x1b[22m"
+					self.usage = "Usage : this command allows to send a notification"
 					suggestion = self.suggestion
 		self._displayInput(suggestion)
 
@@ -329,6 +358,8 @@ class Interpreter:
 		This method enables the suggestion mode.
 		'''
 		self.cursorOffset = 0
+		keyboard.add_hotkey('ctrl+left', self._moveCursorToLeft)
+		keyboard.add_hotkey('ctrl+right', self._moveCursorToRight)
 		keyboard.on_press_key("left",self._manageCursor)
 		keyboard.on_press_key("right",self._manageCursor)
 		keyboard.on_press_key("delete",self._manageCursor)
