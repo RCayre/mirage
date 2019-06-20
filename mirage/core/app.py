@@ -192,7 +192,13 @@ class App(interpreter.Interpreter):
 		'''
 		self.loader.list(pattern)
 
-	def load(self,moduleName):
+	def _autocompleteModules(self):
+		'''
+		This method generates the list of available modules in order to autocomplete "load" command.
+		'''
+		return self.loader.getModulesNames()
+
+	def load(self,moduleName:"!method:_autocompleteModules"):
 		'''
 		This method allows to load a module according to its name.
 		It allows to load a sequence of modules by using the pipe (``|``) symbol.
@@ -229,8 +235,22 @@ class App(interpreter.Interpreter):
 			self.modules = tmpModules
 			self.prompt = io.colorize(" << "+moduleName+" >>~~> ","cyan")
 
+	def _autocompleteParameters(self):
+		'''
+		This method generates a list including the available parameters names in order to autocomplete "set" command.
+		'''
+		if len(self.modules) == 0:
+			return []
+		elif len(self.modules) == 1:
+			return self.modules[0]["module"].args.keys()
+		else:
+			parameters = []
+			for module in self.modules:
+				if module["module"] is not None:
+					parameters += [module["name"] + "." + i for i in module["module"].args.keys()]
+			return parameters
 
-	def set(self,name,value):
+	def set(self,name:"!method:_autocompleteParameters",value):
 		'''
 		This method allows to provide a value for a specific input parameter of the loaded module.
 

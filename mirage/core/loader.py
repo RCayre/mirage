@@ -15,6 +15,15 @@ class Loader:
 			moduleClass = getattr(current,moduleName)
 			self.modulesList[moduleName] = moduleClass
 
+	def getModulesNames(self):
+		'''
+		This method returns a list of existing modules' names.
+
+		:return: list of modules' name
+		:rtype: list of str
+		'''
+		return list(self.modulesList.keys())
+
 	def load(self,moduleName):
 		'''
 		This method returns an instance of a specific module according to the name provided as parameter.

@@ -32,6 +32,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 						"connections"
 					]
 		self.updatePrompt()
+		self.targets = []
 
 	def checkCommunicationCapabilities(self):
 		return self.receiver.hasCapabilities("COMMUNICATING_AS_MASTER")
@@ -48,7 +49,21 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 	def clear(self):
 		subprocess.run(["clear"])
 
-	def pairing(self,active="active",parameters="inputOutput=yesno|authentication=bonding|ltk=112233445566778899aabbccddeeff|rand=1122334455667788|ediv=12"):
+	def _autocompletePairingParameters(self):
+		return [
+				"inputOutput=",
+				"authentication=",
+				"ltk=",
+				"ediv=",
+				"rand=",
+				"irk=",	
+				"addr=",
+				"addr_type=",
+				"csrk=",
+				"pin="
+			]
+
+	def pairing(self,active:["active","passive"]="active",parameters:"!method:_autocompletePairingParameters"="inputOutput=yesno|authentication=bonding|ltk=112233445566778899aabbccddeeff|rand=1122334455667788|ediv=12"):
 		self.receiver.removeCallbacks()
 		self.initializeCallbacks()
 		parameters = {param.split("=")[0]:param.split("=")[1]  for param in parameters.split("|")}
@@ -107,7 +122,10 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		else:
 			io.chart(["Identifier", "Address", "Handle"],connectionsList,io.colorize("Active connections","yellow"))
 
-	def switch(self,target):
+	def _autocompleteConnections(self):
+		return [connection["address"] for connection in self.emitter.getConnections()]
+
+	def switch(self,target:"!method:_autocompleteConnections"):
 		if utils.isNumber(target):
 			if int(target) > 0 and int(target) < len(self.emitter.getConnections())+1:
 				address = self.emitter.getConnections()[int(target)-1]["address"]
@@ -121,17 +139,29 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		else:
 			io.fail("Unknown connection !")
 
-	def scan(self,seconds='6',display="address,name"):
+	def scan(self,seconds='6',display:["address","name","company","flags","data"]="address,name"):
 		if self.checkScanningCapabilities():
 			m = utils.loadModule('ble_scan')
 			m['INTERFACE'] = self.args['INTERFACE']
 			m['TIME'] = seconds
 			m['DISPLAY'] = display
-			m.execute()
+			output = m.execute()
+			if output["success"]:
+				self.targets = []
+				if "ADVERTISING_ADDRESS" in output["output"]:
+					self.targets = [output["output"]["ADVERTISING_ADDRESS"]]
+				else:
+					counter = 1
+					while True:
+						if "ADVERTISING_ADDRESS"+str(counter) in output["output"]:
+							self.targets.append(output["output"]["ADVERTISING_ADDRESS"+str(counter)])
+							counter += 1
+						else:
+							break
 		else:
 			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to scan devices.")
 	
-	def connect(self,target='',connectionType=""):
+	def connect(self,target:"!attribute:targets"="",connectionType:["public","random"]=""):
 		if self.checkConnectionCapabilities():
 			target = self.args['TARGET'] if target=="" else target
 			connectionType = self.args['CONNECTION_TYPE'] if connectionType=="" else connectionType
@@ -149,8 +179,17 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		else:
 			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to initiate a connection.")
 
+	def _autocompleteDiscoverWhat(self):
+		return [
+			"all",
+			"attributes",
+			"services"
+			"primaryservices",
+			"secondaryservices",
+			"characteristics"
+			]
 
-	def discover(self,what="all",start="0x0001",end="0xFFFF",filterby="",filter=""):
+	def discover(self,what:"!method:_autocompleteDiscoverWhat"="all",start="0x0001",end="0xFFFF",filterby:["type","value"]="",filter=""):
 		if self.receiver.isConnected():
 			m = utils.loadModule('ble_discover')
 			m["WHAT"] = what

@@ -33,7 +33,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 	def clear(self):
 		subprocess.run(["clear"])
 
-	def load(self,filename=""):
+	def load(self,filename:"!path"=""):
 		self.initializeServer()
 		if filename == "":
 			if self.args["ATT_FILE"] != "" and self.fileExists(self.args["ATT_FILE"]):
@@ -50,7 +50,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 		else:
 			io.fail("File not found !")
 
-	def show(self,what="attributes"):
+	def show(self,what:["attributes","services","characteristics","all","gatt"]="attributes"):
 		what = what.lower()
 		if what == "attributes":
 			self.server.database.show()
@@ -229,7 +229,21 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 	def endScenario(self):
 		pass
 
-	def pairing(self,active="active",parameters="inputOutput=yesno|authentication=bonding|ltk=112233445566778899aabbccddeeff|rand=1122334455667788|ediv=12"):
+	def _autocompletePairingParameters(self):
+		return [
+				"inputOutput=",
+				"authentication=",
+				"ltk=",
+				"ediv=",
+				"rand=",
+				"irk=",	
+				"addr=",
+				"addr_type=",
+				"csrk=",
+				"pin="
+			]
+
+	def pairing(self,active:["active","passive"]="active",parameters:"!method:_autocompletePairingParameters"="inputOutput=yesno|authentication=bonding|ltk=112233445566778899aabbccddeeff|rand=1122334455667788|ediv=12"):
 		self.receiver.removeCallbacks()
 		self.initializeCallbacks()
 		parameters = {param.split("=")[0]:param.split("=")[1]  for param in parameters.split("|")}
@@ -264,7 +278,16 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 		else:
 			io.fail("An error occured during pairing !")
 
-	def advertising(self,type="ADV_IND",data="",scanData="",intervalMin="200", intervalMax="210"):
+	def _autocompleteAdvertisingType(self):
+		return [
+			"ADV_IND",
+			"ADV_DIRECT_IND",
+			"ADV_SCAN_IND",
+			"ADV_NONCONN_IND",
+			"ADV_DIRECT_IND_LOW"
+			]
+
+	def advertising(self,type:"!method:_autocompleteAdvertisingType"="ADV_IND",data="",scanData="",intervalMin="200", intervalMax="210"):
 		advModule = utils.loadModule("ble_adv")
 		advModule["INTERFACE"] = self.args["INTERFACE"]
 		advModule["ADVERTISING_TYPE"] = type
