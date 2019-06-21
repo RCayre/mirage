@@ -274,8 +274,20 @@ class Interpreter:
 		This method displays the input with the provided suggestion
 		'''
 		inputBuffer = readline.get_line_buffer()
-		for command in self.availableCommands:
-			inputBuffer = inputBuffer.replace(command,"\x1b[1m"+command+"\x1b[0m")
+		bolded = False
+		boldList = []
+		for i in range(len(inputBuffer)):
+			if not bolded:
+				for command in self.availableCommands:
+					if inputBuffer[i:i+len(command)] == command:
+						bolded = True
+						boldList.append((i,i+len(command)))
+			if inputBuffer[i] == ";":
+				bolded = False
+		increment = 0
+		for start,end in boldList:
+			inputBuffer = inputBuffer[:start+increment] + "\x1b[1m" + inputBuffer[start+increment:end+increment] + "\x1b[0m" + inputBuffer[end+increment:]
+			increment += len("\x1b[1m") + len("\x1b[0m")
 		normalDisplay = self.prompt+inputBuffer
 		sys.stdout.write("\x1b7")
 		sys.stdout.write("\r"+normalDisplay+suggestion)
