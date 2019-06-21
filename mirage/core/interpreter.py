@@ -274,24 +274,24 @@ class Interpreter:
 		This method displays the input with the provided suggestion
 		'''
 		inputBuffer = readline.get_line_buffer()
-		bolded = False
-		boldList = []
-		for i in range(len(inputBuffer)):
-			if not bolded:
-				for command in self.availableCommands:
-					if inputBuffer[i:i+len(command)] == command:
-						bolded = True
-						boldList.append((i,i+len(command)))
-			if inputBuffer[i] == ";":
-				bolded = False
-		increment = 0
-		for start,end in boldList:
-			inputBuffer = inputBuffer[:start+increment] + "\x1b[1m" + inputBuffer[start+increment:end+increment] + "\x1b[0m" + inputBuffer[end+increment:]
-			increment += len("\x1b[1m") + len("\x1b[0m")
+		newInstructions = []
+		instructions = inputBuffer.split(";")
+
+		for instruction in instructions:
+			splittedInstruction = instruction.split()
+			if len(splittedInstruction) > 0:
+				firstCommand = splittedInstruction[0]
+				if firstCommand in self.availableCommands:
+					newInstructions.append(instruction.replace(firstCommand,"\x1b[1m"+firstCommand+"\x1b[0m",1))
+				else:
+					newInstructions.append(instruction)
+		inputBuffer = ";".join(newInstructions)
+
 		normalDisplay = self.prompt+inputBuffer
 		sys.stdout.write("\x1b7")
 		sys.stdout.write("\r"+normalDisplay+suggestion)
 		sys.stdout.write("\r\x1b8")
+
 	def _generateSuggestion(self,currentBuffer):
 		'''
 		This method generates the suggestion according to the current input buffer
@@ -334,6 +334,7 @@ class Interpreter:
 		This method enables the suggestion mode.
 		'''
 		keyboard.on_release(self._updateInput)
+		keyboard.on_press_key("enter",self._clearSuggestion)
 
 	def _disableSuggestion(self):
 		'''
