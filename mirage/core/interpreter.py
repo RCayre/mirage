@@ -278,6 +278,11 @@ class Interpreter:
 		words = re.split('[ |_]+',inputBuffer[currentPosition:])
 		if len(words) > 0:
 			firstWord = words[0]
+
+			while firstWord in ("","?") and len(words) > 1:
+				words = words[1:]
+				firstWord += " "+words[0]
+				
 			self.cursorOffset = currentPosition+len(firstWord)-len(inputBuffer)
 
 
