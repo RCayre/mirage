@@ -258,49 +258,6 @@ class Interpreter:
 
 	########################### SUGGESTION ###########################
 
-	def _moveCursorToLeft(self):
-		inputBuffer = readline.get_line_buffer()
-		currentPosition = len(inputBuffer)+self.cursorOffset
-		words = re.split('[ |_]+',inputBuffer[:currentPosition+1])
-		if len(words) > 0:
-			lastWord = words[-1]
-			words = words[:len(words)-1]
-			while lastWord in ("","?") and len(words) > 0:
-				lastWord = words[-1]
-				words = words[:-1]
-			self.cursorOffset = -1*(len(inputBuffer)-inputBuffer.rindex(lastWord))
-			if self.cursorOffset > len(inputBuffer):
-				self.cursorOffset = 0
-
-	def _moveCursorToRight(self):
-		inputBuffer = readline.get_line_buffer()
-		currentPosition = len(inputBuffer)+self.cursorOffset
-		words = re.split('[ |_]+',inputBuffer[currentPosition:])
-		if len(words) > 0:
-			firstWord = words[0]
-
-			while firstWord in ("","?") and len(words) > 1:
-				words = words[1:]
-				firstWord += " "+words[0]
-				
-			self.cursorOffset = currentPosition+len(firstWord)-len(inputBuffer)
-
-
-	def _manageCursor(self,key):
-		'''
-		This method manages the cursor position.
-		'''
-		if key.name == "left":
-			self.cursorOffset = self.cursorOffset - 1 if len(readline.get_line_buffer())+self.cursorOffset > 0 else self.cursorOffset
-		elif key.name == "right":
-			self.cursorOffset = self.cursorOffset + 1 if len(readline.get_line_buffer())+self.cursorOffset < len(readline.get_line_buffer()) else self.cursorOffset
-		elif key.name == "delete":
-			self.cursorOffset = self.cursorOffset + 1
-		elif key.name == "end":
-			self.cursorOffset = 0
-		elif key.name == "home":
-			self.cursorOffset = -len(readline.get_line_buffer())
-
 	def _updateInput(self,key):
 		'''
 		This method updates the input and adds a potential suggestion (if any)
@@ -316,11 +273,13 @@ class Interpreter:
 		'''
 		This method displays the input with the provided suggestion
 		'''
-		normalDisplay = self.prompt+readline.get_line_buffer()
-		ansiEscape=re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+		inputBuffer = readline.get_line_buffer()
+		for command in self.availableCommands:
+			inputBuffer = inputBuffer.replace(command,"\x1b[1m"+command+"\x1b[0m")
+		normalDisplay = self.prompt+inputBuffer
+		sys.stdout.write("\x1b7")
 		sys.stdout.write("\r"+normalDisplay+suggestion)
-		sys.stdout.write("\r\033["+str(len(ansiEscape.sub('', normalDisplay))+self.cursorOffset)+"C")
-
+		sys.stdout.write("\r\x1b8")
 	def _generateSuggestion(self,currentBuffer):
 		'''
 		This method generates the suggestion according to the current input buffer
@@ -362,15 +321,6 @@ class Interpreter:
 		'''
 		This method enables the suggestion mode.
 		'''
-		self.cursorOffset = 0
-		keyboard.add_hotkey('ctrl+left', self._moveCursorToLeft)
-		keyboard.add_hotkey('ctrl+right', self._moveCursorToRight)
-		keyboard.on_press_key("left",self._manageCursor)
-		keyboard.on_press_key("right",self._manageCursor)
-		keyboard.on_press_key("delete",self._manageCursor)
-		keyboard.on_press_key("end",self._manageCursor)
-		keyboard.on_press_key("home",self._manageCursor)
-		keyboard.on_press_key("enter",self._clearSuggestion)
 		keyboard.on_release(self._updateInput)
 
 	def _disableSuggestion(self):
