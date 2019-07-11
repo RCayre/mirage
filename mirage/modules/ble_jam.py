@@ -71,6 +71,7 @@ class ble_jam(module.WirelessModule):
 
 			while True:
 				utils.wait(seconds=0.01)
+			
 		else:
 			io.fail("Interfaces provided are not able to jam advertisements.")
 			return self.nok()
@@ -127,3 +128,4 @@ class ble_jam(module.WirelessModule):
 			return self.jamExistingConnections()
 
 		return self.ok()
+

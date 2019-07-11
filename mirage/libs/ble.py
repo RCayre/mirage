@@ -6,6 +6,7 @@ from mirage.libs.ble_utils.constants import *
 from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
 from mirage.libs.ble_utils.ubertooth import *
 from mirage.libs.ble_utils.btlejack import *
+from mirage.libs.ble_utils.nrfsniffer import *
 from mirage.libs.ble_utils.adb import *
 from mirage.libs.ble_utils.hcidump import *
 from mirage.libs.ble_utils.pcap import *
@@ -486,6 +487,8 @@ class BLEEmitter(wireless.Emitter):
 			deviceClass = BTLEJackDevice
 		elif "adb" in interface:
 			deviceClass = ADBDevice
+		elif "nrfsniffer" in interface:
+			deviceClass = NRFSnifferDevice
 		elif interface[-5:] == ".pcap":
 			deviceClass = BLEPCAPDevice
 		super().__init__(interface=interface, packetType=BLEPacket, deviceType=deviceClass)
@@ -800,6 +803,8 @@ class BLEReceiver(wireless.Receiver):
 			deviceClass = BTLEJackDevice
 		elif "adb" in interface:
 			deviceClass = ADBDevice
+		elif "nrfsniffer" in interface:
+			deviceClass = NRFSnifferDevice
 		elif interface[-5:] == ".pcap":
 			deviceClass = BLEPCAPDevice
 		self.cryptoInstance = BLELinkLayerCrypto.getInstance()
@@ -1096,7 +1101,7 @@ class BLEReceiver(wireless.Receiver):
 					return BLEDisconnect(connectionHandle=handle)
 				else:
 					return None
-		elif "ubertooth" in self.interface or "microbit" in self.interface or self.interface[-5:] == ".pcap":
+		elif "ubertooth" in self.interface or "microbit" in self.interface or "nrfsniffer" in self.interface or self.interface[-5:] == ".pcap":
 			try:	
 				if ((cryptoInstance is None) or (cryptoInstance is not None and not cryptoInstance.ready)) and self.encrypted:
 					new = BLEEncryptedPacket(connectionHandle = 1, data = bytes(packet[BTLE_DATA]))
@@ -1361,6 +1366,15 @@ class BLEReceiver(wireless.Receiver):
 									clkn_high=packet.clkn_high
 									)
 			elif "microbit" in self.interface:
+				
+				new.additionalInformations = BLESniffingParameters(
+									rssi = packet.rssi_avg,
+									rssi_count = packet.rssi_count,
+									clk_100ns = packet.btle_clk_100ns,
+									clkn_high = packet.btle_clkn_high,
+									channel = packet.btle_channel
+									)
+			elif "nrfsniffer" in self.interface:
 				
 				new.additionalInformations = BLESniffingParameters(
 									rssi = packet.rssi_avg,

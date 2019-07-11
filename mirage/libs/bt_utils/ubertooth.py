@@ -94,8 +94,11 @@ class BtUbertoothDevice(wireless.Device):
 		self.ubertooth.ctrl_transfer(CTRL_OUT,UBERTOOTH_RESET,0, 0)
 
 	def close(self):
-		self._stop()
-		self._reset()
+		try:
+			self._stop()
+			self._reset()
+		except:
+			pass
 
 	def getFirmwareVersion(self):
 		'''

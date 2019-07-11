@@ -64,6 +64,8 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 				"getHopInterval",
 				"getHopIncrement", 
 
+				"setSweepingMode",
+	
 				"sniffNewConnections",
 				"sniffExistingConnections", 
 				"sniffAdvertisements"
@@ -71,6 +73,10 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def _initBLE(self):
 		self.jamming = False
 		self.synchronized = False
+		self.sweepingMode = False
+		self.sniffingMode = None
+		self.sweepingSequence = []
+		self.sweepingThreadInstance = None
 		self.scanThreadInstance = None
 		self._stop()
 		self.channel = 37
@@ -94,6 +100,46 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		io.success("Ubertooth Device ("+self.interface+") successfully instanciated !")
 
 
+
+	def _sweepingThread(self):
+		for channel in self.sweepingSequence:
+			if ((self.sniffingMode == BLESniffingMode.NEW_CONNECTION and not self.synchronized) or
+			     self.sniffingMode == BLESniffingMode.ADVERTISEMENT):
+				self.setChannel(channel=channel)
+			utils.wait(seconds=0.1)
+
+	def _startSweepingThread(self):
+		self._stopSweepingThread()
+		self.sweepingThreadInstance = wireless.StoppableThread(target=self._sweepingThread)
+		self.sweepingThreadInstance.start()
+
+	def _stopSweepingThread(self):
+		if self.sweepingThreadInstance is not None:
+			self.sweepingThreadInstance.stop()
+			self.sweepingThreadInstance = None
+
+
+	def setSweepingMode(self,enable=True,sequence=[37,38,39]):
+		'''
+		This method allows to enable or disable the Sweeping mode. It allows to provide a subset of advertising channels to monitor sequentially.
+	
+		:param enable: boolean indicating if the Sweeping mode is enabled.
+		:type enable: bool
+		:param sequence: sequence of channels to use
+		:type sequence: list of int
+
+			
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+		'''
+		self.sweepingMode = enable
+		if enable:
+			self.sweepingSequence = sequence
+			self._startSweepingThread()
+		else:
+			self._stopSweepingThread()
 
 	def isSynchronized(self):
 		'''
@@ -462,7 +508,10 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		self.setCRCChecking(True)
 		self._start()
 		self.lock.release()
-		self.setChannel(channel)
+		if channel is None:
+			channel = 37
+		if not self.sweepingMode:	
+			self.setChannel(channel)
 
 	def sniffNewConnections(self,address="00:00:00:00:00:00",channel=None):
 		'''
@@ -496,7 +545,10 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		self._setCRCChecking(False)
 		self._start()
 		self.lock.release()
-		self.setChannel(channel)
+		if channel is None:
+			channel = 37
+		if not self.sweepingMode:	
+			self.setChannel(channel)
 
 
 	def sniffExistingConnections(self,accessAddress=None,crcInit=None,channelMap=None):
@@ -635,6 +687,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 				self.synchronized = True
 			else:
 				if BTLE_CONNECT_REQ in packet or hasattr(packet,"PDU_type") and packet.PDU_type == 5:
+					self._stopSweepingThread()
 					self.accessAddress = (struct.unpack(">I",struct.pack("<I",packet.AA))[0])
 					self.crcInit = (struct.unpack(">I",b"\x00" + struct.pack('<I',packet.crc_init)[:3])[0])
 					self.channelMap = (packet.chM)

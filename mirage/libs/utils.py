@@ -235,7 +235,7 @@ def exitMirage():
 	'''
 	from mirage.core import app
 	app.App.Instance.exit()
-	sys.exit(1)
+	sys.exit(1) 
 
 def stopAllSubprocesses():
 	'''

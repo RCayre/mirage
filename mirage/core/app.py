@@ -59,6 +59,7 @@ class App(interpreter.Interpreter):
 		This method allows to exit the framework.
 		'''
 		self.taskManager.stopAllTasks()
+
 		for emitter in module.WirelessModule.Emitters.values():
 			emitter.stop()
 		for receiver in module.WirelessModule.Receivers.values():
