@@ -281,8 +281,9 @@ class BLEAdvInd(BLEAdvertisement):
 	'''
 	def __init__(self,
 				addr="00:00:00:00:00:00",
+				addrType="public",
 				data=b""):
-		super().__init__(addr=addr,type="ADV_IND",data=data)
+		super().__init__(addr=addr,addrType=addrType,type="ADV_IND",data=data)
 
 class BLEAdvDirectInd(BLEAdvertisement):
 	'''
@@ -300,10 +301,14 @@ class BLEAdvDirectInd(BLEAdvertisement):
 	'''
 	def __init__(self,
 				srcAddr="00:00:00:00:00:00",
-				dstAddr="00:00:00:00:00:00"):
-		super().__init__(addr=srcAddr,type="ADV_DIRECT_IND")
+				srcAddrType="public",
+				dstAddr="00:00:00:00:00:00",
+				dstAddrType="public"):
+		super().__init__(addr=srcAddr,addrType=srcAddrType,type="ADV_DIRECT_IND")
 		self.dstAddr = dstAddr.upper()
 		self.srcAddr = srcAddr.upper()
+		self.srcAddrType = srcAddrType
+		self.dstAddrType = dstAddrType
 
 	def toString(self):
 		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" >>"
@@ -354,10 +359,14 @@ class BLEScanRequest(BLEAdvertisement):
 	'''
 	def __init__(self,
 				srcAddr="00:00:00:00:00:00",
-				dstAddr="00:00:00:00:00:00"):
-		super().__init__(addr=srcAddr,type="SCAN_REQ")
+				srcAddrType="public",
+				dstAddr="00:00:00:00:00:00",
+				dstAddrType="public"):
+		super().__init__(addr=srcAddr,addrType=srcAddrType,type="SCAN_REQ")
 		self.dstAddr = dstAddr.upper()
 		self.srcAddr = srcAddr.upper()
+		self.srcAddrType = srcAddrType
+		self.dstAddrType = dstAddrType
 
 	def toString(self):
 		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" >>"
@@ -378,8 +387,9 @@ class BLEScanResponse(BLEAdvertisement):
 	'''
 	def __init__(self,
 				addr="00:00:00:00:00:00",
+				addrType="public",
 				data=b""):
-		super().__init__(addr=addr,type="SCAN_RSP",data=data)
+		super().__init__(addr=addr,addrType=addrType,type="SCAN_RSP",data=data)
 
 
 class BLEConnectRequest(BLEAdvertisement):

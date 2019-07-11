@@ -1128,6 +1128,7 @@ class BTLEJackDevice(wireless.Device):
 	def init(self):
 		if self.microbit is not None:
 			self._flush()
+			self.setCRCChecking(True)
 			self.scanThreadInstance = None
 			self.isListening = False
 			self.hijacking = False

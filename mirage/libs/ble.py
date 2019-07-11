@@ -1156,17 +1156,31 @@ class BLEReceiver(wireless.Receiver):
 									data=data
 											)
 							elif advType == "ADV_IND":
-								new = BLEAdvInd(addr=packet.AdvA, data=data)
+								new = BLEAdvInd(
+									addr=packet.AdvA,
+									addrType="public" if 0 == packet.TxAdd else "random",
+									data=data)
 							elif advType == "ADV_DIRECT_IND":
-								new = BLEAdvDirectInd(srcAddr=packet.AdvA,destAddr=packet.InitA)
+								new = BLEAdvDirectInd(
+									srcAddr=packet.AdvA,
+									srcAddrType="public" if 0 == packet.TxAdd else "random",
+									dstAddr=packet.InitA,
+									dstAddrType="public" if 0 == packet.RxAdd else "random")
 							elif advType == "ADV_NONCONN_IND":
 								new = BLEAdvNonConnInd()
 							elif advType == "ADV_SCAN_IND":
 								new = BLEAdvScanInd()	
 							elif advType == "SCAN_REQ":
-								new = BLEScanRequest(srcAddr=packet.ScanA,dstAddr=packet.AdvA)
+								new = BLEScanRequest(
+									srcAddr=packet.ScanA,
+									srcAddrType="public" if 0 == packet.TxAdd else "random",
+									dstAddr=packet.AdvA,
+									dstAddrType="public" if 0 == packet.RxAdd else "random")
 							elif advType == "SCAN_RSP":
-								new = BLEScanResponse(addr=packet.AdvA, data=data)
+								new = BLEScanResponse(
+									addr=packet.AdvA,
+									addrType="public" if 0 == packet.TxAdd else "random",
+									data=data)
 							else:
 								new = BLEAdvertisement(	addr = packet.AdvA,
 											addrType=packet.RxAdd,
