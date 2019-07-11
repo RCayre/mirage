@@ -178,12 +178,17 @@ class ADBDevice(wireless.Device):
 		return originalLength == includedLength
 
 	def _getSnoopFileLocation(self):
-		_,_,returncode = self._runADBCommand("test -f /sdcard/btsnoop_hci.log")
-		if returncode == 0:
-			return (True,"/sdcard/btsnoop_hci.log")
-		else:
-			stdout, _, returncode = self._runADBCommand("find /sdcard/* -name btsnoop_hci.log")
-			return (returncode == 0,stdout.decode('ascii').replace("\n",""))
+		possiblePaths = [
+				"/sdcard/btsnoop_hci.log",
+				"/data/log/bt/btsnoop_hci.log", # Samsung
+				"/sdcard/MIUI/debug_log/common/btsnoop_hci.log" # MIUI
+				]
+		for path in possiblePaths:
+			_,_,returncode = self._runADBCommand("test -f "+path)
+			if returncode == 0:
+				return (True,path)
+		stdout, _, returncode = self._runADBCommand("find /sdcard/* -name btsnoop_hci.log | head -n1")
+		return (stdout.decode('ascii').replace("\n","") == "",stdout.decode('ascii').replace("\n",""))
 
 	def getSnoopFileLocation(self):
 		'''
