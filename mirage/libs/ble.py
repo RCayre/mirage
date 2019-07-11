@@ -6,6 +6,7 @@ from mirage.libs.ble_utils.constants import *
 from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
 from mirage.libs.ble_utils.ubertooth import *
 from mirage.libs.ble_utils.btlejack import *
+from mirage.libs.ble_utils.nrfsniffer import *
 from mirage.libs.ble_utils.adb import *
 from mirage.libs.ble_utils.hcidump import *
 from mirage.libs.ble_utils.pcap import *
@@ -486,6 +487,8 @@ class BLEEmitter(wireless.Emitter):
 			deviceClass = BTLEJackDevice
 		elif "adb" in interface:
 			deviceClass = ADBDevice
+		elif "nrfsniffer" in interface:
+			deviceClass = NRFSnifferDevice
 		elif interface[-5:] == ".pcap":
 			deviceClass = BLEPCAPDevice
 		super().__init__(interface=interface, packetType=BLEPacket, deviceType=deviceClass)
@@ -800,6 +803,8 @@ class BLEReceiver(wireless.Receiver):
 			deviceClass = BTLEJackDevice
 		elif "adb" in interface:
 			deviceClass = ADBDevice
+		elif "nrfsniffer" in interface:
+			deviceClass = NRFSnifferDevice
 		elif interface[-5:] == ".pcap":
 			deviceClass = BLEPCAPDevice
 		self.cryptoInstance = BLELinkLayerCrypto.getInstance()
@@ -1096,7 +1101,7 @@ class BLEReceiver(wireless.Receiver):
 					return BLEDisconnect(connectionHandle=handle)
 				else:
 					return None
-		elif "ubertooth" in self.interface or "microbit" in self.interface or self.interface[-5:] == ".pcap":
+		elif "ubertooth" in self.interface or "microbit" in self.interface or "nrfsniffer" in self.interface or self.interface[-5:] == ".pcap":
 			try:	
 				if ((cryptoInstance is None) or (cryptoInstance is not None and not cryptoInstance.ready)) and self.encrypted:
 					new = BLEEncryptedPacket(connectionHandle = 1, data = bytes(packet[BTLE_DATA]))
@@ -1151,17 +1156,31 @@ class BLEReceiver(wireless.Receiver):
 									data=data
 											)
 							elif advType == "ADV_IND":
-								new = BLEAdvInd(addr=packet.AdvA, data=data)
+								new = BLEAdvInd(
+									addr=packet.AdvA,
+									addrType="public" if 0 == packet.TxAdd else "random",
+									data=data)
 							elif advType == "ADV_DIRECT_IND":
-								new = BLEAdvDirectInd(srcAddr=packet.AdvA,destAddr=packet.InitA)
+								new = BLEAdvDirectInd(
+									srcAddr=packet.AdvA,
+									srcAddrType="public" if 0 == packet.TxAdd else "random",
+									dstAddr=packet.InitA,
+									dstAddrType="public" if 0 == packet.RxAdd else "random")
 							elif advType == "ADV_NONCONN_IND":
 								new = BLEAdvNonConnInd()
 							elif advType == "ADV_SCAN_IND":
 								new = BLEAdvScanInd()	
 							elif advType == "SCAN_REQ":
-								new = BLEScanRequest(srcAddr=packet.ScanA,dstAddr=packet.AdvA)
+								new = BLEScanRequest(
+									srcAddr=packet.ScanA,
+									srcAddrType="public" if 0 == packet.TxAdd else "random",
+									dstAddr=packet.AdvA,
+									dstAddrType="public" if 0 == packet.RxAdd else "random")
 							elif advType == "SCAN_RSP":
-								new = BLEScanResponse(addr=packet.AdvA, data=data)
+								new = BLEScanResponse(
+									addr=packet.AdvA,
+									addrType="public" if 0 == packet.TxAdd else "random",
+									data=data)
 							else:
 								new = BLEAdvertisement(	addr = packet.AdvA,
 											addrType=packet.RxAdd,
@@ -1361,6 +1380,15 @@ class BLEReceiver(wireless.Receiver):
 									clkn_high=packet.clkn_high
 									)
 			elif "microbit" in self.interface:
+				
+				new.additionalInformations = BLESniffingParameters(
+									rssi = packet.rssi_avg,
+									rssi_count = packet.rssi_count,
+									clk_100ns = packet.btle_clk_100ns,
+									clkn_high = packet.btle_clkn_high,
+									channel = packet.btle_channel
+									)
+			elif "nrfsniffer" in self.interface:
 				
 				new.additionalInformations = BLESniffingParameters(
 									rssi = packet.rssi_avg,

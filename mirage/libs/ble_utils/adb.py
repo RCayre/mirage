@@ -152,11 +152,23 @@ class ADBDevice(wireless.Device):
 
 		'''
 		return self.index
+
 	def _runADBCommand(self,command):
 		commandList = ["adb","-s",self.adbDevice,"shell"] + command.split(" ")	
 		result = subprocess.run(commandList,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		return (result.stdout, result.stderr, result.returncode)
 
+	def _isBtsnoopPortAvailable(self):
+		_,_,returncode = self._runADBCommand("netstat -a | grep 8872")
+		return (returncode == 0)
+
+	def _openBtsnoopSocket(self):
+		result = subprocess.run(["adb","-s",self.adbDevice,"forward","tcp:8872","tcp:8872"],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		if result.returncode == 0:
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect(("127.0.0.1", 8872))
+			return s
+		return None
 
 	def _getNewSnoopFileData(self,location, size):
 		stdout, _, _ = self._runADBCommand("tail -c +"+str(self.size)+" "+location)
@@ -178,9 +190,8 @@ class ADBDevice(wireless.Device):
 			_,_,returncode = self._runADBCommand("test -f "+path)
 			if returncode == 0:
 				return (True,path)
-
 		stdout, _, returncode = self._runADBCommand("find /sdcard/* -name btsnoop_hci.log | head -n1")
-		return (returncode == 0,stdout.decode('ascii').replace("\n",""))
+		return (stdout.decode('ascii').replace("\n","") == "",stdout.decode('ascii').replace("\n",""))
 
 	def getSnoopFileLocation(self):
 		'''
@@ -200,7 +211,10 @@ class ADBDevice(wireless.Device):
 
 
 		'''
-		return self.location
+		if self.socket is None:
+			return self.location
+		else:
+			return "TCP socket : 127.0.0.1:8872"
 
 	def getSnoopFileSize(self):
 		'''
@@ -220,8 +234,10 @@ class ADBDevice(wireless.Device):
 
 
 		'''
-		return self.size
-
+		if self.socket is None:
+			return self.size
+		else:
+			return -1
 	def getSerial(self):
 		'''
 		This method returns the serial number of the smartphone.
@@ -250,7 +266,7 @@ class ADBDevice(wireless.Device):
 		header = buffer[:24]	
 		originalLength, includedLength, flags, drops, timestamp = struct.unpack( ">IIIIq", header)
 		data = buffer[24:24+includedLength]
-		output = None if len(data) >= 3 and data[0] == 0x02 and data[1] == 0xdc and data[2] == 0x2e else HCI_Hdr(data)
+		output = None if len(data) != includedLength else HCI_Hdr(data)
 		return (buffer[24+includedLength:],includedLength,output)
 
 	def getCurrentHandle(self):
@@ -396,7 +412,7 @@ class ADBDevice(wireless.Device):
 				return connection['mode']
 		return None
 
-
+	
 	def isConnected(self):
 		'''
 		This method returns a boolean indicating if a connection is actually established.
@@ -427,20 +443,33 @@ class ADBDevice(wireless.Device):
 				self._setCurrentHandle(-1)
 
 	def recv(self):
-		
-		if len(self.buffer) < 24:
-			self.buffer += self._getNewSnoopFileData(self.location,self.size)
-
-		if len(self.buffer) >= 24:
-			while not self._isPacketHeader(self.buffer):
-				self.size += 1
-				self.buffer = self.buffer[1:]
+		if self.socket is None:
+			if len(self.buffer) < 24:
+				self.buffer += self._getNewSnoopFileData(self.location,self.size)
 			if len(self.buffer) >= 24:
-				self.buffer,includedLength,packet = self._getPacket(self.buffer)
-				self.size += 24 + includedLength
-				if packet is not None:			
-					return packet
-		
+				while not self._isPacketHeader(self.buffer):
+					self.size += 1
+					self.buffer = self.buffer[1:]
+				if len(self.buffer) >= 24:
+					self.buffer,includedLength,packet = self._getPacket(self.buffer)
+					self.size += 24 + includedLength
+					if packet is not None:			
+						return packet
+		else:
+			try:
+				self.buffer += self.socket.recv(1)
+			except BlockingIOError:
+				pass
+			if len(self.buffer) >= 24:
+				if self._isPacketHeader(self.buffer):
+					buffer,includedLength,packet = self._getPacket(self.buffer)
+					if len(self.buffer) >= 24 + includedLength and packet is not None:
+						self.buffer = buffer
+						return packet
+					
+				else:
+					self.buffer = self.buffer[1:]
+
 	def __init__(self,interface):
 		super().__init__(interface=interface)
 		self.currentHandle = -1
@@ -461,24 +490,38 @@ class ADBDevice(wireless.Device):
 	def init(self):
 		if self.adbDevice is not None:
 			self.capabilities = ["HCI_MONITORING"]
+			self.socket = None
 			io.success("ADB Device found: "+self.adbDevice)
 			io.info("Trying to send adb shell commands ...")
 			output,_,_ = self._runADBCommand("echo helloworld")
 			if output == b"helloworld\n":
 				io.success("Yeah, we can send commands.")
-				io.info("Looking for HCI logs ...")
-				found, location = self._getSnoopFileLocation()
-				if found:
-					self.location = location
-					io.success("Log found: "+location)
-					io.info("Calculating size ...")
-					size = self._getSizeOfSnoopFile(location)
-					io.success("Size found: "+str(size))
-					self.size = size + 1
-					self.buffer = b""
-					self.ready = True
-				else:
-					io.fail("Log not found, aborting ...")
-					self.ready = False
+				if self._isBtsnoopPortAvailable():
+					self.socket = self._openBtsnoopSocket()
+					if self.socket is not None:
+						start = self.socket.recv(16)
+						if b"btsnoop" in start:
+							io.success("Connected to TCP Btsnoop service !")
+							self.socket.setblocking(0)
+							self.buffer = b""
+							self.ready = True
+						else:
+							io.fail("TCP service not available !")
+							self.socket = None
+				if self.socket is None:
+					io.info("Looking for HCI logs ...")
+					found, location = self._getSnoopFileLocation()
+					if found:
+						self.location = location
+						io.success("Log found: "+location)
+						io.info("Calculating size ...")
+						size = self._getSizeOfSnoopFile(location)
+						io.success("Size found: "+str(size))
+						self.size = size + 1
+						self.buffer = b""
+						self.ready = True
+					else:
+						io.fail("Log not found, aborting ...")
+						self.ready = False
 	def close(self):
 		ADBDevice.stopADBDaemon()

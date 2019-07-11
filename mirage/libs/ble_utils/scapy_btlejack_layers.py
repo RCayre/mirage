@@ -1,4 +1,5 @@
 from scapy.all import *
+import struct
 '''
 This module contains some scapy definitions for communicating with a BTLEJack device.
 '''
@@ -14,7 +15,7 @@ BTLEJACK_PACKETS_OPCODES = {
 				0x2 : "reset",
 				0x3 : "scan_access_address",
 				0x4 : "recover", 
-				0x5 : "recover_channel_map",
+				0x5 : "advertisements",
 				0x6 : "recover_hop_interval",
 				0x7 : "sniff_connection_requests",
 				0x8 : "enable_jamming", 
@@ -24,6 +25,13 @@ BTLEJACK_PACKETS_OPCODES = {
 				0xe : "debug",
 				0xf : "verbose"
 			}
+BTLEJACK_ADVERTISEMENTS_OPCODES = {
+				0x00 : "reset_policy",
+				0x01 : "get_policy", 
+				0x02 : "add_rule", 
+				0x03 : "enable_sniff", 
+				0x04 : "disable_sniff" 
+}
 BTLEJACK_NOTIFICATION_TYPES = {
 				0x0 : "access_address",
 				0x1 : "crc",
@@ -148,21 +156,62 @@ class BTLEJack_Sniff_Connection_Request_Command(Packet):
 			ByteField("channel",37)
 			]
 
-class BTLEJack_Sniff_Advertisements_Command(Packet):
-	name = "BTLEJack Sniff Advertisements Command"
+class BTLEJack_Advertisements_Command(Packet):
+	name = "BTLEJack Advertisements Command"
 	fields_desc = [
-			BDAddrField("address",None),
+			ByteEnumField("adv_opcode",None,BTLEJACK_ADVERTISEMENTS_OPCODES),
+			]
+
+class BTLEJack_Advertisements_Reset_Policy_Command(Packet):
+	name = "BTLEJack Advertisements (Reset Policy) Command"
+	fields_desc = [
+			ByteEnumField("policy_type",0x00,{0x00 : "ACCEPT", 0x01 : "DROP"})
+		]
+
+class BTLEJack_Advertisements_Get_Policy_Command(Packet):
+	name = "BTLEJack Advertisements (Get Policy) Command"
+
+class BTLEJack_Advertisements_Add_Rule_Command(Packet):
+	name = "BTLEJack Advertisements (Add Rule) Command"
+	fields_desc = []
+
+class BTLEJack_Advertisements_Enable_Sniff_Command(Packet):
+	name = "BTLEJack Advertisements (Enable Sniff) Command"
+	fields_desc = [
 			ByteField("channel",37)
 			]
 
-class BTLEJack_Jam_Advertisements_Command(Packet):
-	name = "BTLEJack Jam Advertisements Command"
+
+class BTLEJack_Advertisements_Disable_Sniff_Command(Packet):
+	name = "BTLEJack Advertisements (Disable Sniff) Command"
+	fields_desc = []
+
+class BTLEJack_Advertisements_Enable_Jamming_Command(Packet):
+	name = "BTLEJack Advertisements (Enable Jamming) Command"
 	fields_desc = [
 			ByteField("channel",37),
 			ByteField("offset",None),
 			FieldLenField("pattern_length", None,fmt="B", length_of="pattern"), 
 			StrField("pattern",None)
 			]
+
+
+class BTLEJack_Advertisements_Disable_Jamming_Command(Packet):
+	name = "BTLEJack Advertisements (Disable Jamming) Command"
+	fields_desc = []
+
+
+class BTLEJack_Filtering_Rule(Packet):
+	name = "BTLEJack Filtering Rule"
+	fields_desc = [
+			FieldLenField("data_length", None, length_of="data",fmt = "B"),
+			StrLenField("data", None, length_from=lambda x:x.data_length),
+			StrLenField("mask", None, length_from=lambda x:x.data_length),
+			ByteField("position",0xFF)
+		]
+
+	def extract_padding(self, s):
+		return '', s
 
 class BTLEJack_Enable_Jamming_Command(Packet):
 	name = "BTLEJack Enable Jamming Command"
@@ -213,11 +262,70 @@ class BTLEJack_Reset_Response(Packet):
 class BTLEJack_Sniff_Connection_Request_Response(Packet):
 	name = "BTLEJack Sniff Connection Request Response"
 
-class BTLEJack_Sniff_Advertisements_Response(Packet):
-	name = "BTLEJack Sniff Advertisements Response"
+class BTLEJack_Advertisements_Response(Packet):
+	name = "BTLEJack Advertisements Response"
+	fields_desc = [		
+			ByteEnumField("adv_opcode",None,BTLEJACK_ADVERTISEMENTS_OPCODES),
+		]
 
-class BTLEJack_Jam_Advertisements_Response(Packet):
-	name = "BTLEJack Jam Advertisements Response"
+class BTLEJack_Advertisements_Reset_Policy_Response(Packet):
+	name = "BTLEJack Advertisements (Reset Policy) Response"
+	fields_desc = [
+			ByteEnumField("status",0x00,{0x00 : "success", 0x01 : "error"})
+		]
+
+class BTLEJack_Advertisements_Get_Policy_Response(Packet):
+	name = "BTLEJack Advertisements (Get Policy) Response"
+	fields_desc = [
+			ByteEnumField("mode",None,{0x00 : "BLACKLIST", 0x01 : "WHITELIST"}), 
+			FieldLenField("rules_size",None,length_of="rules",fmt="I"),
+			FieldLenField("rules_count", None,count_of="rules",fmt="B"),
+			PacketListField("rules",None,BTLEJack_Filtering_Rule, count_from=lambda pkt:pkt.rules_count,length_from=lambda pkt:pkt.rules_size)
+	]
+
+	def pre_dissect(self,p):
+		print(p)
+		count = 0
+		rules = p[5:]
+		i = 0
+		while i<struct.unpack(">I",p[1:5])[0]:
+			size = rules[i]
+			count+=1
+			i+=1+1+2*size 
+		return p[:5] + struct.pack("B",count) + p[5:]
+
+	
+
+class BTLEJack_Advertisements_Add_Rule_Response(Packet):
+	name = "BTLEJack Advertisements (Add Rule) Response"
+	fields_desc = [
+			ByteEnumField("status",0x00,{0x00 : "success", 0x01 : "error"})
+		]
+
+class BTLEJack_Advertisements_Enable_Sniff_Response(Packet):
+	name = "BTLEJack Advertisements (Enable Sniff) Response"
+	fields_desc = [
+			ByteEnumField("status",0x00,{0x00 : "success", 0x01 : "error"})
+		]
+
+class BTLEJack_Advertisements_Disable_Sniff_Response(Packet):
+	name = "BTLEJack Advertisements (Disable Sniff) Response"
+	fields_desc = [
+			ByteEnumField("status",0x00,{0x00 : "success", 0x01 : "error"})
+		]
+
+
+class BTLEJack_Advertisements_Enable_Jamming_Response(Packet):
+	name = "BTLEJack Advertisements (Enable Jamming) Response"
+	fields_desc = [
+			ByteEnumField("status",0x00,{0x00 : "success", 0x01 : "error"})
+		]
+
+class BTLEJack_Advertisements_Disable_Jamming_Response(Packet):
+	name = "BTLEJack Advertisements (Disable Jamming) Response"
+	fields_desc = [
+			ByteEnumField("status",0x00,{0x00 : "success", 0x01 : "error"})
+		]
 
 class BTLEJack_Verbose_Response(Packet):
 	name = "BTLEJack Verbose Response"
@@ -298,9 +406,13 @@ class BTLEJack_Hijack_Status_Notification(Packet):
 class BTLEJack_Connection_Lost_Notification(Packet):
 	name = "BTLEJack Connection Lost Notification"
 
-class BTLEJack_Advertisement_Notification(Packet):
-	name = "BTLEJack Advertisement Notification"
+class BTLEJack_Advertisement_Packet_Notification(Packet):
+	name = "BTLEJack Advertisement Packet Notification"
 	fields_desc = [
+		ByteField("packet_length",None),
+		ByteField("channel",None),
+		ByteEnumField("crc_ok",None,{0x00 : "false",0x01 : "true"}),
+		ByteField("rssi",None),
 		PacketField("ble_payload",None,BTLE_ADV)
 	]
 
@@ -332,23 +444,43 @@ bind_layers(BTLEJack_Recover_Command,BTLEJack_Recover_Hopping_Parameters_Command
 #bind_layers(BTLEJack_Hdr, BTLEJack_Recover_Connection_AA_Command,packet_type=0x1,opcode=0x4)
 #bind_layers(BTLEJack_Hdr, BTLEJack_Recover_Connection_AA_Chm_Command,packet_type=0x1,opcode=0x5)
 #bind_layers(BTLEJack_Hdr, BTLEJack_Recover_Connection_AA_Chm_HopInterval_Command,packet_type=0x1,opcode=0x6)
-bind_layers(BTLEJack_Hdr, BTLEJack_Jam_Advertisements_Command,packet_type=0x1, opcode=0x5)
+bind_layers(BTLEJack_Hdr, BTLEJack_Advertisements_Command,packet_type=0x1, opcode=0x5)
+
+bind_layers(BTLEJack_Advertisements_Command, BTLEJack_Advertisements_Reset_Policy_Command, adv_opcode = 0x00)
+bind_layers(BTLEJack_Advertisements_Command, BTLEJack_Advertisements_Get_Policy_Command, adv_opcode = 0x01)
+bind_layers(BTLEJack_Advertisements_Command, BTLEJack_Advertisements_Add_Rule_Command, adv_opcode = 0x02)
+bind_layers(BTLEJack_Advertisements_Command, BTLEJack_Advertisements_Enable_Sniff_Command, adv_opcode = 0x03)
+bind_layers(BTLEJack_Advertisements_Command, BTLEJack_Advertisements_Disable_Sniff_Command, adv_opcode = 0x04)
+bind_layers(BTLEJack_Advertisements_Command, BTLEJack_Advertisements_Enable_Jamming_Command, adv_opcode = 0x05)
+bind_layers(BTLEJack_Advertisements_Command, BTLEJack_Advertisements_Disable_Jamming_Command, adv_opcode = 0x06)
+
+bind_layers(BTLEJack_Advertisements_Add_Rule_Command,BTLEJack_Filtering_Rule, adv_opcode=0x02)
+
 bind_layers(BTLEJack_Hdr, BTLEJack_Sniff_Connection_Request_Command,packet_type=0x1,opcode=0x7)
-bind_layers(BTLEJack_Hdr, BTLEJack_Sniff_Advertisements_Command,packet_type=0x1,opcode=0xc)
 bind_layers(BTLEJack_Hdr, BTLEJack_Enable_Jamming_Command,packet_type=0x1,opcode=0x8)
 bind_layers(BTLEJack_Hdr, BTLEJack_Enable_Hijacking_Command,packet_type=0x1,opcode=0x9)
 bind_layers(BTLEJack_Hdr, BTLEJack_Send_Packet_Command,packet_type=0x1,opcode=0xa)
+
+
+
 # Binding BTLEJack Responses
 bind_layers(BTLEJack_Hdr, BTLEJack_Send_Packet_Response,packet_type=0x2,opcode=0xa)
 bind_layers(BTLEJack_Hdr, BTLEJack_Enable_Jamming_Response,packet_type=0x2,opcode=0x8)
 bind_layers(BTLEJack_Hdr, BTLEJack_Enable_Hijacking_Response,packet_type=0x2,opcode=0x9)
 bind_layers(BTLEJack_Hdr, BTLEJack_Sniff_Connection_Request_Response,packet_type=0x2, opcode=0x7)
-bind_layers(BTLEJack_Hdr, BTLEJack_Sniff_Advertisements_Response,packet_type=0x1,opcode=0xc)
-'''
-bind_layers(BTLEJack_Hdr, BTLEJack_Recover_Connection_AA_Response,packet_type=0x2, opcode=0x4)
-bind_layers(BTLEJack_Hdr, BTLEJack_Recover_Connection_AA_Chm_Response,packet_type=0x2, opcode=0x5)
-'''
-bind_layers(BTLEJack_Hdr, BTLEJack_Jam_Advertisements_Command,packet_type=0x1,opcode=0x5)
+
+
+bind_layers(BTLEJack_Hdr, BTLEJack_Advertisements_Response,packet_type=0x3,opcode=0x5)
+
+bind_layers(BTLEJack_Advertisements_Response, BTLEJack_Advertisements_Reset_Policy_Response,adv_opcode = 0x00)
+bind_layers(BTLEJack_Advertisements_Response, BTLEJack_Advertisements_Get_Policy_Response,adv_opcode = 0x01)
+bind_layers(BTLEJack_Advertisements_Response, BTLEJack_Advertisements_Add_Rule_Response,adv_opcode = 0x02)
+bind_layers(BTLEJack_Advertisements_Response, BTLEJack_Advertisements_Enable_Sniff_Response,adv_opcode = 0x03)
+bind_layers(BTLEJack_Advertisements_Response, BTLEJack_Advertisements_Disable_Sniff_Response,adv_opcode = 0x04)
+bind_layers(BTLEJack_Advertisements_Response, BTLEJack_Advertisements_Enable_Jamming_Response,adv_opcode = 0x05)
+bind_layers(BTLEJack_Advertisements_Response, BTLEJack_Advertisements_Disable_Jamming_Response,adv_opcode = 0x06)
+
+
 bind_layers(BTLEJack_Hdr, BTLEJack_Recover_Response,packet_type=0x2, opcode=0x4)
 bind_layers(BTLEJack_Hdr, BTLEJack_Version_Response,packet_type=0x2, opcode=0x1)
 bind_layers(BTLEJack_Hdr, BTLEJack_Reset_Response,packet_type=0x2, opcode=0x2)
@@ -367,5 +499,5 @@ bind_layers(BTLEJack_Hdr, BTLEJack_Nordic_Tap_Packet_Notification, packet_type=0
 bind_layers(BTLEJack_Hdr, BTLEJack_Hijack_Status_Notification, packet_type=0x4, notification_type=0x8)
 bind_layers(BTLEJack_Hdr, BTLEJack_Connection_Lost_Notification, packet_type=0x4, notification_type=0x9)
 bind_layers(BTLEJack_Hdr, BTLEJack_Connection_Request_Notification, packet_type=0x4, notification_type=0x6)
-bind_layers(BTLEJack_Hdr, BTLEJack_Advertisement_Notification, packet_type=0x4, notification_type=0xa)
+bind_layers(BTLEJack_Hdr, BTLEJack_Advertisement_Packet_Notification, packet_type=0x4, notification_type=0xA)
 

@@ -56,9 +56,10 @@ class PacketQueue:
 	def _createDaemonThread(self):
 		self.daemonThread = StoppableThread(target = self._task)
 
+	'''
 	def __del__(self):
 		self.stop()
-
+	'''
 	def start(self):
 		'''
 		This method starts the associated stoppable thread in order to continuously call the watchdog function (_task).

@@ -20,7 +20,8 @@ class ble_sniff(module.WirelessModule):
 				"CRC_INIT":"",
 				"CHANNEL_MAP":"",
 				"LTK":"",
-				"CRACK_KEY":"no"
+				"CRACK_KEY":"no",
+				"SWEEPING":"no"
 
 			}
 		# Security Manager related
@@ -63,6 +64,22 @@ class ble_sniff(module.WirelessModule):
 		if not missingData:
 			io.fail("Temporary Key not found, collected values are probably corrupted.")
 
+	def sweepingParameter(self):
+		parameter = self.args["SWEEPING"]
+		sweepingSequence = []
+		if parameter.upper() in ("YES","1","TRUE"):
+			sweepingSequence = [37,38,39]
+			return (True, sweepingSequence)
+		elif parameter.upper() in ("NO","0","FALSE"):
+			return (False,sweepingSequence)
+		else:
+			if all(int(i) in (37,38,39) for i in parameter.split(",")):
+				for i in parameter.split(","):
+					sweepingSequence.append(int(i))
+				return (True,sweepingSequence)
+			else:
+				return (False,sweepingSequence)
+
 	def crackTemporaryKey(self):
 		m = utils.loadModule("ble_crack")
 		if ( 	self.mRand is not None and
@@ -101,7 +118,8 @@ class ble_sniff(module.WirelessModule):
 		isConnectReq = isinstance(packet,ble.BLEConnectRequest)
 		addressMatching = (    isConnectReq
 				   and packet.addr == utils.addressArg(self.args["TARGET"])
-				   or  self.args["TARGET"] == "")
+				   or  self.args["TARGET"] == ""
+				   or  (hasattr(packet,"addr") and packet.addr == utils.addressArg(self.args["TARGET"])))
 		if (
 			(not advMode and (not isAnAdv or isConnectReq) and not isAnEmpty and not unknownInName) 
 			 or (advMode and isAnAdv and addressMatching)
@@ -208,6 +226,9 @@ class ble_sniff(module.WirelessModule):
 		if self.pcap is not None:
 			self.pcap.sniffNewConnections(address=target, channel=channel)			
 		if len(self.receivers) == 1:
+			enabled,sweepingSequence = self.sweepingParameter()
+			if enabled:
+				self.receivers[0].setSweepingMode(enable=True,sequence=sweepingSequence)
 			self.receivers[0].sniffNewConnections(address=target, channel=channel)
 			self.receivers[0].onEvent("*", callback=self.show)
 		elif len(self.receivers) == 2:
@@ -246,7 +267,11 @@ class ble_sniff(module.WirelessModule):
 		return self.ok()
 
 	def sniffAdvertisements(self,target, channel):
+
 		if len(self.receivers) == 1:
+			enabled,sweepingSequence = self.sweepingParameter()	
+			if enabled:
+				self.receivers[0].setSweepingMode(enable=True,sequence=sweepingSequence)
 			self.receivers[0].sniffAdvertisements(address=target, channel=channel)
 			self.receivers[0].onEvent("*", callback=self.show)
 		elif len(self.receivers) == 2:

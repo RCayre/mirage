@@ -29,7 +29,7 @@ class ble_info(module.WirelessModule):
 			index = str(self.emitter.getDeviceIndex())
 
 			io.chart(["Interface","Device Index","Serial number","Snoop Location", "Snoop Size"],
-				[[interface,"#"+index,serial,snoopLocation,snoopSize+" bytes"]])
+				[[interface,"#"+index,serial,snoopLocation,(snoopSize+" bytes" if snoopSize != "-1" else "unknown")]])
 			return self.ok({"INTERFACE":interface,
 					"INDEX":index,
 					"SERIAL":serial,
@@ -70,16 +70,25 @@ class ble_info(module.WirelessModule):
 			interface = self.args["INTERFACE"]
 			versionMajor,versionMinor = self.emitter.getFirmwareVersion()
 			version = str(versionMajor)+"."+str(versionMinor)
-			index = str(self.emitter.getDeviceIndex())
+			index = self.emitter.getDeviceIndex()
 			customFirmware = "yes" if version == "3.14" else "no"
-			io.chart(["Interface","Device Index","Version","Custom Firmware"],[[interface,"#"+index,version,customFirmware]])
+			io.chart(["Interface","Device Index","Version","Custom Firmware"],[[interface,("#"+str(index) if isinstance(index,int) else str(index)),version,customFirmware]])
 			return self.ok({
 					"INTERFACE":interface,
 					"INDEX":index,
 					"VERSION":version,
 					"CUSTOM_FIRMWARE":customFirmware
 					})
-
+		elif "nrfsniffer" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			version = self.emitter.getFirmwareVersion()
+			index = self.emitter.getDeviceIndex()
+			io.chart(["Interface","Device Index","Version"],[[interface,("#"+str(index) if isinstance(index,int) else str(index)),version]])
+			return self.ok({
+					"INTERFACE":interface,
+					"INDEX":index,
+					"VERSION":version
+					})
 		elif ".pcap" in self.args["INTERFACE"]:
 			interface = self.args["INTERFACE"]
 			mode = self.emitter.getMode()
