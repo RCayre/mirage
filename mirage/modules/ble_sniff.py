@@ -119,7 +119,7 @@ class ble_sniff(module.WirelessModule):
 		addressMatching = (    isConnectReq
 				   and packet.addr == utils.addressArg(self.args["TARGET"])
 				   or  self.args["TARGET"] == ""
-				   or  packet.addr == utils.addressArg(self.args["TARGET"]))
+				   or  (hasattr(packet,"addr") and packet.addr == utils.addressArg(self.args["TARGET"])))
 		if (
 			(not advMode and (not isAnAdv or isConnectReq) and not isAnEmpty and not unknownInName) 
 			 or (advMode and isAnAdv and addressMatching)
