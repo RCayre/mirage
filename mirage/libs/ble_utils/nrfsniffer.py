@@ -8,6 +8,43 @@ from mirage.libs.ble_utils.scapy_nrfsniffer_layers import *
 from mirage.libs import io,utils,wireless
 
 class NRFSnifferDevice(wireless.Device):
+	'''
+	This device allows to communicate with a NRFSniffer Device in order to sniff Bluetooth Low Energy protocol.
+	The corresponding interfaces are : ``nrfsnifferX`` (e.g. "nrfsniffer0")
+
+	The following capabilities are actually supported :
+
+	+-----------------------------------+----------------+
+	| Capability			    | Available ?    |
+	+===================================+================+
+	| SCANNING                          | yes            |
+	+-----------------------------------+----------------+
+	| ADVERTISING                       | no             |
+	+-----------------------------------+----------------+
+	| SNIFFING_ADVERTISEMENTS           | yes            |
+	+-----------------------------------+----------------+
+	| SNIFFING_NEW_CONNECTION           | yes            |
+	+-----------------------------------+----------------+
+	| SNIFFING_EXISTING_CONNECTION      | no             |
+	+-----------------------------------+----------------+
+	| JAMMING_CONNECTIONS               | no             |
+	+-----------------------------------+----------------+
+	| JAMMING_ADVERTISEMENTS            | no             |
+	+-----------------------------------+----------------+
+	| HIJACKING_CONNECTIONS             | no             |
+	+-----------------------------------+----------------+
+	| INITIATING_CONNECTION             | no             |
+	+-----------------------------------+----------------+
+	| RECEIVING_CONNECTION              | no             |
+	+-----------------------------------+----------------+
+	| COMMUNICATING_AS_MASTER           | no             |
+	+-----------------------------------+----------------+
+	| COMMUNICATING_AS_SLAVE            | no             |
+	+-----------------------------------+----------------+
+	| HCI_MONITORING                    | no             |
+	+-----------------------------------+----------------+
+
+	'''
 	sharedMethods = [
 			"getFirmwareVersion",
 			"getDeviceIndex",
