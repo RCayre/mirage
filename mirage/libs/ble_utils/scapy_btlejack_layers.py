@@ -489,7 +489,7 @@ bind_layers(BTLEJack_Hdr, BTLEJack_Collaborative_Channel_Map_Response,packet_typ
 bind_layers(BTLEJack_Hdr, BTLEJack_Debug_Response,packet_type=0x2, opcode=0xe)
 bind_layers(BTLEJack_Hdr, BTLEJack_Verbose_Response,packet_type=0x2, opcode=0xf)
 
-# Binding BTLEJack NotificationsB
+# Binding BTLEJack Notifications
 bind_layers(BTLEJack_Hdr, BTLEJack_Access_Address_Notification, packet_type=0x4, notification_type=0x0)
 bind_layers(BTLEJack_Hdr, BTLEJack_CRCInit_Notification, packet_type=0x4, notification_type=0x1)
 bind_layers(BTLEJack_Hdr, BTLEJack_Channel_Map_Notification, packet_type=0x4, notification_type=0x2)
