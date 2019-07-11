@@ -497,8 +497,8 @@ class BTLEJackDevice(wireless.Device):
 
 			>>> device.sniffExistingConnections()
 			>>> device.sniffExistingConnections(accessAddress=0xe5e296e9)
-			>>> device.sniffAdvertisements(accessAddress=0xe5e296e9, crcInit=0x0bd54a)
-			>>> device.sniffAdvertisements(accessAddress=0xe5e296e9, crcInit=0x0bd54a, channelMap=0x1fffffffff)
+			>>> device.sniffExistingConnections(accessAddress=0xe5e296e9, crcInit=0x0bd54a)
+			>>> device.sniffExistingConnections(accessAddress=0xe5e296e9, crcInit=0x0bd54a, channelMap=0x1fffffffff)
 			
 		.. warning::
 

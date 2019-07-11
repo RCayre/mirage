@@ -80,6 +80,22 @@ class NRFSnifferDevice(wireless.Device):
 		return None
 
 	def isSynchronized(self):
+		'''
+		This method indicates if the sniffer is actually synchronized with a connection.
+
+		:return: boolean indicating if the sniffer is synchronized
+		:rtype: bool
+
+		:Example:
+
+			>>> device.isSynchronized()
+			True
+
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+		'''
 		return self.synchronized
 
 
@@ -118,9 +134,47 @@ class NRFSnifferDevice(wireless.Device):
 		self._setChannels([channel])
 
 	def setChannel(self,channel=37):
+		'''
+		This method changes the channel actually in use by the provided channel.
+
+		:param channel: new channel
+		:type channel: int
+
+		:Example:
+
+			>>> device.getChannel()
+			37
+			>>> device.setChannel(channel=38)
+			>>> device.getChannel()
+			38
+
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+		'''
 		self._setChannel(channel)
 
 	def getChannel(self):
+		'''
+		This method returns the channel actually in use.
+
+		:return: channel in use
+		:rtype: int
+
+		:Example:
+			
+			>>> device.getChannel()
+			37
+			>>> device.setChannel(channel=38)
+			>>> device.getChannel()
+			38
+
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+		'''
 		return self.channel
 
 	def _setTemporaryKey(self,temporaryKey=b"\x00"*16):
@@ -134,6 +188,25 @@ class NRFSnifferDevice(wireless.Device):
 		pkt = self._internalCommand(NRFSniffer_Follow_Request(addr=target,addr_type=addrType,follow_only_advertisements=advertisementsOnly),responseType=NRFSniffer_Event_Follow)
 
 	def sniffAdvertisements(self,address='FF:FF:FF:FF:FF:FF',channel=None):
+		'''
+		This method starts the advertisement sniffing mode.
+
+		:param address: selected address - if not provided, no filter is applied (format : "1A:2B:3C:4D:5E:6F")
+		:type address: str
+		:param channel: selected channel - if not provided, channel 37 is selected
+		:type channel: int
+
+		:Example:
+
+			>>> device.sniffAdvertisements()
+			>>> device.sniffAdvertisements(channel=38)
+			>>> device.sniffAdvertisements(address="1A:2B:3C:4D:5E:6F")
+				
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+		'''
 		self.sniffingMode = BLESniffingMode.ADVERTISEMENT
 
 		self.lastTarget = address
@@ -153,6 +226,25 @@ class NRFSnifferDevice(wireless.Device):
 			self._followTarget(address,self.targets[address.upper()],advertisementsOnly=True)
 
 	def sniffNewConnections(self,address='FF:FF:FF:FF:FF:FF',channel=None):
+		'''
+		This method starts the new connections sniffing mode.
+
+		:param address: selected address - if not provided, no filter is applied (format : "1A:2B:3C:4D:5E:6F")
+		:type address: str
+		:param channel: selected channel - if not provided, channel 37 is selected
+		:type channel: int
+
+		:Example:
+
+			>>> device.sniffNewConnections()
+			>>> device.sniffNewConnections(channel=38)
+			>>> device.sniffNewConnections(address="1A:2B:3C:4D:5E:6F")
+			
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+		'''
 		self.synchronized = False
 		self.sniffingMode = BLESniffingMode.NEW_CONNECTION
 		self.lastTarget = address
@@ -259,6 +351,23 @@ class NRFSnifferDevice(wireless.Device):
 		return pkt.version
 
 	def getFirmwareVersion(self):
+		'''
+		This method returns the firmware version of the current NRFSniffer device.
+
+		:return: firmware version
+		:rtype: int
+
+		:Example:
+			
+			>>> device.getFirmwareVersion()
+			1111
+
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+
+
+		'''
 		version = self._getFirmwareVersion()
 		return version		
 
