@@ -780,8 +780,7 @@ class BTLEJackDevice(wireless.Device):
 
 		'''
 		self.crcEnabled = enable
-		io.info("BTLEJack calculates the CRC directly in the firmware.")
-		io.warning("This command will be ignored !")
+
 
 	def setAccessAddress(self,accessAddress):
 		'''
@@ -931,12 +930,15 @@ class BTLEJackDevice(wireless.Device):
 				timestamp = time.time()
 				ts_sec = int(timestamp)
 				ts_usec = int((timestamp - ts_sec)*1000000)
-				
+				'''				
 				if pkt.crc_ok == 0x01:
 					io.success("CRC OK !")
 				else:
 					io.fail("CRC not OK !")
-				
+				'''
+				if pkt.crc_ok != 0x01 and self.crcEnabled:
+					return None
+
 				return BTLE_PPI(
 						btle_channel=pkt.channel,
 						btle_clkn_high=ts_sec,
