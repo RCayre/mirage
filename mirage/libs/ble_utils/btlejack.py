@@ -1158,7 +1158,7 @@ class BTLEJackDevice(wireless.Device):
 				(major,minor) = self._getFirmwareVersion()
 				io.success("BTLEJack device "+("#"+str(self.index) if isinstance(self.index,int) else str(self.index))+
 					   " successfully instantiated (firmware version : "+str(major)+"."+str(minor)+")")
-				if major == 1 and minor == 4:
+				if major == 3 and minor == 14:
 					io.info("Custom Mirage Firmware used ! Advertisements sniffing and jamming will be supported.")
 					self.capabilities += ["SNIFFING_ADVERTISEMENTS","SCANNING","JAMMING_ADVERTISEMENTS"]
 					self.customMirageFirmware = True
