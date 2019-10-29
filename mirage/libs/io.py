@@ -1,6 +1,10 @@
 import sys
 from enum import IntEnum
 from terminaltables import SingleTable
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 '''
 This submodule provides some useful functions allowing to interact with the users.
@@ -265,7 +269,7 @@ def progress(count, total=100, suffix=""):
 	filled_len = int(round(bar_len * count / float(total)))
 
 	percents = round(100.0 * count / float(total), 1)
-	bar = '\x1b[35m)\x1b[37m' * filled_len + '_' * (bar_len - filled_len)
+	bar = '\x1b[35m)\x1b[39m' * filled_len + '_' * (bar_len - filled_len)
 	if (bar_len == filled_len):
 		end = "\n"
 	else:
@@ -278,4 +282,104 @@ def progress(count, total=100, suffix=""):
 		return True
 	else:
 		return False
+
+class MiceVisualizer:
+	'''
+	This class allows to import some mouse movement and click data in order to generate a graphical view of the mouse behaviour.
+	It requires to provide a list of dictionary containing the following fields:
+	
+	   * **x**: x coordinate of the velocity vector
+	   * **y**: y coordinate of the velocity vector
+	   * **leftClick**: boolean indicating if the left button is pressed
+	   * **rightClick**: boolean indicating if the right button is pressed
+
+	The execution of this component may take a few minutes if the provided data is big. It produces an animated GIF file.
+
+	:param datas: list of dictionnary containing the mouse movements and clicks.
+	:type datas: list of dict
+	:param outputFile: string indicating the output filename (animated GIF format)
+	:type outputFile: str
+	:param lineColor: string indicating the line color (default: blue)
+	:type lineColor: str
+	:param leftClickColor: string indicating the left click color (default: red)
+	:type leftClickColor: str
+	:param rightClickColor: string indicating the right click color (default: purple)
+	:type rightClickColor: str
+	:param showStart: boolean indicating if the first movement (from the point (0,0) to the first provided coordinates) should be displayed
+	:type showStart: bool
+
+
+	'''
+	def __init__(self,datas=[],outputFile = "mice.gif", lineColor="tab:blue",leftClickColor="tab:red",rightClickColor="tab:purple", showStart=False):
+		self.datas =  datas
+		self.outputFile = outputFile
+		self.lineColor = lineColor
+		self.leftClickColor = leftClickColor
+		self.rightClickColor = rightClickColor
+		self.fig, self.ax = plt.subplots()
+		self.line, = self.ax.plot([], [], lw=2,color=self.lineColor)
+		if showStart:
+			plt.annotate("start", xy=(0, 0), xytext=(0, -5), arrowprops=dict(arrowstyle="->"))
+
+	def _generateData(self,t=0):
+		cnt = 0
+		for data in self.datas:
+			cnt += 1
+			x,y = data["x"],data["y"]
+			yield data["leftClick"],data["rightClick"],x,y
+
+
+	def _init(self):
+		xmin,xmax,ymin,ymax = 0,0,0,0
+		x,y = 0,0
+		for data in self.datas:
+			x += data["x"]
+			y += data["y"]
+			if y >= ymax:
+				ymax = y
+			if y <= ymin:
+				ymin = y
+			if x >= xmax:
+				xmax = x
+			if x <= xmin:
+				xmin = x
+		self.xdata, self.ydata = [0], [0]
+		self.ax.set_ylim(ymax+10, ymin-10)
+		self.ax.set_xlim(xmin-10, xmax+10)
+	
+	def _update(self,data):
+		lc,rc,x, y = data
+		posx = self.xdata[-1]
+		posy = self.ydata[-1]
+		self.xdata.append(x+posx)
+		self.ydata.append(y+posy)
+		xmin, xmax = self.ax.get_xlim()
+		ymin,ymax = self.ax.get_ylim()
+		color = "orange"
+		if lc:
+			color = self.leftClickColor
+			plt.scatter(posx,posy,c=color)
+		if rc:
+			color = self.rightClickColor
+			plt.scatter(posx,posy,c=color)
+		self.line.set_data(self.xdata, self.ydata)
+		if posx >= xmax:
+			self.ax.set_xlim(xmin, 2*xmax)
+			self.ax.figure.canvas.draw()
+		if posx <= xmin:
+			self.ax.set_xlim(2*xmin, xmax)
+			self.ax.figure.canvas.draw()
+		if posy <= ymax:
+			self.ax.set_ylim(ymin, 2*ymax)
+			self.ax.figure.canvas.draw()
+		if posy >= ymin:
+			self.ax.set_ylim(2*ymin, ymax)
+			self.ax.figure.canvas.draw()
+
+	def visualize(self):
+		'''
+		This method generates the output GIF file, according to the provided parameters.
+		'''
+		ani = animation.FuncAnimation(self.fig, self._update, self._generateData, blit=False,repeat=False, interval=10,init_func=self._init,save_count=len(self.datas))
+		ani.save(self.outputFile, dpi=80, writer='imagemagick')
 

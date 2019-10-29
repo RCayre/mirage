@@ -108,6 +108,9 @@ class PacketQueue:
 		'''
 		return self.queue.empty()
 
+	def clear(self):
+		while not self.isEmpty():
+			self.queue.get(False)
 
 	def _task(self):
 		pass

@@ -1,4 +1,4 @@
-from mirage.libs import io,ble
+from mirage.libs import io,ble,utils
 from mirage.core import module
 
 class ble_info(module.WirelessModule):
@@ -7,11 +7,21 @@ class ble_info(module.WirelessModule):
 		self.type = "info"
 		self.description = "Information module for Bluetooth Low Energy interface"
 		self.args = {
-				"INTERFACE":"hci0"
+				"INTERFACE":"hci0",
+				"SHOW_CAPABILITIES":"yes"
 			}
+		self.capabilities = ["SCANNING", "ADVERTISING", "SNIFFING_ADVERTISEMENTS", "SNIFFING_NEW_CONNECTION", "SNIFFING_EXISTING_CONNECTION","JAMMING_CONNECTIONS","JAMMING_ADVERTISEMENTS","HIJACKING_CONNECTIONS","INITIATING_CONNECTION","RECEIVING_CONNECTION","COMMUNICATING_AS_MASTER","COMMUNICATING_AS_SLAVE","HCI_MONITORING"]
+
+	def displayCapabilities(self):
+		capabilitiesList = []
+		for capability in self.capabilities:
+			capabilitiesList.append([capability,(io.colorize("yes","green") if self.emitter.hasCapabilities(capability) else io.colorize("no","red"))])
+		io.chart(["Capability","Available"],capabilitiesList)
 
 	def run(self):
 		self.emitter = self.getEmitter(interface=self.args["INTERFACE"])
+		if utils.booleanArg(self.args["SHOW_CAPABILITIES"]):
+			self.displayCapabilities()
 		if "hcidump" in self.args["INTERFACE"]:
 			interface = self.args["INTERFACE"]
 			hciInterface = self.emitter.getHCIInterface()

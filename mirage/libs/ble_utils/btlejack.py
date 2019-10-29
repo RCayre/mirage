@@ -930,12 +930,12 @@ class BTLEJackDevice(wireless.Device):
 				timestamp = time.time()
 				ts_sec = int(timestamp)
 				ts_usec = int((timestamp - ts_sec)*1000000)
-				'''				
+								
 				if pkt.crc_ok == 0x01:
 					io.success("CRC OK !")
 				else:
 					io.fail("CRC not OK !")
-				'''
+				
 				if pkt.crc_ok != 0x01 and self.crcEnabled:
 					return None
 

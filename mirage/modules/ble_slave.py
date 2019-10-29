@@ -14,6 +14,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 				"GATT_FILE":"",
 				"SCENARIO":""
 			}
+		self.dynamicArgs = True
 
 	def checkCapabilities(self):
 		return self.receiver.hasCapabilities("COMMUNICATING_AS_SLAVE", "RECEIVING_CONNECTION")
@@ -241,7 +242,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 				"rand=",
 				"irk=",	
 				"addr=",
-				"addr_type=",
+				"addrType=",
 				"csrk=",
 				"pin="
 			]

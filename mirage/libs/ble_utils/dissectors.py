@@ -1,77 +1,7 @@
 import struct,copy
+from mirage.libs.wireless_utils.dissectors import Dissector
 from mirage.libs.bt_utils.assigned_numbers import *
-
-class Dissector:
-	'''
-	This class defines a dissector : it allows to easily convert a complex data structure to the corresponding raw bytes, or the raw bytes to the corresponding data structure. 
-	Every dissector must inherits from this class in order to provide the same API.
-
-	A data structure is described as a dictionary, composed of one (or more) field(s) and stored in the ``content`` attribute. Every key of this dictionary can be manipulated as a standard attribute.
-	The corresponding data is stored in the ``data`` attribute as a list of raw bytes.
-
-	Two main methods have to be implemented :
-
-	  * **build** : this method converts the data structure to the corresponding raw bytes
-	  * **dissect** : this method converts the raw bytes to the corresponding data structure
-	'''
-	def __init__(self,data=b"",length=-1,content={},*args, **kwargs):
-		self.data = data
-		if len(args)==1 and data==b"":
-			self.data = args[0]
-			
-		self.length = length if length!=-1 else len(self.data)
-
-		self.content = copy.copy(content)
-
-		if self.data != b"":
-			self.dissect()
-		else:
-			for k,v in kwargs.items():
-				self.content[k] = v
-		self.build()
-
-	def dissect(self):
-		'''
-		This method converts the data structure to the corresponding raw bytes.
-
-		:Example:
-			
-			>>> dissector.dissect()
-
-		'''
-
-		self.content = {}
-
-	def __getattr__(self, name):
-		if name in self.content:
-			return self.content[name]
-		else:
-			return None
-
-	def __setattribute__(self,name,value):
-		self.content[name] = value
-		self.build()
-
-	def __repr__(self):
-		return self.__str__()
-
-	def __eq__(self,other):
-		return self.data == other.data or self.content == other.content
-
-	def build(self):
-		'''
-		This method converts the raw bytes to the corresponding data structure.
-
-		:Example:
-			
-			>>> dissector.build()
-
-		'''
-
-		self.data = b""
-		self.length = -1
-
-
+from mirage.libs.common.hid import HIDMapping
 
 class PermissionsFlag(Dissector):
 	'''
@@ -481,3 +411,45 @@ class KeyDistributionFlag(Dissector):
 		linkKey = "yes" if self.content["linkKey"] else "no"
 			
 		return "Key Distribution Flag("+hex(self.data[0])+",encKey:"+encKey+"|idKey:"+idKey+"|signKey:"+signKey+"|linkKey:"+linkKey+")"
+
+
+
+class HIDoverGATTKeystroke(Dissector):
+	'''
+	This class is a dissector for the HID over GATT keystroke payload. It inherits from ``Dissector``.
+
+	The following fields are available in the data structure :
+	  * **locale** : string indicating the locale (language layout)
+	  * **key** : string indicating the key
+	  * **ctrl** : boolean indicating if the Ctrl key is pressed
+	  * **alt** : boolean indicating if the Alt key is pressed
+	  * **super** : boolean indicating if the Super key is pressed
+	  * **shift** : boolean indicating if the Shift key is pressed
+		
+
+	:Example:
+
+		>>> HIDoverGATTKeystroke(locale="fr",key="a",ctrl=False,gui=False,alt=False,shift=False)
+		Keystroke(key=a,ctrl=no,alt=no,shift=no,gui=no)
+		>>> HIDoverGATTKeystroke(locale="fr",key="a",ctrl=False,gui=False,alt=False,shift=False).data.hex()
+		'0000140000000000'
+
+
+	'''
+	def dissect(self):
+		# TODO
+		pass
+
+	def build(self):
+		locale = self.content["locale"]
+		key = self.content["key"]
+		ctrl = self.content["ctrl"]
+		alt = self.content["alt"]
+		gui = self.content["gui"]
+		shift = self.content["shift"]
+		(hidCode,modifiers) = HIDMapping(locale).getHIDCodeFromKey(key=key,alt=alt,ctrl=ctrl,shift=shift,gui=gui)
+		self.data = bytes([0,modifiers,hidCode,0,0,0,0,0])
+
+	def __str__(self):
+		sortie = "key="+str(self.content["key"])+",ctrl="+("yes" if self.content["ctrl"] else "no")+",alt="+("yes" if self.content["alt"] else "no")+",shift="+("yes" if self.content["shift"] else "no")+",gui="+("yes" if self.content["gui"] else "no")
+		return "Keystroke("+sortie+")"

@@ -2,6 +2,7 @@ from mirage.libs import io,utils
 from mirage.libs.wireless_utils.device import Device
 from os.path import isfile
 from struct import unpack,pack
+import time
 
 class PCAPDevice(Device):
 	'''
@@ -33,22 +34,24 @@ class PCAPDevice(Device):
 		self.beginningTimestamp = None
 		self.mode = None
 		if interface[-5:] == ".pcap":
-			if isfile(self.filename):
-				try:
-					self.mode = "read"
-					self.file = open(self.filename,"rb")
+			self.openFile()
 
-				except IOError as e:
-					if e.errno == errno.EACCES:
-						io.fail("You don't have permissions to access this file !")
-			else:
-				self.mode = "write"
-				self.file = open(self.filename,"wb")
-				#self.init()
 		else:
 			self.file = None
 			self.ready = False
 
+	def openFile(self):
+		if isfile(self.filename):
+			try:
+				self.mode = "read"
+				self.file = open(self.filename,"rb")
+
+			except IOError as e:
+				if e.errno == errno.EACCES:
+					io.fail("You don't have permissions to access this file !")
+		else:
+			self.mode = "write"
+			self.file = open(self.filename,"wb")
 	def getMode(self):
 		'''
 		This method returns the mode used by this PCAP Device.
@@ -119,7 +122,7 @@ class PCAPDevice(Device):
 		if self.mode == "write":
 			if self.SCAPY_LAYER is not None:
 				packet = bytes(packet)
-			self.putPacket(data)
+			self.putPacket(packet)
 
 	def close(self):
 		self.file.close()
@@ -200,11 +203,11 @@ class PCAPDevice(Device):
 		if self.mode == "read":
 			packetList = []
 			while True:
-				success,packet = self.getPacket()
+				success,data = self.getPacket()
 				if not success:
 					break
 				else:
-					timestamp = ts_usec
+					timestamp,packet = data
 					packetList.append((timestamp,self.buildPacket(packet, timestamp)))
 
 			return packetList

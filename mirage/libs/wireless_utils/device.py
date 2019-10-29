@@ -5,6 +5,7 @@ class Device:
 	'''
 	This class is used to communicate with a specific hardware component.
 	Every class communicating with a given hardware component must inherits from this class, and implements the following methods :
+
 	  * ``init()`` : this method initializes the communication with the hardware component
 	  * ``isUp()`` : this method allows to check if the initialization was successful and if the device is usable
 	  * ``send(packet)`` : this method allows to send data (as a raw representation, e.g. bytes array or scapy frame)
@@ -52,7 +53,7 @@ class Device:
 		'''
 		self.subscribers.append(subscriber)
 
-	def publish(self,event):
+	def publish(self,event,*args, **kwargs):
 		'''
 		This method allows to publish an event. It may be used to call from the device a method implemented on the corresponding Emitters / Receivers, subscribers by default.
 	
@@ -66,7 +67,7 @@ class Device:
 		'''
 		for subscriber in self.subscribers:
 			if hasattr(subscriber,event) and callable(getattr(subscriber,event)):
-				getattr(subscriber,event)()
+				return getattr(subscriber,event)(*args,**kwargs)
 
 	def hasCapabilities(self, *capability):
 		'''

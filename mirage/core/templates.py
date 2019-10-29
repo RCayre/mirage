@@ -15,7 +15,7 @@ class $name(module.WirelessModule):
 """
 
 __scenario_template__ = """from mirage.core import scenario
-from mirage.libs import io,ble,bt,utils
+from mirage.libs import io,ble,esb,utils
 
 class $name(scenario.Scenario):
 

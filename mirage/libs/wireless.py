@@ -65,6 +65,16 @@ class Emitter(PacketQueue):
 			io.fail("Malformed packet")
 			return None
 
+	def convertMiragePacketToRaw(self,data):
+		'''
+		This method is an alias for the convert method of an emitter.
+		
+		:param data: raw representation of a packet
+		:return: Mirage packet
+		:rtype: mirage.libs.wireless_utils.packets.Packet
+		'''
+		return self.convert(data)
+
 	def _task(self):
 		if not self.isEmpty():
 			self.transmitting = True
@@ -159,6 +169,16 @@ class Receiver(PacketQueue):
 		:rtype: mirage.libs.wireless_utils.packets.Packet
 		'''
 		return Packet(packet=data)
+
+	def convertRawToMiragePacket(self,data):
+		'''
+		This method is an alias for the convert method of a receiver.
+		
+		:param data: raw representation of a packet
+		:return: Mirage packet
+		:rtype: mirage.libs.wireless_utils.packets.Packet
+		'''
+		return self.convert(data)
 
 	def _add(self,data):
 		if data is not None:
