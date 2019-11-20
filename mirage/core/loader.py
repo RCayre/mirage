@@ -57,8 +57,8 @@ class Loader:
 				pattern in info["type"]
 			):
 				if not info["technology"] in displayDict:
-					displayDict[info["technology"]] = []
-				displayDict[info["technology"]].append([info["name"], info["type"], info["description"]])
+					displayDict[(info["technology"]).upper()] = []
+				displayDict[(info["technology"]).upper()].append([info["name"], info["type"], info["description"]])
 
 
 		for module in sorted(displayDict):
