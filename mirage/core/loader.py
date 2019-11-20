@@ -46,7 +46,7 @@ class Loader:
 		:param pattern: filter
 		:type pattern: str
 		'''
-		displayDict = {"BT":[], "BTLE":[], "ESB":[], "IR":[], "Mosart":[], "WiFi":[], "ZigBee":[], "Other":[]}
+		displayDict = {}
 
 		for module in self.modulesList:
 			info = self.modulesList[module]().info()
@@ -56,23 +56,11 @@ class Loader:
 				pattern in info["technology"]	or 
 				pattern in info["type"]
 			):
-				if "ble_" in info["name"]:
-					displayDict["BTLE"].append([info["name"], info["type"], info["description"]])
-				elif "bt_" in info["name"]:
-					displayDict["BT"].append([info["name"], info["type"], info["description"]])
-				elif "esb_" in info["name"]:
-					displayDict["ESB"].append([info["name"], info["type"], info["description"]])
-				elif "ir_" in info["name"]:
-					displayDict["IR"].append([info["name"], info["type"], info["description"]])
-				elif "mosart_" in info["name"]:
-					displayDict["Mosart"].append([info["name"], info["type"], info["description"]])
-				elif "wifi_" in info["name"]:
-					displayDict["WiFi"].append([info["name"], info["type"], info["description"]])
-				elif "zigbee_" in info["name"]:
-					displayDict["ZigBee"].append([info["name"], info["type"], info["description"]])
-				else:
-					displayDict["Other"].append([info["name"], info["type"], info["description"]])
+				if not info["technology"] in displayDict:
+					displayDict[info["technology"]] = []
+				displayDict[info["technology"]].append([info["name"], info["type"], info["description"]])
 
-		for module in displayDict:
+
+		for module in sorted(displayDict):
 			if displayDict[module]:
 				io.chart(["Name", "Type","Description"], sorted(displayDict[module]), "{} Modules".format(module))
