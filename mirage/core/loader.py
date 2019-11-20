@@ -50,15 +50,16 @@ class Loader:
 
 		for module in self.modulesList:
 			info = self.modulesList[module]().info()
+			technology = (info["technology"]).upper()
 			if (
 				pattern in info["description"]	or
 				pattern in info["name"] 	or
 				pattern in info["technology"]	or 
 				pattern in info["type"]
 			):
-				if not info["technology"] in displayDict:
-					displayDict[(info["technology"]).upper()] = []
-				displayDict[(info["technology"]).upper()].append([info["name"], info["type"], info["description"]])
+				if not technology in displayDict:
+					displayDict[technology] = []
+				displayDict[technology].append([info["name"], info["type"], info["description"]])
 
 
 		for module in sorted(displayDict):
