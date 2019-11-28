@@ -230,7 +230,7 @@ def chart(columnsName,content,title=""):
 		tab = []
 		tab.append(columnsName)
 		tab+=(content)
-		print(SingleTable(tab,title).table)
+		print('\n' + SingleTable(tab,title).table)
 
 
 def progress(count, total=100, suffix=""):

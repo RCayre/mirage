@@ -46,14 +46,22 @@ class Loader:
 		:param pattern: filter
 		:type pattern: str
 		'''
-		displayList = []
+		displayDict = {}
+
 		for module in self.modulesList:
 			info = self.modulesList[module]().info()
+			technology = (info["technology"]).upper()
 			if (
 				pattern in info["description"]	or
 				pattern in info["name"] 	or
 				pattern in info["technology"]	or 
 				pattern in info["type"]
 			):
-				displayList.append([info["name"], info["type"], info["description"]])
-		io.chart(["Name", "Type","Description"], displayList, "Modules")
+				if not technology in displayDict:
+					displayDict[technology] = []
+				displayDict[technology].append([info["name"], info["type"], info["description"]])
+
+
+		for module in sorted(displayDict):
+			if displayDict[module]:
+				io.chart(["Name", "Type","Description"], sorted(displayDict[module]), "{} Modules".format(module))
