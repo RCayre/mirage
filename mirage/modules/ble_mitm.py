@@ -124,9 +124,9 @@ class ble_mitm(module.WirelessModule):
 
 
 		if utils.booleanArg(self.args["SLAVE_SPOOFING"]) and address != self.a2mEmitter.getAddress():
-			self.a2mEmitter.setAddress(address)
+			self.a2mEmitter.setAddress(address, random=addrType)
 		self.a2mEmitter.setScanningParameters(data=dataResponse)
-		self.a2mEmitter.setAdvertisingParameters(data=data, intervalMin=intervalMin, intervalMax=intervalMax, daType = addrType)
+		self.a2mEmitter.setAdvertisingParameters(data=data, intervalMin=intervalMin, intervalMax=intervalMax, daType=addrType, oaType=addrType)
 
 
 	# Connection related methods
