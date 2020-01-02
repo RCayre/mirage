@@ -18,7 +18,7 @@ class BLECrypto:
 
 	@classmethod
 	def _findKey(cls,L,pMin,pMax,r,pres,preq,iat,ia,rat,ra,confirm):
-		i = 0
+		i = pMin
 		p1 = pres + preq + rat + iat
 		p2 = b"\x00\x00\x00\x00" + ia + ra
 		a = cls.xor128(p1,r)
