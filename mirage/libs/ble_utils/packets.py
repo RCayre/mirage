@@ -563,6 +563,48 @@ class BLEFindInformationResponse(BLEPacket):
 	def toString(self):
 		return "<< "+self.name+" | format="+hex(self.format)+" | data="+self.data.hex()+" >>"
 
+class BLEFindByTypeValueRequest(BLEPacket):
+	'''
+	Mirage Bluetooth Low Energy Packet - Find By Type Value Request
+
+	:param startHandle: lowest ATT handle included in the request
+	:type startHandle: int
+	:param endHandle: highest ATT handle included in the request
+	:type endHandle: int
+	:param uuid: 2 octet UUID to find
+	:type uuid: int
+	:param data: Attribute value to find
+	:type data: bytes
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	'''
+
+	def __init__(self, startHandle=0x0000, endHandle=0xFFFF, uuid=0, data=b"", connectionHandle=-1):
+		super().__init__()
+		self.startHandle = startHandle
+		self.endHandle = endHandle
+		self.uuid = uuid
+		self.data = data
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Find Type By Value Request"
+
+class BLEFindByTypeValueResponse(BLEPacket):
+	'''
+	Mirage Bluetooth Low Energy Packet - Find By Type Value Response
+
+	:param handles: list indicating the handles contained in the Information Response
+	:type handles: list
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	'''
+	def __init__(self, handles=[], connectionHandle = -1):
+		super().__init__()
+		self.handles = handles
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Find By Type Value Response Packet"
+
 class BLEReadByGroupTypeRequest(BLEPacket):
 	'''
 	Mirage Bluetooth Low Energy Packet - Read By Group Type Request

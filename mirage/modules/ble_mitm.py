@@ -307,6 +307,21 @@ class ble_mitm(module.WirelessModule):
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEFindInformationResponse(format=packet.format,data=packet.data))
 
+	@module.scenarioSignal("onMasterFindByTypeValueRequest")
+	def findByTypeValueRequest(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Find Type By Value Request (from master) : startHandle = "+hex(packet.startHandle)+
+				" / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid)+" / data = "+packet.data.hex())
+			io.info("Redirecting to slave ...")
+			self.a2sEmitter.sendp(ble.BLEFindByTypeValueRequest(startHandle=packet.startHandle,endHandle=packet.endHandle,uuid=packet.uuid,data=packet.data))
+
+	@module.scenarioSignal("onSlaveFindByTypeValueResponse")
+	def findByTypeValueResponse(self,packet):
+		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
+			io.info("Find Type By Value Response (from slave)")
+			io.info("Redirecting to master ...")
+			self.a2mEmitter.sendp(ble.BLEFindByTypeValueResponse(handles=packet.handles))
+
 	@module.scenarioSignal("onMasterReadByTypeRequest")
 	def readByType(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
@@ -670,6 +685,10 @@ class ble_mitm(module.WirelessModule):
 			# Find Information Callbacks
 			self.a2mReceiver.onEvent("BLEFindInformationRequest", callback=self.findInformation)
 			self.a2sReceiver.onEvent("BLEFindInformationResponse",callback=self.findInformationResponse)
+
+			# Find Type Value Callbacks
+			self.a2mReceiver.onEvent("BLEFindByTypeValueRequest", callback=self.findByTypeValueRequest)
+			self.a2sReceiver.onEvent("BLEFindByTypeValueResponse", callback=self.findByTypeValueResponse)
 
 			# Read By Callbacks
 			self.a2mReceiver.onEvent("BLEReadByTypeRequest",callback=self.readByType)
