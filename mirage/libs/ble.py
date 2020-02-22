@@ -702,6 +702,15 @@ class BLEEmitter(wireless.Emitter):
 					elif isinstance(packet,BLESigningInformation):
 						packet.packet /= SM_Signing_Information(csrk=packet.csrk)
 
+					elif isinstance(packet, BLEFindByTypeValueRequest):
+						packet.packet /= ATT_Find_By_Type_Value_Request(start=packet.startHandle,
+																		end=packet.endHandle,
+																		uuid=packet.uuid,
+																		data=packet.data)
+
+					elif isinstance(packet, BLEFindByTypeValueResponse):
+						packet.packet /= ATT_Find_By_Type_Value_Response(handles=packet.handles)
+
 					elif isinstance(packet,BLEErrorResponse):
 						packet.packet /= ATT_Error_Response(request=packet.request, handle=packet.handle,ecode=packet.ecode)
 
@@ -933,6 +942,7 @@ class BLEReceiver(wireless.Receiver):
 						data=bytes(packet[ATT_Find_Information_Response])[1:],
 						format=packet.format
 						)
+
 				elif SM_Security_Request in packet:
 					return BLESecurityRequest(
 							connectionHandle = packet.handle,
@@ -1000,6 +1010,17 @@ class BLEReceiver(wireless.Receiver):
 					return BLESigningInformation(
 						connectionHandle = packet.handle,
 						csrk=packet.csrk)
+
+				elif ATT_Find_By_Type_Value_Request in packet:
+					return BLEFindByTypeValueRequest(
+						startHandle=packet[ATT_Find_By_Type_Value_Request].start,
+						endHandle=packet[ATT_Find_By_Type_Value_Request].end,
+						uuid=packet[ATT_Find_By_Type_Value_Request].uuid,
+						data=packet[ATT_Find_By_Type_Value_Request].data)
+
+				elif ATT_Find_By_Type_Value_Response in packet:
+					return BLEFindByTypeValueResponse(
+						handles=packet[ATT_Find_By_Type_Value_Response].handles)
 
 				elif L2CAP_Connection_Parameter_Update_Request in packet:
 					return BLEConnectionParameterUpdateRequest(
@@ -1328,6 +1349,16 @@ class BLEReceiver(wireless.Receiver):
 						elif SM_Signing_Information in packet:
 							new = BLESigningInformation(
 								csrk=packet.csrk)
+
+						elif ATT_Find_By_Type_Value_Request in packet:
+							new = BLEFindByTypeValueRequest(
+								startHandle=packet[ATT_Find_By_Type_Value_Request].start,
+								endHandle=packet[ATT_Find_By_Type_Value_Request].end,
+								uuid=packet[ATT_Find_By_Type_Value_Request].uuid,
+								data=packet[ATT_Find_By_Type_Value_Request].data)
+
+						elif ATT_Find_By_Type_Value_Response in packet:
+							new = BLEFindByTypeValueResponse(handles=packet[ATT_Find_By_Type_Value_Response].handles)
 
 						elif L2CAP_Connection_Parameter_Update_Request in packet:
 							new = BLEConnectionParameterUpdateRequest(
