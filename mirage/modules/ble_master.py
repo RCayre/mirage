@@ -295,7 +295,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		io.info(" => Minimum interval: "+str(packet.minInterval))
 		io.info(" => Maximum interval: "+str(packet.maxInterval))
 		self.emitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
-		self.emitter.sendp(ble.BLEConnectionParameterUpdateResponse(moveResult=0))
+		self.emitter.sendp(ble.BLEConnectionParameterUpdateResponse(l2capCmdId = packet.l2capCmdId,moveResult=0))
 
 	@module.scenarioSignal("onSlaveHandleValueNotification")
 	def onNotification(self,packet):

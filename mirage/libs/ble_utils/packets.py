@@ -1067,6 +1067,8 @@ class BLEConnectionParameterUpdateRequest(BLEPacket):
 	'''
 	Mirage Bluetooth Low Energy Packet - Connection Parameter Update Request
 
+	:param l2capCmdId
+	:type l2capCmdId: int
 	:param timeoutMult: timeout Multiplier
 	:type timeoutMult: int
 	:param slaveLatency: slave Latency
@@ -1083,8 +1085,9 @@ class BLEConnectionParameterUpdateRequest(BLEPacket):
 		>>> emitter.sendp(ble.BLEConnectionParameterUpdateRequest(timeoutMult=65535, minInterval=65535, maxInterval=65535, slaveLatency=0))
 
 	'''
-	def __init__(self,minInterval = 0, maxInterval = 0, slaveLatency = 0, timeoutMult = 0,connectionHandle = -1):
+	def __init__(self,l2capCmdId = 0, minInterval = 0, maxInterval = 0, slaveLatency = 0, timeoutMult = 0,connectionHandle = -1):
 		super().__init__()
+		self.l2capCmdId = l2capCmdId
 		self.timeoutMult = timeoutMult
 		self.slaveLatency = slaveLatency
 		self.minInterval = minInterval
@@ -1101,6 +1104,8 @@ class BLEConnectionParameterUpdateResponse(BLEPacket):
 	'''
 	Mirage Bluetooth Low Energy Packet - Connection Parameter Update Response
 
+	:param l2capCmdId
+	:type l2capCmdId: int
 	:param moveResult: move Result
 	:type moveResult: int
 	:param connectionHandle: connection handle associated to the connection
@@ -1111,8 +1116,9 @@ class BLEConnectionParameterUpdateResponse(BLEPacket):
 		>>> emitter.sendp(ble.BLEConnectionParameterUpdateResponse(moveResult=0))
 
 	'''
-	def __init__(self,moveResult = 0,connectionHandle = -1):
+	def __init__(self,l2capCmdId = 0, moveResult = 0,connectionHandle = -1):
 		super().__init__()
+		self.l2capCmdId = l2capCmdId
 		self.moveResult = moveResult
 		self.connectionHandle = connectionHandle
 		self.name = "BLE - Connection Parameter Update Response Packet"
