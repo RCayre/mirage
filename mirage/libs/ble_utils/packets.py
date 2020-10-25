@@ -1067,7 +1067,7 @@ class BLEConnectionParameterUpdateRequest(BLEPacket):
 	'''
 	Mirage Bluetooth Low Energy Packet - Connection Parameter Update Request
 
-	:param l2capCmdId
+	:param l2capCmdId: L2CAP Command Identifier
 	:type l2capCmdId: int
 	:param timeoutMult: timeout Multiplier
 	:type timeoutMult: int
@@ -1104,7 +1104,7 @@ class BLEConnectionParameterUpdateResponse(BLEPacket):
 	'''
 	Mirage Bluetooth Low Energy Packet - Connection Parameter Update Response
 
-	:param l2capCmdId
+	:param l2capCmdId: L2CAP Command Identifier
 	:type l2capCmdId: int
 	:param moveResult: move Result
 	:type moveResult: int
