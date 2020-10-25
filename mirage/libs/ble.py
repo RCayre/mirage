@@ -1238,7 +1238,7 @@ class BLEReceiver(wireless.Receiver):
 							new = BLEReadResponse(
 								value = packet[ATT_Read_Response].value
 								)
-						elif packet[ATT_Hdr].opcode == 0x13:
+						elif packet[ATT_Hdr].opcode == 0xb:
 							new = BLEReadResponse(
 								value = b""
 								)
