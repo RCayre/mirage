@@ -602,11 +602,13 @@ class ble_mitm(module.WirelessModule):
 		io.info("Sending a response to slave ...")
 		self.a2sEmitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
 		self.a2sEmitter.sendp(ble.BLEConnectionParameterUpdateResponse(
+						l2capCmdId = packet.l2capCmdId,
 						moveResult=0
 					))
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEConnectionParameterUpdateRequest(timeoutMult=packet.timeoutMult, slaveLatency=packet.slaveLatency, minInterval=packet.minInterval, maxInterval=packet.maxInterval))
+			self.a2mEmitter.sendp(ble.BLEConnectionParameterUpdateRequest(
+						l2capCmdId = packet.l2capCmdId,timeoutMult=packet.timeoutMult, slaveLatency=packet.slaveLatency, minInterval=packet.minInterval, maxInterval=packet.maxInterval))
 	
 			
 	@module.scenarioSignal("onMasterConnectionParameterUpdateResponse")

@@ -623,7 +623,7 @@ class BLEEmitter(wireless.Emitter):
 						isinstance(packet,BLEConnectionParameterUpdateRequest) or
 					     	isinstance(packet,BLEConnectionParameterUpdateResponse)
 					   ):
-							packet.packet /= L2CAP_Hdr()/L2CAP_CmdHdr()
+							packet.packet /= L2CAP_Hdr()/L2CAP_CmdHdr(id=packet.l2capCmdId)
 					elif (
 						isinstance(packet,BLESecurityRequest) or
 						isinstance(packet,BLEPairingRequest) or
@@ -835,7 +835,7 @@ class BLEReceiver(wireless.Receiver):
 		new = BLEPacket()
 		new.packet = packet
 		if "hci" in self.interface or "adb" in self.interface:
-			#packet.show()
+			packet.show()
 
 			if packet.type == TYPE_ACL_DATA:
 				if ATT_Exchange_MTU_Request in packet:
@@ -855,9 +855,14 @@ class BLEReceiver(wireless.Receiver):
 						mtu = packet[ATT_Exchange_MTU_Response].mtu,
 						connectionHandle = packet.handle
 						)
-				elif ATT_Read_Response in packet :
+				elif ATT_Read_Response in packet:
 					return BLEReadResponse(
 						value = packet[ATT_Read_Response].value,
+						connectionHandle = packet.handle
+						)
+				elif packet[ATT_Hdr].opcode == 0xb:
+					return BLEReadResponse(
+						value = b"",
 						connectionHandle = packet.handle
 						)
 				elif ATT_Read_Request in packet:
@@ -1024,6 +1029,7 @@ class BLEReceiver(wireless.Receiver):
 
 				elif L2CAP_Connection_Parameter_Update_Request in packet:
 					return BLEConnectionParameterUpdateRequest(
+						l2capCmdId = packet.id,
 						connectionHandle = packet.handle,
 						maxInterval=packet.max_interval,
 						minInterval=packet.min_interval,
@@ -1032,6 +1038,7 @@ class BLEReceiver(wireless.Receiver):
 						)
 				elif L2CAP_Connection_Parameter_Update_Response in packet:
 					return BLEConnectionParameterUpdateResponse(
+						l2capCmdId = packet.id,
 						connectionHandle = packet.handle,
 						moveResult=packet.move_result
 						) 
@@ -1046,6 +1053,7 @@ class BLEReceiver(wireless.Receiver):
 					return BLEConnectionCancel()
 				elif L2CAP_Connection_Parameter_Update_Request in packet:
 					return BLEConnectionParameterUpdateRequest(
+											l2capCmdId = packet.id,
 											connectionHandle = packet.handle,
 											maxInterval = packet.max_interval,
 											minInterval = packet.min_interval,
@@ -1054,6 +1062,7 @@ class BLEReceiver(wireless.Receiver):
 											)
 				elif L2CAP_Connection_Parameter_Update_Response in packet:
 					return BLEConnectionParameterUpdateResponse(
+											l2capCmdId = packet.id,
 											connectionHandle = packet.handle,
 											moveResult=packet.move_result)
 				elif HCI_Cmd_LE_Start_Encryption_Request in packet:
@@ -1228,6 +1237,10 @@ class BLEReceiver(wireless.Receiver):
 						elif ATT_Read_Response in packet :
 							new = BLEReadResponse(
 								value = packet[ATT_Read_Response].value
+								)
+						elif packet[ATT_Hdr].opcode == 0x13:
+							new = BLEReadResponse(
+								value = b""
 								)
 						elif ATT_Read_Request in packet:
 							new = BLEReadRequest(
