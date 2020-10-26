@@ -860,7 +860,7 @@ class BLEReceiver(wireless.Receiver):
 						value = packet[ATT_Read_Response].value,
 						connectionHandle = packet.handle
 						)
-				elif packet[ATT_Hdr].opcode == 0xb:
+				elif ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0xb:
 					return BLEReadResponse(
 						value = b"",
 						connectionHandle = packet.handle
@@ -1238,7 +1238,7 @@ class BLEReceiver(wireless.Receiver):
 							new = BLEReadResponse(
 								value = packet[ATT_Read_Response].value
 								)
-						elif packet[ATT_Hdr].opcode == 0xb:
+						elif ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0xb:
 							new = BLEReadResponse(
 								value = b""
 								)
