@@ -835,7 +835,7 @@ class BLEReceiver(wireless.Receiver):
 		new = BLEPacket()
 		new.packet = packet
 		if "hci" in self.interface or "adb" in self.interface:
-			packet.show()
+			#packet.show()
 
 			if packet.type == TYPE_ACL_DATA:
 				if ATT_Exchange_MTU_Request in packet:
