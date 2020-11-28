@@ -75,9 +75,13 @@ class ADBDevice(wireless.Device):
 			True
 
 		'''
-		result = subprocess.run(["adb","start-server"], stdout=subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-		return result.returncode == 0
-
+		try:
+			result = subprocess.run(["adb","start-server"], stdout=subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+			return result.returncode == 0
+		except:
+			io.fail("Mirage fails to start ADB daemon.")
+			return False
+			
 	@classmethod
 	def stopADBDaemon(cls):
 		'''
@@ -119,19 +123,21 @@ class ADBDevice(wireless.Device):
 
 		
 		'''
-
-		result = subprocess.run(["adb","devices"], stdout=subprocess.PIPE, stderr = subprocess.DEVNULL)
-		adbDevicesList = [i.split("\t")[0] for i in result.stdout.decode('ascii').split("\n")[1:-2]]
-		if index is None:
-			return adbDevicesList
-		else:			
-			try:
-				adbDevice = adbDevicesList[index]
-			except IndexError:
-				return None
-			return adbDevice
-		return None
-
+		try:
+			result = subprocess.run(["adb","devices"], stdout=subprocess.PIPE, stderr = subprocess.DEVNULL)
+			adbDevicesList = [i.split("\t")[0] for i in result.stdout.decode('ascii').split("\n")[1:-2]]
+			if index is None:
+				return adbDevicesList
+			else:			
+				try:
+					adbDevice = adbDevicesList[index]
+				except IndexError:
+					return None
+				return adbDevice
+			return None
+		except:
+			io.fail("Mirage fails to find ADB devices. Exiting ...")
+			return None
 
 	def getDeviceIndex(self):
 		'''
@@ -180,18 +186,30 @@ class ADBDevice(wireless.Device):
 		return originalLength == includedLength
 
 	def _getSnoopFileLocation(self):
-		possiblePaths = [
-				"/sdcard/btsnoop_hci.log",
-				"/data/log/bt/btsnoop_hci.log", # Samsung
-				"/sdcard/MIUI/debug_log/common/btsnoop_hci.log" # MIUI
-				]
-
-		for path in possiblePaths:
-			_,_,returncode = self._runADBCommand("test -f "+path)
+		stdout, _, returncode = self._runADBCommand("cat /etc/bluetooth/bt_stack.conf | grep BtSnoopLogOutput")
+		if returncode == 0:
+			# The option has been found in the bt_stack.conf file
+			snoopEnabled = ((stdout.decode('ascii').replace("\n","")).split('=')[1] == "true")
+			stdout, _, returncode = self._runADBCommand("cat /etc/bluetooth/bt_stack.conf | grep BtSnoopFileName")
 			if returncode == 0:
-				return (True,path)
-		stdout, _, returncode = self._runADBCommand("find /sdcard/* -name btsnoop_hci.log | head -n1")
-		return (stdout.decode('ascii').replace("\n","") == "",stdout.decode('ascii').replace("\n",""))
+				path = (stdout.decode('ascii').replace("\n","")).split('=')[1]
+				_,_,returncode = self._runADBCommand("test -f "+path)
+				return (snoopEnabled and returncode == 0,path)
+		else:
+			# The option has not been found in the bt_stack.conf file
+			possiblePaths = [
+					"/sdcard/btsnoop_hci.log",
+					"/data/log/bt/btsnoop_hci.log", # Samsung
+					"/sdcard/MIUI/debug_log/common/btsnoop_hci.log" # MIUI
+					]
+
+			for path in possiblePaths:
+				_,_,returncode = self._runADBCommand("test -f "+path)
+				if returncode == 0:
+					return (True,path)
+			stdout, _, returncode = self._runADBCommand("find /sdcard/* -name btsnoop_hci.log | head -n1")
+			print(stdout.decode('ascii').replace("\n","") != "")
+			return (stdout.decode('ascii').replace("\n","") != "",stdout.decode('ascii').replace("\n",""))
 
 	def getSnoopFileLocation(self):
 		'''
