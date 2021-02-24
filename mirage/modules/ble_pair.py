@@ -56,13 +56,15 @@ class ble_pair(module.WirelessModule):
 
 		self.failure = False
 
+		self.pairingMethod = None
+
 	def pinToTemporaryKey(self,pin):
 		hexn = hex(pin)[2:]
 		tk = bytes.fromhex((32-len(hexn))*"0"+hexn)
 		return tk
 
 	def keyGeneration(self,size=16):
-		return os.urandom(size)
+		return urandom(size)
 
 	def pairingMethodSelection(self):
 		self.secureConnections = self.responderAuthReq.secureConnections and self.initiatorAuthReq.secureConnections
@@ -138,8 +140,9 @@ class ble_pair(module.WirelessModule):
 
 	def slavePairingResponse(self,pkt):
 
-		self.initiatorAddress = self.emitter.getAddress()
-		self.initiatorAddressType = b"\x00" if self.emitter.getAddressMode() == "public" else b"\x01"
+		self.initiatorAddress = self.args["ADDR"] if self.args["ADDR"]!="" else self.emitter.getAddress()
+		self.initiatorAddressType = b"\x00" if self.args["ADDR_TYPE"] == "public" else b"\x01"
+
 		self.responderAddress = self.emitter.getCurrentConnection()
 		self.responderAddressType = b"\x00" if self.emitter.getCurrentConnectionMode() == "public" else b"\x01"
 
@@ -151,11 +154,11 @@ class ble_pair(module.WirelessModule):
 		self.responderInputOutputCapability = ble.InputOutputCapability(data = bytes([pkt.inputOutputCapability]))
 		self.responderKeyDistribution = ble.KeyDistributionFlag(data=bytes([pkt.responderKeyDistribution]))
 		pairingMethod = self.pairingMethodSelection()
-		io.success("Pairing Method selected : "+self.pairingMethod)
+		io.info("Pairing Method selected : "+self.pairingMethod)
 		
 
 		self.mRand = ble.BLECrypto.generateRandom()
-		io.success("Generating random : "+self.mRand.hex())
+		io.info("Generating random : "+self.mRand.hex())
 		
 		if pairingMethod == "JustWorks":
 			pinCode = 0
@@ -166,8 +169,7 @@ class ble_pair(module.WirelessModule):
 				pinCode = int(io.enterPinCode("Enter the 6 digit PIN code: "))
 
 		self.tk = self.pinToTemporaryKey(pinCode)
-		io.success("Generating Temporary Key : "+self.tk.hex())
-		
+		io.info("Generating Temporary Key : "+self.tk.hex())
 		self.mConfirm = ble.BLECrypto.c1(	self.tk,
 							self.mRand[::-1], 
 							self.pReq,
@@ -176,7 +178,7 @@ class ble_pair(module.WirelessModule):
 							self.initiatorAddress,
 							self.responderAddressType,
 							self.responderAddress)
-		io.success("Generating MConfirm : "+self.mConfirm.hex())
+		io.info("Generating MConfirm : "+self.mConfirm.hex())
 		confirmPacket = ble.BLEPairingConfirm(confirm=self.mConfirm[::-1])
 		confirmPacket.show()
 		self.emitter.sendp(confirmPacket)
@@ -200,12 +202,15 @@ class ble_pair(module.WirelessModule):
 						self.responderAddressType,
 						self.responderAddress)
 		if self.sConfirm == sConfirm:
-			io.success("Confirm Value correct !")
+			io.info("Confirm Value correct !")
 			self.stk = ble.BLECrypto.s1(self.tk,self.mRand[::-1], self.sRand[::-1])
-			io.success("Generating Short Term Key (STK): "+self.stk.hex())
+			io.info("Generating Short Term Key (STK): "+self.stk.hex())
 			self.encrypted = self.emitter.encryptLink(ltk=self.stk[::-1])
 			if self.encrypted:
 				io.success("Encryption enabled !")
+				io.info("{}".format(self.responderKeyDistribution.data))
+				if self.responderKeyDistribution.data == b"\x00":
+					self.finished = True
 			else:
 				io.fail("Encryption not enabled !")
 		else:
@@ -249,29 +254,29 @@ class ble_pair(module.WirelessModule):
 
 	def slavePairingFailed(self,pkt):
 		self.failure = True
-		io.fail("Pairing Failed received : "+str(pkt))
+		io.fail("Pairing Failed received : " + pkt.toString())
 		self.pairingFailed(pkt)
 
 	def encryptionInformation(self,pkt):
 		pkt.show()
-		io.success("Long Term Key (LTK) received : "+pkt.ltk[::-1].hex())
+		io.info("Long Term Key (LTK) received : "+pkt.ltk[::-1].hex())
 
 
 	def masterIdentification(self,pkt):
 		pkt.show()
-		io.success("EDIV and RAND received :  "+hex(pkt.ediv)+" / "+pkt.rand.hex())
+		io.info("EDIV and RAND received :  "+hex(pkt.ediv)+" / "+pkt.rand.hex())
 
 	def identityAddressInformation(self,pkt):
 		pkt.show()
-		io.success("Address received : "+str(pkt.address)+" ("+pkt.type+")")
+		io.info("Address received : "+str(pkt.address)+" ("+pkt.type+")")
 
 	def identityInformation(self,pkt):
 		pkt.show()
-		io.success("IRK received :  "+pkt.irk[::-1].hex())
+		io.info("IRK received :  "+pkt.irk[::-1].hex())
 
 	def signingInformation(self,pkt):
 		pkt.show()
-		io.success("CSRK received :  "+pkt.csrk[::-1].hex())
+		io.info("CSRK received :  "+pkt.csrk[::-1].hex())
 
 
 	def masterEncryptionInformation(self,pkt):
@@ -319,8 +324,8 @@ class ble_pair(module.WirelessModule):
 	def masterPairingRequest(self,pkt):
 		self.initiatorAddress = self.emitter.getCurrentConnection()
 		self.initiatorAddressType = b"\x00" if self.emitter.getCurrentConnectionMode() == "public" else b"\x01"
-		self.responderAddress = self.emitter.getAddress()
-		self.responderAddressType = b"\x00" if self.emitter.getAddressMode() == "public" else b"\x01"
+		self.responderAddress = self.args["ADDR"] if self.args["ADDR"]!="" else self.emitter.getAddress()
+		self.responderAddressType = b"\x00" if self.args["ADDR_TYPE"] == "public" else b"\x01"
 
 		pkt.show()
 		self.pairingRequest = pkt
@@ -359,8 +364,8 @@ class ble_pair(module.WirelessModule):
 							)
 		self.pairingResponse.show()
 		self.pRes = self.pairingResponse.payload[::-1]
-		pairingMethod = self.pairingMethodSelection()
-		io.success("Pairing Method selected : "+self.pairingMethod)
+		self.pairingMethod = self.pairingMethodSelection()
+		io.info("Pairing Method selected : "+self.pairingMethod)
 		self.emitter.sendp(self.pairingResponse)
 
 	def masterPairingConfirm(self,pkt):
@@ -368,7 +373,7 @@ class ble_pair(module.WirelessModule):
 		self.mConfirm = pkt.confirm[::-1]
 
 		self.sRand = ble.BLECrypto.generateRandom()
-		io.success("Generating random : "+self.sRand.hex())
+		io.info("Generating random : "+self.sRand.hex())
 		
 		if self.pairingMethod == "JustWorks":
 			pinCode = 0
@@ -380,7 +385,7 @@ class ble_pair(module.WirelessModule):
 
 		self.tk = self.pinToTemporaryKey(pinCode)
 
-		io.success("Generating Temporary Key : "+self.tk.hex())
+		io.info("Generating Temporary Key : "+self.tk.hex())
 
 		
 		self.sConfirm = ble.BLECrypto.c1(	self.tk,
@@ -392,7 +397,7 @@ class ble_pair(module.WirelessModule):
 							self.responderAddressType,
 							self.responderAddress)
 
-		io.success("Generating SConfirm : "+self.sConfirm.hex())
+		io.info("Generating SConfirm : "+self.sConfirm.hex())
 		confirmPacket = ble.BLEPairingConfirm(confirm=self.sConfirm[::-1])
 		confirmPacket.show()
 		self.emitter.sendp(confirmPacket)
@@ -413,16 +418,16 @@ class ble_pair(module.WirelessModule):
 						self.responderAddressType,
 						self.responderAddress)
 		if self.mConfirm == mConfirm:
-			io.success("Confirm Value correct !")
+			io.info("Confirm Value correct !")
 			self.stk = ble.BLECrypto.s1(self.tk,self.mRand[::-1], self.sRand[::-1])
-			io.success("Generating Short Term Key (STK): "+self.stk.hex())
+			io.info("Generating Short Term Key (STK): "+self.stk.hex())
 		else:
 			io.fail("Confirm value failed ! Terminating ...")
 			self.failure = True
 	
 	def masterPairingFailed(self,pkt):
 		self.failure = True
-		io.fail("Pairing Failed received : "+str(pkt))
+		io.fail("Pairing Failed received : " + pkt.toString())
 		self.pairingFailed(pkt)
 
 
@@ -440,7 +445,7 @@ class ble_pair(module.WirelessModule):
 									ediv=utils.integerArg(self.args["EDIV"]),
 									rand=bytes.fromhex(self.args["RAND"])
 									))
-			io.success("Sent !")
+			io.info("Sent !")
 		if keyDistribution.idKey:
 			io.info("Sending IRK...")
 			self.emitter.sendp(ble.BLEIdentityInformation(irk=bytes.fromhex(self.args["IRK"])[::-1]))
@@ -448,12 +453,12 @@ class ble_pair(module.WirelessModule):
 									address=utils.addressArg(self.args["ADDR"]),
 									type=self.args["ADDR_TYPE"].lower()
 									))
-			io.success("Sent !")
+			io.info("Sent !")
 
 		if keyDistribution.signKey:
 			io.info("Sending CSRK...")
 			self.emitter.sendp(ble.BLESigningInformation(csrk=bytes.fromhex(self.args["CSRK"])[::-1]))
-			io.success("Sent !")
+			io.info("Sent !")
 
 	def masterLongTermKeyRequest(self,pkt):
 		pkt.show()
@@ -472,7 +477,6 @@ class ble_pair(module.WirelessModule):
 		interface = self.args["INTERFACE"]
 		self.emitter = self.getEmitter(interface=interface)
 		self.receiver = self.getReceiver(interface=interface)
-
 		if not self.emitter.isConnected() and utils.booleanArg(self.args["ACTIVE"]):
 			io.fail("A connection must be established.")
 			return self.nok()
@@ -528,7 +532,7 @@ class ble_pair(module.WirelessModule):
 				if self.failure:
 					return self.nok()
 
-			return self.ok()
+			return self.ok({"PAIRING_METHOD":self.pairingMethod})
 		else:
 
 			self.receiver.onEvent("BLEPairingRequest", callback=self.masterPairingRequest)
@@ -557,4 +561,4 @@ class ble_pair(module.WirelessModule):
 				securityRequest.show()
 				self.emitter.sendp(securityRequest)
 
-			return self.ok({"INTERFACE":self.args["INTERFACE"]})
+			return self.ok({"INTERFACE":self.args["INTERFACE"],"PAIRING_METHOD":self.pairingMethod})
