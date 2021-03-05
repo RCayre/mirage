@@ -24,3 +24,13 @@ The original BTLEJack firmware, written by Damien Cauquil, is available on githu
 
  * BTLEJack: https://github.com/virtualabs/btlejack
  * BTLEJack firmware: https://github.com/virtualabs/btlejack-firmware
+ 
+Publications
+------------
+
+This framework is developed in the context of research works focused on IoT security by Romain Cayre, who is a PhD student at LAAS-CNRS and Apsys.Lab. His PhD thesis is supervised by Guillaume Auriol, Vincent Nicomette and Mohamed Kaâniche. 
+
+We published two papers describing this tool:
+
+ * Romain Cayre, Jonathan Roux, Eric Alata, Vincent Nicomette, Guillaume Auriol. [Mirage : un framework offensif pour l'audit du Bluetooth Low Energy](https://hal.laas.fr/hal-02268774). *Symposium sur la Sécurité des Technologies de l'Information et des Communications (SSTIC 2019)*, Jun 2019, Rennes, France. pp.229-258. **\[fr\]**
+ * Romain Cayre, Vincent Nicomette, Guillaume Auriol, Eric Alata, Mohamed Kaâniche, et al.. [Mirage: towards a Metasploit-like framework for IoT](https://hal.laas.fr/hal-02346074). *2019 IEEE 30th International Symposium on Software Reliability Engineering (ISSRE)*, Oct 2019, Berlin, Germany. **\[en\]**
