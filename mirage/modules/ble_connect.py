@@ -1,5 +1,7 @@
-from mirage.libs import io,ble,utils
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.packets import BLEConnect, BLEConnectionCancel
+
 
 class ble_connect(module.WirelessModule):
 	def init(self):
@@ -25,7 +27,7 @@ class ble_connect(module.WirelessModule):
 
 		if self.checkCapabilities():
 			io.info("Trying to connect to : "+self.args["TARGET"]+" (type : "+self.args["CONNECTION_TYPE"]+")")
-			self.emitter.sendp(ble.BLEConnect(self.args["TARGET"], type=self.args["CONNECTION_TYPE"]))
+			self.emitter.sendp(BLEConnect(self.args["TARGET"], type=self.args["CONNECTION_TYPE"]))
 
 			while not self.receiver.isConnected() and timeout > 0:
 				timeout -= 1
@@ -37,7 +39,7 @@ class ble_connect(module.WirelessModule):
 
 			else:
 				io.fail("Error during connection establishment !")
-				self.emitter.sendp(ble.BLEConnectionCancel())
+				self.emitter.sendp(BLEConnectionCancel())
 				return self.nok()
 		else:
 			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to initiate connection.")

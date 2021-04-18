@@ -1,6 +1,8 @@
 import traceback
-from mirage.core import module,app
+
+from mirage.core import app
 from mirage.libs import io
+
 
 class Scenario:
 	'''
@@ -41,7 +43,7 @@ class Scenario:
 				else:
 					io.fail("An error occured in scenario "+self.name+" !")
 					if app.App.Instance.debugMode:
-			    			traceback.print_exception(type(e), e, e.__traceback__)
+							traceback.print_exception(type(e), e, e.__traceback__)
 		else:
 			return True
 

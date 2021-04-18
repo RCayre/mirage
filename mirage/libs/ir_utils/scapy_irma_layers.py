@@ -1,4 +1,12 @@
-from scapy.all import *
+import struct
+
+from scapy.fields import ByteEnumField, \
+	FieldLenField, \
+	FieldListField, \
+	ShortField, \
+	StrField, \
+	StrLenField
+from scapy.packet import Packet, bind_layers
 
 '''
 This module contains some scapy definitions for interacting with an IRMA device.

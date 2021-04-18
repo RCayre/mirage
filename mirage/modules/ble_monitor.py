@@ -1,5 +1,6 @@
-from mirage.libs import io,ble,utils
 from mirage.core import module
+from mirage.libs import io, utils
+
 
 class ble_monitor(module.WirelessModule):
 	def init(self):
@@ -11,7 +12,7 @@ class ble_monitor(module.WirelessModule):
 				"INTERFACE":"adb0",
 				"SCENARIO":"",
 				"TIME":""
-			    }
+				}
 
 	def checkMonitoringCapabilities(self):
 		return self.receiver.hasCapabilities("HCI_MONITORING")

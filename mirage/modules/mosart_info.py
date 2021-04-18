@@ -1,5 +1,6 @@
-from mirage.libs import io,mosart,utils
 from mirage.core import module
+from mirage.libs import io, utils
+
 
 class mosart_info(module.WirelessModule):
 	def init(self):

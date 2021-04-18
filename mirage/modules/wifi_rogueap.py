@@ -1,5 +1,7 @@
-from mirage.libs import io,utils,wifi
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.wifi_utils.packets import WifiBeacon, WifiProbeResponse
+
 
 class wifi_rogueap(module.WirelessModule):
 	def init(self):
@@ -18,7 +20,7 @@ class wifi_rogueap(module.WirelessModule):
 		return self.emitter.hasCapabilities("COMMUNICATING_AS_ACCESS_POINT","MONITORING")
 	
 	def probeResponse(self,packet):
-		self.emitter.sendp(wifi.WifiProbeResponse(destMac = packet.srcMac,beaconInterval=100, SSID = self.args["SSID"],cypher=self.args["CYPHER"]))
+		self.emitter.sendp(WifiProbeResponse(destMac = packet.srcMac,beaconInterval=100, SSID = self.args["SSID"],cypher=self.args["CYPHER"]))
 		io.info("Incoming Probe Request from : "+packet.srcMac)
 		io.info("Answering...")
 
@@ -30,7 +32,7 @@ class wifi_rogueap(module.WirelessModule):
 			
 			self.emitter.setChannel(utils.integerArg(self.args["CHANNEL"]))
 			while True:
-				self.emitter.sendp(wifi.WifiBeacon(SSID=self.args["SSID"],cypher=self.args["CYPHER"]))
+				self.emitter.sendp(WifiBeacon(SSID=self.args["SSID"],cypher=self.args["CYPHER"]))
 				utils.wait(seconds=0.1)
 			return self.ok()
 		else:

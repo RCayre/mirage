@@ -1,12 +1,15 @@
 from scapy.all import Packet
-from scapy.layers.bluetooth import *
+from scapy.fields import ByteEnumField, ByteField, LEShortField, StrField
+from scapy.layers.bluetooth import HCI_Command_Hdr, HCI_Event_Command_Complete, LEMACField
+from scapy.packet import bind_layers
+
 '''
 This module contains some scapy definitions defining some vendor specific HCI packets in order to change the BD Address.
 '''
 COMPATIBLE_VENDORS = [0,10,13,15,18,48,57]
 
- # Packets
- # Read Local Version Information, Command & Event
+# Packets
+# Read Local Version Information, Command & Event
 
 class HCI_Cmd_Read_Local_Version_Information(Packet):
 	name = "Read Local Version Information"

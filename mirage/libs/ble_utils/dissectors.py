@@ -1,24 +1,26 @@
-import struct,copy
-from mirage.libs.wireless_utils.dissectors import Dissector
-from mirage.libs.bt_utils.assigned_numbers import *
+import struct
+
+from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
 from mirage.libs.common.hid import HIDMapping
+from mirage.libs.wireless_utils.dissectors import Dissector
+
 
 class PermissionsFlag(Dissector):
 	'''
 	This class is a dissector for the permissions flag (ATT/GATT). It inherits from ``Dissector``.
 
 	The following fields are available in the data structure :
-	  * **permissions** : field indicating permissions as a list of strings (ex : ['Write Without Response', 'Read'])
+		* **permissions** : field indicating permissions as a list of strings (ex : ['Write Without Response', 'Read'])
 		
 	The following permissions can be used : 
- 	 * "Extended Properties"
-	 * "Authenticated Signed Writes"
-	 * "Indicate"
-	 * "Notify"
-	 * "Write"
-	 * "Write Without Response"
-	 * "Read"
-	 * "Broadcast"
+		* "Extended Properties"
+		* "Authenticated Signed Writes"
+		* "Indicate"
+		* "Notify"
+		* "Write"
+		* "Write Without Response"
+		* "Read"
+		* "Broadcast"
 
 	:Example:
 
@@ -72,11 +74,11 @@ class UUID(Dissector):
 	It provides a way to convert them into their multiple forms.
 	
 	This dissector uses the data structure dictionary in order to use the following fields as simple attributes :
-	  * **UUID16** field : UUID (16 bits)
-	  * **UUID128** field : UUID (128 bits)
-	  * **name** field : name
-
- 	:Example:
+		* **UUID16** field : UUID (16 bits)
+		* **UUID128** field : UUID (128 bits)
+		* **name** field : name
+		
+	:Example:
 
 		>>> UUID(name="Generic Access").data.hex()
 		'1800'
@@ -140,11 +142,11 @@ class CharacteristicDeclaration(Dissector):
 	This class is a dissector for the characteristic declarations (GATT). It inherits from ``Dissector``.
 
 	This dissector uses the data structure dictionary in order to use the following fields as simple attributes :
-	  * **UUID** field : characteristic's UUID (see also the following dissector : ``UUID``)
-	  * **permissions** field : characteristic's Permissions Flag (see also the following dissector : ``PermissionsFlag``)
-	  * **valueHandle** field : characteristic's value handle
+		* **UUID** field : characteristic's UUID (see also the following dissector : ``UUID``)
+		* **permissions** field : characteristic's Permissions Flag (see also the following dissector : ``PermissionsFlag``)
+		* **valueHandle** field : characteristic's value handle
 
- 	:Example:
+	:Example:
 
 		>>> CharacteristicDeclaration(data=bytes.fromhex('2a00000302'))
 		Characteristic Declaration( UUID=UUID(128bits:00002a00-0000-1000-8000-00805f9b34fb, 16bits:0x2a00, name:Device Name ) , valueHandle=0x3 , permissionsFlag=Flag(Read))
@@ -186,9 +188,9 @@ class CharacteristicDescriptor(Dissector):
 	This class is a dissector for the characteristic descriptors (GATT). It inherits from ``Dissector``.
 
 	This dissector uses the data structure dictionary in order to use the following fields as simple attributes :
-	  * **UUID** field : descriptor's UUID (see also the following dissector : ``UUID``)
+		* **UUID** field : descriptor's UUID (see also the following dissector : ``UUID``)
 
- 	:Example:
+	:Example:
 
 		>>> CharacteristicDescriptor(data=bytes.fromhex("2901"))
 		Characteristic Descriptor( UUID=UUID(128bits:00002901-0000-1000-8000-00805f9b34fb, 16bits:0x2901, name:Characteristic User Description ) )
@@ -212,9 +214,9 @@ class Service(Dissector):
 	This class is a dissector for the services (GATT). It inherits from ``Dissector``.
 
 	This dissector uses the data structure dictionary in order to use the following fields as simple attributes :
-	  * **UUID** field : descriptor's UUID (see also the following dissector : ``UUID``)
+		* **UUID** field : descriptor's UUID (see also the following dissector : ``UUID``)
 
- 	:Example:
+	:Example:
 
 		>>> Service(data=bytes.fromhex("1800"))
 		Service( UUID=UUID(128bits:00001800-0000-1000-8000-00805f9b34fb, 16bits:0x1800, name:Generic Access ) )
@@ -242,15 +244,15 @@ class InputOutputCapability(Dissector):
 	This class is a dissector for the Input Output Capability (Security Manager). It inherits from ``Dissector``.
 
 	This dissector uses the data structure dictionary in order to use the following fields as simple attributes :
-	  * **display** field : boolean indicating if the device provides a display output
-	  * **yesno** field : boolean indicating if the device has yes/no input
-	  * **keyboard** field : boolean indicating if the device has a keyboard input
+		* **display** field : boolean indicating if the device provides a display output
+		* **yesno** field : boolean indicating if the device has yes/no input
+		* **keyboard** field : boolean indicating if the device has a keyboard input
 
- 	:Example:
+	:Example:
 
 		>>> InputOutputCapability(display=True, yesno=False, keyboard=True).data.hex()
 		'04'
-		>>> InputOutputCapability(data=data=bytes.fromhex("04"))
+		>>> InputOutputCapability(data=bytes.fromhex("04"))
 		Input Output Capability(0x4,keyboard:yes|yesno:no|display:yes)
 
 
@@ -293,17 +295,17 @@ class AuthReqFlag(Dissector):
 	This class is a dissector for the Authentication Request Flag (Security Manager). It inherits from ``Dissector``.
 
 	This dissector uses the data structure dictionary in order to use the following fields as simple attributes :
-	  * **bonding** field : boolean indicating if bonding is required
-	  * **mitm** field : boolean indicating if MiTM protection is required
-	  * **secureConnections** field : boolean indicating if a secure connection is required
-	  * **keypress** field : boolean indicating if the keypress mode is required
-	  * **ct2** field : boolean indicating if ct2 is required
+		* **bonding** field : boolean indicating if bonding is required
+		* **mitm** field : boolean indicating if MiTM protection is required
+		* **secureConnections** field : boolean indicating if a secure connection is required
+		* **keypress** field : boolean indicating if the keypress mode is required
+		* **ct2** field : boolean indicating if ct2 is required
 
- 	:Example:
+	:Example:
 
 		>>> AuthReqFlag(bonding=True, mitm=True).data.hex()
 		'05'
-		>>> AuthReqFlag(data=data=bytes.fromhex("05"))
+		>>> AuthReqFlag(data=bytes.fromhex("05"))
 		AuthReq Flag(0x5,bonding:yes|mitm:yes|secureConnections:no|keypress:no|ct2:no)
 
 	'''
@@ -358,12 +360,12 @@ class KeyDistributionFlag(Dissector):
 	This class is a dissector for the Key Distribution Flag (Security Manager). It inherits from ``Dissector``.
 
 	This dissector uses the data structure dictionary in order to use the following fields as simple attributes :
-	  * **encKey** field : boolean indicating if an encryption key is required (LTK + Ediv + RAND)
-	  * **idKey** field : boolean indicating if an identification key is required (IRK + BD_Addr + BD_Addr mode)
-	  * **signKey** field : boolean indicating if a signing key is required (CSRK)
-	  * **linkKey** field : boolean indicating if a link key is required
+		* **encKey** field : boolean indicating if an encryption key is required (LTK + Ediv + RAND)
+		* **idKey** field : boolean indicating if an identification key is required (IRK + BD_Addr + BD_Addr mode)
+		* **signKey** field : boolean indicating if a signing key is required (CSRK)
+		* **linkKey** field : boolean indicating if a link key is required
 
- 	:Example:
+	:Example:
 
 		>>> KeyDistributionFlag(idKey=True,encKey=True).data.hex()
 		'03'
@@ -419,12 +421,12 @@ class HIDoverGATTKeystroke(Dissector):
 	This class is a dissector for the HID over GATT keystroke payload. It inherits from ``Dissector``.
 
 	The following fields are available in the data structure :
-	  * **locale** : string indicating the locale (language layout)
-	  * **key** : string indicating the key
-	  * **ctrl** : boolean indicating if the Ctrl key is pressed
-	  * **alt** : boolean indicating if the Alt key is pressed
-	  * **super** : boolean indicating if the Super key is pressed
-	  * **shift** : boolean indicating if the Shift key is pressed
+		* **locale** : string indicating the locale (language layout)
+		* **key** : string indicating the key
+		* **ctrl** : boolean indicating if the Ctrl key is pressed
+		* **alt** : boolean indicating if the Alt key is pressed
+		* **super** : boolean indicating if the Super key is pressed
+		* **shift** : boolean indicating if the Shift key is pressed
 		
 
 	:Example:

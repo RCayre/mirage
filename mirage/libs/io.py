@@ -1,7 +1,9 @@
 import sys
 from enum import IntEnum
-from terminaltables import SingleTable
+
 import matplotlib
+from terminaltables import SingleTable
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -14,10 +16,10 @@ This submodule provides some useful functions allowing to interact with the user
 class VerbosityLevels(IntEnum):
 	'''
 	This class provide an enumeration of available verbosity levels :
-	  * ``NONE`` prints no message at all
-	  * ``NO_INFO_AND_WARNING`` prints only failure and success messages
-	  * ``NO_INFO`` prints only failure, success and warning messages
-	  * ``ALL`` prints every type of messages
+		* ``NONE`` prints no message at all
+		* ``NO_INFO_AND_WARNING`` prints only failure and success messages
+		* ``NO_INFO`` prints only failure, success and warning messages
+		* ``ALL`` prints every type of messages
 
 	'''
 	NONE = 0
@@ -288,10 +290,10 @@ class MiceVisualizer:
 	This class allows to import some mouse movement and click data in order to generate a graphical view of the mouse behaviour.
 	It requires to provide a list of dictionary containing the following fields:
 	
-	   * **x**: x coordinate of the velocity vector
-	   * **y**: y coordinate of the velocity vector
-	   * **leftClick**: boolean indicating if the left button is pressed
-	   * **rightClick**: boolean indicating if the right button is pressed
+		* **x**: x coordinate of the velocity vector
+		* **y**: y coordinate of the velocity vector
+		* **leftClick**: boolean indicating if the left button is pressed
+		* **rightClick**: boolean indicating if the right button is pressed
 
 	The execution of this component may take a few minutes if the provided data is big. It produces an animated GIF file.
 

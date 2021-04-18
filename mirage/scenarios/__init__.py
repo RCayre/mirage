@@ -1,6 +1,7 @@
-import os, sys, imp
+import os
+
 from mirage.core.app import App
-from mirage.libs.utils import getHomeDir,generateScenariosDictionary
+from mirage.libs.utils import generateScenariosDictionary, getHomeDir
 
 if App.Instance is not None:
 	# Scenarios Directory

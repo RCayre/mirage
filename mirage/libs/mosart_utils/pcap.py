@@ -1,15 +1,19 @@
-from mirage.libs.mosart_utils.scapy_mosart_layers import *
-from mirage.libs.mosart_utils.helpers import *
-from mirage.libs import wireless
+from scapy.compat import raw
 
-class MosartPCAPDevice(wireless.PCAPDevice):
+from mirage.libs.mosart_utils.helpers import integerToAddress
+from mirage.libs.mosart_utils.scapy_mosart_layers import Mosart_Hdr
+from mirage.libs.wireless_utils.packets import WaitPacket
+from mirage.libs.wireless_utils.pcapDevice import PCAPDevice
+
+
+class MosartPCAPDevice(PCAPDevice):
 	'''
 	This device allows to communicate with a PCAP file in order to write and read Mosart packets.
 	
 	The corresponding interfaces are : ``<filename>.pcap`` (e.g. "out.pcap")
 	
-	  * If the file exists, the MosartPCAPDevice is in *read* mode, and the corresponding receiver is able to use it as a classic Mosart sniffer.
-	  * If the file doesn't exist, the MosartPCAPDevice is in *write* mode, and the corresponding emitter is able to write packets in the file.
+		* If the file exists, the MosartPCAPDevice is in *read* mode, and the corresponding receiver is able to use it as a classic Mosart sniffer.
+		* If the file doesn't exist, the MosartPCAPDevice is in *write* mode, and the corresponding emitter is able to write packets in the file.
 
 	The following capabilities are actually supported :
 
@@ -178,7 +182,7 @@ class MosartPCAPDevice(wireless.PCAPDevice):
 				currentTimestamp = timestamp
 			else:
 				wait = (timestamp - currentTimestamp)
-				stream.append(wireless.WaitPacket(time=wait))
+				stream.append(WaitPacket(time=wait))
 				currentTimestamp = timestamp
 
 			stream.append(self.publish("convertRawToMiragePacket",packet))

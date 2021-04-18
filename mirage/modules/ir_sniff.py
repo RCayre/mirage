@@ -1,5 +1,6 @@
-from mirage.libs import ir,utils
 from mirage.core import module
+from mirage.libs import utils
+from mirage.libs.io import fail
 
 
 class ir_sniff(module.WirelessModule):
@@ -62,5 +63,5 @@ class ir_sniff(module.WirelessModule):
 			output = self.generateOutput()	
 			return self.ok(output)
 		else:
-			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to sniff IR signals.")			
+			fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to sniff IR signals.")
 			return self.nok()

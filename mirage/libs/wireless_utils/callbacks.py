@@ -16,11 +16,11 @@ class Callback:
 	+----------------------+-------------------------------+
 	
 	Some arguments can be passed to the constructor as parameters :
-	  * event : string indicating the event
-	  * function : function to run if the callback is triggered
-	  * args : unnamed arguments of the function
-	  * kwargs : named arguments of the function
-	  * background : boolean indicating if the function is launched in a background thread or in foreground
+		* event : string indicating the event
+		* function : function to run if the callback is triggered
+		* args : unnamed arguments of the function
+		* kwargs : named arguments of the function
+		* background : boolean indicating if the function is launched in a background thread or in foreground
 	'''
 	def __init__(self,event="*",function=None, args=[], kwargs={},background=True):
 		if event == "*" or event.isdigit():

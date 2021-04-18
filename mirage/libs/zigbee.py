@@ -1,13 +1,30 @@
-from mirage.libs.zigbee_utils.rzusbstick import *
-from mirage.libs.zigbee_utils.packets import *
-from mirage.libs.zigbee_utils.helpers import *
-from mirage.libs.zigbee_utils.pcap import *
-from mirage.libs.zigbee_utils.scapy_xbee_layers import *
-from mirage.libs import wireless
-from mirage.core.module import *
+
 import struct
 
-class ZigbeeEmitter(wireless.Emitter):
+from scapy.compat import raw
+from scapy.layers.dot15d4 import Dot15d4, Dot15d4Ack, Dot15d4Beacon, Dot15d4Cmd, Dot15d4CmdAssocReq, Dot15d4CmdAssocResp, Dot15d4CmdDisassociation, Dot15d4Data
+from scapy.layers.zigbee import ZigBeeBeacon, ZigbeeAppDataPayload, ZigbeeSecurityHeader
+
+from mirage.core.module import WirelessModule
+from mirage.libs.wireless import Emitter, Receiver
+from mirage.libs.zigbee_utils.packets import ZigbeeAcknowledgment, \
+	ZigbeeApplicationData, \
+	ZigbeeApplicationEncryptedData, \
+	ZigbeeAssociationRequest, \
+	ZigbeeAssociationResponse, \
+	ZigbeeBeacon, \
+	ZigbeeBeaconRequest, \
+	ZigbeeDataRequest, \
+	ZigbeeDisassociationNotification, \
+	ZigbeePacket, \
+	ZigbeeSniffingParameters, \
+	ZigbeeXBeeData
+from mirage.libs.zigbee_utils.pcap import ZigbeePCAPDevice
+from mirage.libs.zigbee_utils.rzusbstick import RZUSBStickDevice
+from mirage.libs.zigbee_utils.scapy_xbee_layers import Xbee_Hdr
+
+
+class ZigbeeEmitter(Emitter):
 	def __init__(self,interface):
 		deviceClass = None
 		if "rzusbstick" in interface:
@@ -126,7 +143,7 @@ class ZigbeeEmitter(wireless.Emitter):
 		#frame.show()
 		return frame
 
-class ZigbeeReceiver(wireless.Receiver):
+class ZigbeeReceiver(Receiver):
 	def __init__(self,interface):
 		deviceClass = None
 		if "rzusbstick" in interface:
@@ -143,7 +160,7 @@ class ZigbeeReceiver(wireless.Receiver):
 		new = ZigbeePacket(sequenceNumber=frame.seqnum,data=raw(frame))
 		new.packet = frame
 
-		if frame[Dot15d4].fcf_frametype == 0 or Dot15d4Beacon in frame: 
+		if frame[Dot15d4].fcf_frametype == 0 or Dot15d4Beacon in frame:
 			new = ZigbeeBeacon(
 						sequenceNumber=frame.seqnum,
 						srcAddr=frame.src_addr,
@@ -153,10 +170,10 @@ class ZigbeeReceiver(wireless.Receiver):
 						payload=False
 					)
 			if ZigBeeBeacon in frame:
-		                new.payload = True
-		                new.endDeviceCapacity=frame.end_device_capacity
-		                new.routerCapacity=frame.router_capacity
-		                new.extendedPanID=':'.join('{:02x}'.format(i).upper() for i in struct.pack('>Q',frame.extended_pan_id))
+						new.payload = True
+						new.endDeviceCapacity=frame.end_device_capacity
+						new.routerCapacity=frame.router_capacity
+						new.extendedPanID=':'.join('{:02x}'.format(i).upper() for i in struct.pack('>Q',frame.extended_pan_id))
 		elif frame[Dot15d4].fcf_frametype == 1 or Dot15d4Data in frame:
 			if b"\r\n" == raw(frame[Dot15d4Data:])[-4:-2]:
 				xbeeData = Xbee_Hdr(raw(frame[Dot15d4Data:][1:]))

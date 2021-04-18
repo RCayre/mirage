@@ -1,11 +1,11 @@
-from mirage.libs import wireless
+from mirage.libs.wireless_utils.packets import Packet
 
 '''
 This module contains Mirage Packets for the Bluetooth protocol.
 '''
 PSM_PROTOCOLS = {1: "SDP", 3: "RFCOMM", 5: "telephony control"}
 
-class BluetoothPacket(wireless.Packet):
+class BluetoothPacket(Packet):
 	'''
 	Mirage Bluetooth Packet
 	'''
@@ -300,9 +300,9 @@ class BluetoothL2CAPConnectionRequest(BluetoothPacket):
 
 	.. note::
 		This class implements an automatic behaviour in order to select the right protocol :
-		  * If PSM is provided, the protocol field is set according to its value
-		  * If PSM is not provided, the protocol field is used to choose the protocol and the PSM field is set to the right value
-		  * If PSM and protocol are not provided, the SDP protocol is automatically selected
+			* If PSM is provided, the protocol field is set according to its value
+			* If PSM is not provided, the protocol field is used to choose the protocol and the PSM field is set to the right value
+			* If PSM and protocol are not provided, the SDP protocol is automatically selected
 	'''
 	def __init__(self,psm=None, protocol=None, scid=0x0040,connectionHandle=-1):
 		super().__init__()

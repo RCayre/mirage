@@ -1,6 +1,9 @@
 import queue
-from mirage.libs import io,wifi,utils
+
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.wifi_utils.packets import WifiBeacon, WifiProbeRequest, WifiProbeResponse
+
 
 class wifi_scan(module.WirelessModule):
 	def init(self):
@@ -24,12 +27,12 @@ class wifi_scan(module.WirelessModule):
 	
 
 	def scan(self,packet):
-		if isinstance(packet,wifi.WifiProbeResponse) or isinstance(packet,wifi.WifiBeacon):
+		if isinstance(packet,WifiProbeResponse) or isinstance(packet,WifiBeacon):
 			ssid = packet.SSID
 			address = packet.srcMac
 			channel = packet.channel
 			self.accessPointsQueue.put({"ssid":ssid,"address":address,"channel":channel})
-		elif isinstance(packet,wifi.WifiProbeRequest):
+		elif isinstance(packet,WifiProbeRequest):
 			address = packet.srcMac
 			channel = packet.channel
 			self.stationsQueue.put({"address":address,"channel":channel})
@@ -125,7 +128,7 @@ class wifi_scan(module.WirelessModule):
 
 			for i in range(utils.integerArg(self.args['TIME'])):
 				self.receiver.setChannel(channel+1)
-				self.emitter.sendp(wifi.WifiProbeRequest(srcMac = 'FF:FF:FF:FF:FF:FF', destMac= 'FF:FF:FF:FF:FF:FF', emitMac = "FF:FF:FF:FF:FF:FF"))
+				self.emitter.sendp(WifiProbeRequest(srcMac = 'FF:FF:FF:FF:FF:FF', destMac= 'FF:FF:FF:FF:FF:FF', emitMac = "FF:FF:FF:FF:FF:FF"))
 				channel = (channel+1) % 14
 				utils.wait(seconds=1)
 				if utils.booleanArg(self.args["ACCESS_POINTS"]):

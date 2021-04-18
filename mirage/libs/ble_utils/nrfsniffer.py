@@ -1,13 +1,34 @@
-from serial import Serial,SerialException
-from serial.tools.list_ports import comports
-from threading import Lock
-from queue import Queue
+import struct
 import time
-from mirage.libs.ble_utils.constants import *
-from mirage.libs.ble_utils.scapy_nrfsniffer_layers import *
-from mirage.libs import io,utils,wireless
+from queue import Queue
+from threading import Lock
 
-class NRFSnifferDevice(wireless.Device):
+from scapy.compat import raw
+from scapy.layers.bluetooth4LE import BTLE_ADV, BTLE_CONNECT_REQ, BTLE_PPI
+from serial import Serial, SerialException
+from serial.tools.list_ports import comports
+
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.constants import BLESniffingMode
+from mirage.libs.ble_utils.scapy_nrfsniffer_layers import NRFSniffer_Event_Follow, \
+	NRFSniffer_Follow_Request, \
+	NRFSniffer_Go_Idle, \
+	NRFSniffer_Hdr, \
+	NRFSniffer_Ping_Request, \
+	NRFSniffer_Ping_Response, \
+	NRFSniffer_Scan_Continuously_Request, \
+	NRFSniffer_Set_Advertising_Channels_Hopping_Sequence, \
+	NRFSniffer_Set_Temporary_Key_Request, \
+	SLIP_END, \
+	SLIP_ESC, \
+	SLIP_ESC_END, \
+	SLIP_ESC_ESC, \
+	SLIP_ESC_START, \
+	SLIP_START
+from mirage.libs.wireless_utils.device import Device
+
+
+class NRFSnifferDevice(Device):
 	'''
 	This device allows to communicate with a NRFSniffer Device in order to sniff Bluetooth Low Energy protocol.
 	The corresponding interfaces are : ``nrfsnifferX`` (e.g. "nrfsniffer0")
@@ -15,7 +36,7 @@ class NRFSnifferDevice(wireless.Device):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available ?    |
 	+===================================+================+
 	| SCANNING                          | yes            |
 	+-----------------------------------+----------------+
@@ -375,7 +396,7 @@ class NRFSnifferDevice(wireless.Device):
 			self.sniffingMode = BLESniffingMode.NEW_CONNECTION
 			version = self.getFirmwareVersion()
 			io.success("NRFSniffer device "+("#"+str(self.index) if isinstance(self.index,int) else str(self.index))+
-				   " successfully instantiated (firmware version : "+str(version)+")")
+				" successfully instantiated (firmware version : "+str(version)+")")
 			self.channel = None
 			self._goIdle()
 			self.targets = {}
@@ -647,7 +668,7 @@ class NRFSnifferDevice(wireless.Device):
 		:Example:
 
 			>>> device.setScan(enable=True) # scanning mode enabled
- 			>>> device.setScan(enable=False) # scanning mode disabled
+			>>> device.setScan(enable=False) # scanning mode disabled
 		
 		.. note::
 

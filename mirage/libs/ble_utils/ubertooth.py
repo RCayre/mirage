@@ -1,9 +1,32 @@
-from scapy.all import *
+import array
 import struct
-from mirage.libs.bt_utils.ubertooth import *
-from mirage.libs.ble_utils.constants import *
+
+import usb
+from scapy.layers.bluetooth4LE import BTLE_CONNECT_REQ
+
+from mirage.libs import io, utils
 from mirage.libs.ble_utils import helpers
-from mirage.libs import utils,io,wireless
+from mirage.libs.ble_utils.constants import BLESniffingMode
+from mirage.libs.bt_utils.constants import CTRL_IN, \
+	CTRL_OUT, \
+	JAM_CONTINUOUS, \
+	JAM_NONE, \
+	UBERTOOTH_BTLE_PROMISC, \
+	UBERTOOTH_BTLE_SET_TARGET, \
+	UBERTOOTH_BTLE_SNIFFING, \
+	UBERTOOTH_GET_ACCESS_ADDRESS, \
+	UBERTOOTH_GET_CHANNEL, \
+	UBERTOOTH_JAM_MODE, \
+	UBERTOOTH_POLL, \
+	UBERTOOTH_SET_ACCESS_ADDRESS, \
+	UBERTOOTH_SET_CHANNEL
+from mirage.libs.bt_utils.scapy_ubertooth_layers import BTLE_Promiscuous_Access_Address, \
+	BTLE_Promiscuous_CRCInit, \
+	BTLE_Promiscuous_Hop_Increment, \
+	BTLE_Promiscuous_Hop_Interval, \
+	Ubertooth_Hdr
+from mirage.libs.bt_utils.ubertooth import BtUbertoothDevice
+from mirage.libs.wireless_utils.packetQueue import StoppableThread
 
 
 class BLEUbertoothDevice(BtUbertoothDevice):
@@ -14,7 +37,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available ?    |
 	+===================================+================+
 	| SCANNING                          | yes            |
 	+-----------------------------------+----------------+
@@ -104,13 +127,13 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def _sweepingThread(self):
 		for channel in self.sweepingSequence:
 			if ((self.sniffingMode == BLESniffingMode.NEW_CONNECTION and not self.synchronized) or
-			     self.sniffingMode == BLESniffingMode.ADVERTISEMENT):
+				self.sniffingMode == BLESniffingMode.ADVERTISEMENT):
 				self.setChannel(channel=channel)
 			utils.wait(seconds=0.1)
 
 	def _startSweepingThread(self):
 		self._stopSweepingThread()
-		self.sweepingThreadInstance = wireless.StoppableThread(target=self._sweepingThread)
+		self.sweepingThreadInstance = StoppableThread(target=self._sweepingThread)
 		self.sweepingThreadInstance.start()
 
 	def _stopSweepingThread(self):
@@ -573,8 +596,8 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		.. warning::
 			Please note the following warnings :
 
-			  * Ubertooth is actually not able to set CRC Init value and uses a full Channel Map (0x1fffffffff). This parameters are provided in order to provide the same API for Ubertooth and BTLEJack devices.
-			  * If no access address is provided, Ubertooth tries to get multiple candidate access addresses and select the most probable address
+				* Ubertooth is actually not able to set CRC Init value and uses a full Channel Map (0x1fffffffff). This parameters are provided in order to provide the same API for Ubertooth and BTLEJack devices.
+				* If no access address is provided, Ubertooth tries to get multiple candidate access addresses and select the most probable address
 
 		.. note::
 
@@ -650,7 +673,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		:Example:
 
 			>>> device.setScan(enable=True) # scanning mode enabled
- 			>>> device.setScan(enable=False) # scanning mode disabled
+			>>> device.setScan(enable=False) # scanning mode disabled
 		
 		.. note::
 
@@ -661,7 +684,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 			self.sniffAdvertisements()
 			self._setCRCChecking(True)
 			if self.scanThreadInstance is None:
-				self.scanThreadInstance = wireless.StoppableThread(target=self._scanThread)
+				self.scanThreadInstance = StoppableThread(target=self._scanThread)
 				self.scanThreadInstance.start()
 		else:
 			self.scanThreadInstance.stop()

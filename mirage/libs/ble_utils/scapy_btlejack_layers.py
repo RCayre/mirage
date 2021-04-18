@@ -1,5 +1,24 @@
-from scapy.all import *
 import struct
+
+from scapy.fields import BitEnumField, \
+	BitField, \
+	ByteEnumField, \
+	ByteField, \
+	ConditionalField, \
+	FieldLenField, \
+	LEIntField, \
+	LEShortField, \
+	LEX3BytesField, \
+	PacketField, \
+	PacketListField, \
+	StrField, \
+	StrLenField, \
+	XByteField, \
+	XLEIntField, \
+	XLEShortField
+from scapy.layers.bluetooth4LE import BDAddrField, BTLEChanMapField, BTLE_ADV, BTLE_CONNECT_REQ, BTLE_DATA
+from scapy.packet import Packet, bind_layers
+
 '''
 This module contains some scapy definitions for communicating with a BTLEJack device.
 '''
@@ -89,7 +108,7 @@ class BTLEJack_Collaborative_Channel_Map_Command(Packet):
 			LEX3BytesField("crc_init",None),
 			ByteField("start_channel",0),
 			ByteField("end_channel",37)
-		      ]
+			]
 
 class BTLEJack_Recover_Command(Packet):
 	name = "BTLEJack Recover Command"
@@ -106,7 +125,7 @@ class BTLEJack_Recover_Crcinit_Command(Packet):
 	name = "BTLEJack Recover CRCInit Command"
 	fields_desc = [
 			XLEIntField("access_address",None)			
-		      ]
+			]
 
 class BTLEJack_Recover_Channel_Map_Command(Packet):
 	name = "BTLEJack Recover Channel Map Command"
@@ -116,7 +135,7 @@ class BTLEJack_Recover_Channel_Map_Command(Packet):
 			ByteField("start_channel",0),
 			ByteField("end_channel",37),
 			LEIntField("timeout",None)		
-		      ]
+			]
 
 class BTLEJack_Recover_Hopping_Parameters_Command(Packet):
 	name = "BTLEJack Recover Hopping Parameters Command"
@@ -124,21 +143,21 @@ class BTLEJack_Recover_Hopping_Parameters_Command(Packet):
 			XLEIntField("access_address",None),
 			LEX3BytesField("crc_init",None),
 			BTLEChanMapField("channel_map",None)
-		      ]
+			]
 
 
 class BTLEJack_Recover_Connection_AA_Command(Packet):
 	name = "BTLEJack Recover Connection AA Command"
 	fields_desc = [
 			XLEIntField("access_address",None)			
-		      ]
+			]
 
 class BTLEJack_Recover_Connection_AA_Chm_Command(Packet):
 	name = "BTLEJack Recover Connection AA Chm Command"
 	fields_desc = [
 			XLEIntField("access_address",None),
 			BTLEChanMapField("channel_map",None)		
-		      ]
+			]
 
 
 class BTLEJack_Recover_Connection_AA_Chm_HopInterval_Command(Packet):
@@ -147,7 +166,7 @@ class BTLEJack_Recover_Connection_AA_Chm_HopInterval_Command(Packet):
 			XLEIntField("access_address",None),
 			BTLEChanMapField("channel_map",None),
 			XLEShortField("hop_interval",None)		
-		      ]
+			]
 
 class BTLEJack_Sniff_Connection_Request_Command(Packet):
 	name = "BTLEJack Sniff Connection Request Command"

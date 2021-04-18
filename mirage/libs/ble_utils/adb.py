@@ -1,8 +1,14 @@
-from scapy.all import *
-import subprocess,struct
-from mirage.libs import io,utils,wireless
+import socket
+import struct
+import subprocess
 
-class ADBDevice(wireless.Device):
+from scapy.layers.bluetooth import HCI_Hdr
+
+from mirage.libs import io
+from mirage.libs.wireless_utils.device import Device
+
+
+class ADBDevice(Device):
 	'''
 	This device allows to communicate with an Android Device using **adb** in order to monitor Bluetooth Low Energy HCI packets.
 	

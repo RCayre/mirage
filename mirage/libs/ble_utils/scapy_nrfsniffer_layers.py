@@ -1,5 +1,13 @@
-from scapy.all import *
 import struct
+
+from scapy.fields import BitFieldLenField, ByteEnumField, \
+	ByteField, \
+	LEIntField, \
+	LEShortField, \
+	MACField, PacketField, \
+	StrFixedLenField, StrLenField
+from scapy.layers.bluetooth4LE import BTLE
+from scapy.packet import Packet, bind_layers
 
 '''
 This module contains some scapy definitions for communicating with a NRF Sniffer device.

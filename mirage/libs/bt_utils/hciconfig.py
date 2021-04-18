@@ -1,5 +1,6 @@
-from fcntl import ioctl
 import socket
+from fcntl import ioctl
+
 
 class HCIConfig(object):
 	'''

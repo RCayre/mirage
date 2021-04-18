@@ -1,8 +1,22 @@
-from scapy.all import *
-from mirage.libs.bt_utils.constants import *
+
 '''
 This module contains some scapy definitions for communicating with an Ubertooth device.
 '''
+import struct
+
+from scapy.fields import ByteEnumField, \
+	ByteField, \
+	LEIntField, \
+	LEShortField, \
+	LEX3BytesField, \
+	ShortField, \
+	SignedByteField, \
+	XByteField, \
+	XLEIntField
+from scapy.layers.bluetooth4LE import BTLE
+from scapy.packet import Packet, bind_layers
+
+from mirage.libs.bt_utils.constants import UBERTOOTH_PACKET_TYPES
 
 ACCESS_ADDRESS_SIZE = 4
 HEADER_SIZE = 2
@@ -33,10 +47,11 @@ class Ubertooth_Hdr(Packet):
 class BTLE_Promiscuous_Data(Packet):
 	name = "BTLE Promiscuous Data"
 	fields_desc = [
-			ByteEnumField("state",None,{0x00 : "access_address",
-						   0x01 : "crc_init",
-						   0x02 : "hop_interval",
-						   0x03 : "hop_increment"})
+			ByteEnumField("state",None,{
+						0x00 : "access_address",
+						0x01 : "crc_init",
+						0x02 : "hop_interval",
+						0x03 : "hop_increment"})
 			]
 
 class BTLE_Promiscuous_Access_Address(Packet):

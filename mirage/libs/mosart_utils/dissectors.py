@@ -1,13 +1,13 @@
+from mirage.libs.mosart_utils.keyboard_codes import MosartKeyboardCodes
 from mirage.libs.wireless_utils.dissectors import Dissector
-from mirage.libs.mosart_utils.keyboard_codes import *
 
 class MosartKeystroke(Dissector):
 	'''
 	This class is a dissector for the Mosart keystroke payload. It inherits from ``Dissector``.
 
 	The following fields are available in the data structure :
-	  * **hidCode** : integer indicating the hid code of the key
-	  * **modifiers** : integer indicating the modifiers code of the key
+		* **hidCode** : integer indicating the hid code of the key
+		* **modifiers** : integer indicating the modifiers code of the key
 
 	:Example:
 

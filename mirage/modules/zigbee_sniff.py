@@ -1,5 +1,6 @@
-from mirage.libs import zigbee,utils,io
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.zigbee_utils.helpers import convertAddress
 
 
 class zigbee_sniff(module.WirelessModule):
@@ -49,7 +50,7 @@ class zigbee_sniff(module.WirelessModule):
 				if utils.isNumber(self.args["TARGET"]):
 					self.target = utils.integerArg(self.args["TARGET"])
 				else:
-					self.target = zigbee.convertAddress(self.args["TARGET"])
+					self.target = convertAddress(self.args["TARGET"])
 			else:
 				self.target = None
 

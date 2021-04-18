@@ -1,10 +1,29 @@
-from mirage.libs.bt_utils.scapy_ubertooth_layers import *
-from mirage.libs import io,wireless,utils
-from threading import Lock
-import usb.core,usb.util,struct,array
+import array
+import struct
 from fcntl import ioctl
+from threading import Lock
 
-class BtUbertoothDevice(wireless.Device):
+import usb.core
+import usb.util
+
+from mirage.libs import io, utils
+from mirage.libs.bt_utils.constants import CTRL_IN, \
+	CTRL_OUT, \
+	MOD_BT_LOW_ENERGY, \
+	UBERTOOTH_GET_MOD, \
+	UBERTOOTH_GET_SERIAL, \
+	UBERTOOTH_ID_PRODUCT, \
+	UBERTOOTH_ID_VENDOR, \
+	UBERTOOTH_RESET, \
+	UBERTOOTH_SET_CLOCK, \
+	UBERTOOTH_SET_CRC_VERIFY, \
+	UBERTOOTH_SET_MOD, \
+	UBERTOOTH_STOP, \
+	USBDEVFS_RESET
+from mirage.libs.wireless_utils.device import Device
+
+
+class BtUbertoothDevice(Device):
 	'''
 	This device allows to communicate with an Ubertooth Device in order to use Bluetooth protocol.
 	The corresponding interfaces are : ``ubertoothX``  (e.g. "ubertooth0")
@@ -149,7 +168,7 @@ class BtUbertoothDevice(wireless.Device):
 		try:		
 			self.ubertooth = list(
 						usb.core.find(idVendor=UBERTOOTH_ID_VENDOR, idProduct=UBERTOOTH_ID_PRODUCT, find_all=True)
-					 )[self.index]
+					)[self.index]
 
 			self.version = '{0:x}.{1:x}'.format((self.ubertooth.bcdDevice >> 8) & 0x0FF,self.ubertooth.bcdDevice & 0x0FF)
 		except:

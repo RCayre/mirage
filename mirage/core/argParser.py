@@ -1,5 +1,7 @@
-from mirage.libs import io
 import sys
+
+from mirage.libs import io
+
 
 class ArgParser:
 	'''

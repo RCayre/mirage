@@ -1,6 +1,7 @@
-from mirage.libs import wireless
+from mirage.libs.wireless_utils.packets import Packet
 
-class IRPacket(wireless.Packet):
+
+class IRPacket(Packet):
 	'''
 	Mirage IR Packet
 

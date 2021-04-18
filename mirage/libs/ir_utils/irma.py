@@ -1,8 +1,21 @@
-from serial import Serial,SerialException
+from scapy.compat import raw
+from scapy.layers.netflow import port
+from serial import Serial, SerialException
 from serial.tools.list_ports import comports
+
+from mirage.libs import io, utils
+from mirage.libs.ir_utils.scapy_irma_layers import IRma_Hdr, \
+	IRma_Request, \
+	IRma_Response, \
+	Req_IRma_GetFreq, \
+	Req_IRma_Recv, \
+	Req_IRma_Reset, \
+	Req_IRma_SetFreq, \
+	Resp_IRma_Freq, \
+	Resp_IRma_Ready, \
+	Resp_IRma_Reset
 from mirage.libs.wireless import Device
-from mirage.libs.ir_utils.scapy_irma_layers import *
-from mirage.libs import io
+
 
 class IRMADevice(Device):
 	'''

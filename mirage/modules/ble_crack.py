@@ -1,5 +1,7 @@
-from mirage.libs import utils,io,ble
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.crypto import BLECrypto
+
 
 class ble_crack(module.WirelessModule):
 	def init(self):
@@ -32,7 +34,7 @@ class ble_crack(module.WirelessModule):
 				self.args["RESPONDER_ADDRESS"] != "" and 
 				self.args["INITIATOR_ADDRESS_TYPE"] != "" and 
 				self.args["RESPONDER_ADDRESS_TYPE"] != ""
-			    )
+				)
 		payloads = (self.args["PAIRING_REQUEST"] != "" and self.args["PAIRING_RESPONSE"] != "")
 		return couple and addresses and payloads
 
@@ -60,7 +62,7 @@ class ble_crack(module.WirelessModule):
 
 			io.info("Cracking TK ...")
 			
-			pin = ble.BLECrypto.crackTemporaryKey(
+			pin = BLECrypto.crackTemporaryKey(
 								rand,
 								self.pReq,
 								self.pRes,
@@ -75,7 +77,7 @@ class ble_crack(module.WirelessModule):
 			io.success("Temporary Key found : "+self.temporaryKey.hex())
 
 			if self.mRand != b"" and self.sRand != b"":
-				self.shortTermKey = ble.BLECrypto.s1(self.temporaryKey,self.mRand,self.sRand)[::-1]
+				self.shortTermKey = BLECrypto.s1(self.temporaryKey,self.mRand,self.sRand)[::-1]
 				io.success("Short Term Key found : "+self.shortTermKey.hex())
 				return self.ok({"PIN":str(pin), "TEMPORARY_KEY":self.temporaryKey.hex(),"SHORT_TERM_KEY":self.shortTermKey.hex()})
 			return self.ok({"PIN":str(pin), "TEMPORARY_KEY":self.temporaryKey.hex()})

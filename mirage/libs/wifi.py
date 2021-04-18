@@ -1,12 +1,24 @@
-from mirage.core.module import WirelessModule
-from mirage.libs import utils,wireless
-import mirage.libs.io as mio
-from mirage.libs.wifi_utils.packets import *
-from mirage.libs.wifi_utils.constants import *
+import array
+import fcntl
+import math
+import os
+import socket
+import struct
 from threading import Lock
-from scapy.all import *
-import os,socket,fcntl,array,struct
-class WifiDevice(wireless.Device):
+
+from scapy.arch import IFF_UP
+from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11Deauth, Dot11Disas, Dot11Elt, Dot11ProbeReq, Dot11ProbeResp, RadioTap
+from scapy.sendrecv import sendp, sniff
+
+import mirage.libs.io as mio
+from mirage.core.module import WirelessModule
+from mirage.libs.wifi_utils.constants import IFNAMESIZE, IWFREQFIXED, SIOCGIFFLAGS, SIOCGIWFREQ, SIOCGIWMODE, SIOCSIFFLAGS, SIOCSIWFREQ, SIOCSIWMODE, WIFI_MODES
+from mirage.libs.wifi_utils.packets import WifiBeacon, WifiDeauth, WifiDisas, WifiPacket, WifiProbeRequest, WifiProbeResponse
+from mirage.libs.wireless import Emitter, Receiver
+from mirage.libs.wireless_utils.device import Device
+
+
+class WifiDevice(Device):
 	'''
 	This device allows to communicate with a WiFi Device.
 	The corresponding interfaces are : ``wlanX`` (e.g. "wlanX")
@@ -14,17 +26,17 @@ class WifiDevice(wireless.Device):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available?	|
 	+===================================+================+
-	| SCANNING                          | yes            |
+	| SCANNING							| yes			|
 	+-----------------------------------+----------------+
-	| MONITORING                        | yes            |
+	| MONITORING						| yes			|
 	+-----------------------------------+----------------+
-	| COMMUNICATING_AS_ACCESS_POINT     | yes            |
+	| COMMUNICATING_AS_ACCESS_POINT		| yes			|
 	+-----------------------------------+----------------+
-	| COMMUNICATING_AS_STATION          | yes            |
+	| COMMUNICATING_AS_STATION			| yes			|
 	+-----------------------------------+----------------+
-	| JAMMING                           | no             |
+	| JAMMING							| no			|
 	+-----------------------------------+----------------+
 
 	'''
@@ -118,14 +130,14 @@ class WifiDevice(wireless.Device):
 
 		Existing modes: 
 
-		   * 'Auto'
-		   * 'Ad-Hoc'
-		   * 'Managed'
-		   * 'Master'
-		   * 'Repeat'
-		   * 'Second'
-		   * 'Monitor'
-		   * 'Unknown/bug'
+			* 'Auto'
+			* 'Ad-Hoc'
+			* 'Managed'
+			* 'Master'
+			* 'Repeat'
+			* 'Second'
+			* 'Monitor'
+			* 'Unknown/bug'
 		
 		:return: string indicating the mode in use
 		:rtype: str
@@ -154,14 +166,14 @@ class WifiDevice(wireless.Device):
 
 		Existing modes: 
 
-		   * 'Auto'
-		   * 'Ad-Hoc'
-		   * 'Managed'
-		   * 'Master'
-		   * 'Repeat'
-		   * 'Second'
-		   * 'Monitor'
-		   * 'Unknown/bug'
+			* 'Auto'
+			* 'Ad-Hoc'
+			* 'Managed'
+			* 'Master'
+			* 'Repeat'
+			* 'Second'
+			* 'Monitor'
+			* 'Unknown/bug'
 
 		
 		:param mode: string indicating the mode to use
@@ -372,7 +384,7 @@ class WifiDevice(wireless.Device):
 		return ''.join(['%02x:' % b for b in info[18:24]])[:-1].upper()
 
 
-class WifiEmitter(wireless.Emitter):
+class WifiEmitter(Emitter):
 	def __init__(self,interface="wlp2s0"):
 		super().__init__(interface=interface,packetType=WifiPacket,deviceType=WifiDevice)
 
@@ -415,8 +427,8 @@ class WifiEmitter(wireless.Emitter):
 					packet.packet /= Dot11Disas(reason=packet.reason)
 
 				if ( isinstance(packet, WifiBeacon) 		or
-				     isinstance(packet, WifiProbeRequest) 	or
-				     isinstance(packet, WifiProbeResponse) ):
+					isinstance(packet, WifiProbeRequest) 	or
+					isinstance(packet, WifiProbeResponse) ):
 					ssid = Dot11Elt(ID="SSID", info=packet.SSID, len=len(packet.SSID))
 					
 					packet.packet /= ssid
@@ -428,13 +440,13 @@ class WifiEmitter(wireless.Emitter):
 
 					if hasattr(packet,"cypher") and packet.cypher != "OPN":
 						rsn = Dot11Elt(ID='RSNinfo',info=(b'\x01\x00\x00\x0f\xac\x04\x01\x00\x00\x0f'
-										  b'\xac\x04\x01\x00\x00\x0f\xac\x01\x28\x00'))
+										b'\xac\x04\x01\x00\x00\x0f\xac\x01\x28\x00'))
 
 						packet.packet /= rsn
 			return packet.packet
 		return None
 
-class WifiReceiver(wireless.Receiver):
+class WifiReceiver(Receiver):
 	def __init__(self,interface="wlp2s0",monitorMode=True):
 		super().__init__(interface=interface,packetType=WifiPacket, deviceType=WifiDevice)
 

@@ -1,5 +1,6 @@
-from mirage.libs import io,esb,utils
 from mirage.core import module
+from mirage.libs import io, utils
+
 
 class esb_info(module.WirelessModule):
 	def init(self):

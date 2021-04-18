@@ -10,8 +10,8 @@ class Dissector:
 
 	Two main methods have to be implemented :
 
-	  * **build** : this method converts the data structure to the corresponding raw bytes
-	  * **dissect** : this method converts the raw bytes to the corresponding data structure
+		* **build** : this method converts the data structure to the corresponding raw bytes
+		* **dissect** : this method converts the raw bytes to the corresponding data structure
 	'''
 	def __init__(self,data=b"",length=-1,content={},*args, **kwargs):
 		self.data = data

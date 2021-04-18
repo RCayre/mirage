@@ -1,24 +1,42 @@
-from scapy.all import *
+from scapy.compat import raw
+
 from mirage.core.module import WirelessModule
-from mirage.libs.esb_utils.scapy_esb_layers import *
-from mirage.libs.esb_utils.packets import *
-from mirage.libs.esb_utils.constants import *
-from mirage.libs.esb_utils.dissectors import *
-from mirage.libs.esb_utils.rfstorm import *
-from mirage.libs.esb_utils.pcap import *
-from mirage.libs.esb_utils.helpers import *
-from mirage.libs import wireless,io
+from mirage.libs.esb_utils.packets import ESBAckResponsePacket, \
+	ESBLogitechEncryptedKeystrokePacket, \
+	ESBLogitechKeepAlivePacket, \
+	ESBLogitechMousePacket, \
+	ESBLogitechMultimediaKeyPressPacket, \
+	ESBLogitechMultimediaKeyReleasePacket, \
+	ESBLogitechSetTimeoutPacket, \
+	ESBLogitechUnencryptedKeyPressPacket, \
+	ESBLogitechUnencryptedKeyReleasePacket, \
+	ESBPacket, \
+	ESBPingRequestPacket, \
+	ESBSniffingParameters
+from mirage.libs.esb_utils.pcap import ESBPCAPDevice
+from mirage.libs.esb_utils.rfstorm import ESBRFStormDevice
+from mirage.libs.esb_utils.scapy_esb_layers import ESB_Ack_Response, \
+	ESB_Hdr, \
+	ESB_Payload_Hdr, \
+	ESB_Ping_Request, \
+	Logitech_Encrypted_Keystroke_Payload, \
+	Logitech_Keepalive_Payload, \
+	Logitech_Mouse_Payload, \
+	Logitech_Multimedia_Key_Payload, \
+	Logitech_Set_Keepalive_Payload, \
+	Logitech_Unencrypted_Keystroke_Payload, \
+	Logitech_Unifying_Hdr
+from mirage.libs.wireless import Emitter, Receiver
 
 
-
-class ESBEmitter(wireless.Emitter):
+class ESBEmitter(Emitter):
 	'''
 	This class is an Emitter for the Enhanced ShockBurst protocol ("esb").
 
 	It can instantiates the following devices :
 
-	  * RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
-	  * PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
+		* RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
+		* PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
 
 	'''
 	def __init__(self,interface="rfstorm0"):
@@ -57,14 +75,14 @@ class ESBEmitter(wireless.Emitter):
 		
 		return new
 
-class ESBReceiver(wireless.Receiver):
+class ESBReceiver(Receiver):
 	'''
 	This class is a Receiver for the Enhanced ShockBurst protocol ("esb").
 
 	It can instantiates the following devices :
 
-	  * RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
-	  * PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
+		* RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
+		* PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
 
 	'''
 	def __init__(self,interface="rfstorm0"):

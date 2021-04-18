@@ -1,6 +1,7 @@
-import os, sys, imp
+import os
+
 from mirage.core.app import App
-from mirage.libs.utils import getHomeDir,generateModulesDictionary
+from mirage.libs.utils import generateModulesDictionary, getHomeDir
 
 if App.Instance is not None:
 	# Modules Directory

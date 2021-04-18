@@ -1,10 +1,32 @@
-from mirage.core.module import WirelessModule
-from mirage.libs.ir_utils.scapy_irma_layers import *
-from mirage.libs.ir_utils.irma import *
-from mirage.libs.ir_utils.packets import *
 import math
+import struct
 
-class IREmitter(wireless.Emitter):
+from mirage.core.module import WirelessModule
+from mirage.libs.ir_utils.irma import IRMADevice
+from mirage.libs.ir_utils.packets import IRAiwaPacket, \
+	IRDenonPacket, \
+	IRDishPacket, \
+	IRJVCPacket, \
+	IRLGPacket, \
+	IRMitsubishiPacket, \
+	IRNECPacket, \
+	IRPacket, \
+	IRPanasonicPacket, \
+	IRRC5Packet, \
+	IRRC6Packet, \
+	IRSamsungPacket, \
+	IRSanyoPacket, \
+	IRSharpPacket, \
+	IRSonyPacket, \
+	IRWhynterPacket
+from mirage.libs.ir_utils.scapy_irma_layers import IRma_Hdr, \
+	IRma_Request, \
+	Req_IRma_Send, \
+	Resp_IRma_Recv
+from mirage.libs.wireless import Emitter, Receiver
+
+
+class IREmitter(Emitter):
 	def __init__(self,interface="irma0"):
 		super().__init__(interface=interface,packetType=IRPacket, deviceType=IRMADevice)
 
@@ -51,7 +73,7 @@ class IREmitter(wireless.Emitter):
 		return p.packet
 
 
-class IRReceiver(wireless.Receiver):
+class IRReceiver(Receiver):
 	def __init__(self,interface="irma0"):
 		super().__init__(interface=interface,packetType=IRPacket, deviceType=IRMADevice)
 	

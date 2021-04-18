@@ -1,5 +1,8 @@
-from mirage.libs import io,utils,ble
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.crypto import BLECrypto, BLELinkLayerCrypto
+from mirage.libs.ble_utils.packets import BLEAdvertisement, BLEConnectRequest, BLEEmptyPDU, BLEPairingConfirm, BLEPairingRandom, BLEPairingRequest, BLEPairingResponse
+
 
 class ble_sniff(module.WirelessModule):
 	def init(self):
@@ -112,18 +115,18 @@ class ble_sniff(module.WirelessModule):
 
 	def show(self,packet):
 		advMode = self.args["SNIFFING_MODE"].upper() == "advertisements".upper()
-		isAnAdv =  isinstance(packet, ble.BLEAdvertisement)
-		isAnEmpty = isinstance(packet,ble.BLEEmptyPDU)
+		isAnAdv =  isinstance(packet, BLEAdvertisement)
+		isAnEmpty = isinstance(packet,BLEEmptyPDU)
 		unknownInName = "Unknown" in packet.name
-		isConnectReq = isinstance(packet,ble.BLEConnectRequest)
-		addressMatching = (    isConnectReq
-				   and packet.addr == utils.addressArg(self.args["TARGET"])
-				   or  self.args["TARGET"] == ""
-				   or  (hasattr(packet,"addr") and packet.addr == utils.addressArg(self.args["TARGET"])))
+		isConnectReq = isinstance(packet,BLEConnectRequest)
+		addressMatching = (isConnectReq
+				and packet.addr == utils.addressArg(self.args["TARGET"])
+				or  self.args["TARGET"] == ""
+				or  (hasattr(packet,"addr") and packet.addr == utils.addressArg(self.args["TARGET"])))
 		if (
 			(not advMode and (not isAnAdv or isConnectReq) and not isAnEmpty and not unknownInName) 
-			 or (advMode and isAnAdv and addressMatching)
-		   ):
+			or (advMode and isAnAdv and addressMatching)
+		):
 			io.displayPacket(packet)
 			if self.pcap is not None:
 				self.pcap.sendp(packet)
@@ -135,14 +138,14 @@ class ble_sniff(module.WirelessModule):
 					self.responderAddress = packet.dstAddr
 					self.responderAddressType = packet.dstAddrType
 
-				if isinstance(packet, ble.BLEPairingRequest):
+				if isinstance(packet, BLEPairingRequest):
 					self.pReq = packet.payload[::-1]
-				if isinstance(packet,ble.BLEPairingResponse):
+				if isinstance(packet,BLEPairingResponse):
 					self.pRes = packet.payload[::-1]
-				if isinstance(packet,ble.BLEPairingConfirm) and self.mConfirm is None:
+				if isinstance(packet,BLEPairingConfirm) and self.mConfirm is None:
 					self.mConfirm = packet.confirm[::-1]
 
-				if isinstance(packet,ble.BLEPairingRandom) and self.mRand is not None and self.sRand is None:
+				if isinstance(packet,BLEPairingRandom) and self.mRand is not None and self.sRand is None:
 					self.sRand = packet.random[::-1]
 					while self.temporaryKey is None and not self.failure:
 						pass
@@ -150,11 +153,11 @@ class ble_sniff(module.WirelessModule):
 						self.errorDuringCracking()
 					else:
 						io.info("Derivating Short Term Key ...")
-						self.shortTermKey = ble.BLECrypto.s1(self.temporaryKey,self.mRand,self.sRand)[::-1]
+						self.shortTermKey = BLECrypto.s1(self.temporaryKey,self.mRand,self.sRand)[::-1]
 						io.success("Short Term Key found : "+ self.shortTermKey.hex())
-						ble.BLELinkLayerCrypto.provideLTK(self.shortTermKey)
+						BLELinkLayerCrypto.provideLTK(self.shortTermKey)
 			
-				if isinstance(packet,ble.BLEPairingRandom) and self.mRand is None:
+				if isinstance(packet,BLEPairingRandom) and self.mRand is None:
 					self.mRand = packet.random[::-1]
 					self.failure = not self.crackTemporaryKey()
 
@@ -190,7 +193,7 @@ class ble_sniff(module.WirelessModule):
 			interfaceb  = self.args["INTERFACEB"]
 			self.emitters.append(self.getEmitter(interface=interfaceb))
 			self.receivers.append(self.getReceiver(interface=interfaceb))
-	 
+
 	def displayConnection(self,index=0):
 		aa = "0x{:8x}".format(self.receivers[index].getAccessAddress())
 		crcInit = "0x{:6x}".format(self.receivers[index].getCrcInit())
@@ -300,7 +303,7 @@ class ble_sniff(module.WirelessModule):
 		self.initEmittersAndReceivers()
 
 		if self.args["LTK"] != "":
-			ble.BLELinkLayerCrypto.provideLTK(bytes.fromhex(self.args["LTK"]))
+			BLELinkLayerCrypto.provideLTK(bytes.fromhex(self.args["LTK"]))
 
 		if utils.booleanArg(self.args["HIJACKING"]) and not self.checkHijackingCapabilities():
 			io.fail("Interfaces provided are not able to hijack a connection.")

@@ -1,5 +1,7 @@
-from mirage.libs import io,ble,utils
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.packets import BLEDisconnect
+
 
 class ble_adv(module.WirelessModule):
 	def init(self):
@@ -30,7 +32,7 @@ class ble_adv(module.WirelessModule):
 		self.emitter = self.getEmitter(interface=interface)
 		if self.checkCapabilities():
 			if self.emitter.isConnected():
-				self.emitter.sendp(ble.BLEDisconnect())
+				self.emitter.sendp(BLEDisconnect())
 			while self.emitter.isConnected():
 				utils.wait(seconds=0.01)
 			address = (self.emitter.getAddress()	if self.args["ADVERTISING_ADDRESS"] == ""

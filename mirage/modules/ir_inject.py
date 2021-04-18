@@ -1,5 +1,22 @@
-from mirage.libs import ir,utils,io
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.ir_utils.packets import IRAiwaPacket,\
+	IRDenonPacket,\
+	IRDishPacket,\
+	IRJVCPacket,\
+	IRLGPacket,\
+	IRMitsubishiPacket,\
+	IRNECPacket,\
+	IRPacket,\
+	IRPanasonicPacket,\
+	IRRC5Packet,\
+	IRRC6Packet,\
+	IRSamsungPacket,\
+	IRSanyoPacket,\
+	IRSharpPacket,\
+	IRSonyPacket,\
+	IRWhynterPacket
+
 
 class ir_inject(module.WirelessModule):
 	def init(self):
@@ -31,35 +48,35 @@ class ir_inject(module.WirelessModule):
 					code = self.args["CODE"][2:]
 				code = bytes.fromhex(code)
 				if self.args["PROTOCOL"].upper() == "NEC":
-					packet = ir.IRNECPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRNECPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "SONY":
-					packet = ir.IRSonyPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRSonyPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "RC5":
-					packet = ir.IRRC5Packet(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRRC5Packet(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "RC6":
-					packet = ir.IRRC6Packet(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRRC6Packet(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "DISH":
-					packet = ir.IRDishPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRDishPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "SHARP":
-					packet = ir.IRSharpPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRSharpPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "JVC":
-					packet = ir.IRJVCPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRJVCPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "SANYO":
-					packet = ir.IRSanyoPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRSanyoPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "MITSUBISHI":
-					packet = ir.IRMitsubishiPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRMitsubishiPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "SAMSUNG":
-					packet = ir.IRSamsungPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRSamsungPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "LG":
-					packet = ir.IRLGPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRLGPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "WHYNTER":
-					packet = ir.IRWhynterPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRWhynterPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "AIWA":
-					packet = ir.IRAiwaPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRAiwaPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "PANASONIC":
-					packet = ir.IRPanasonicPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRPanasonicPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				elif self.args["PROTOCOL"].upper() == "DENON":
-					packet = ir.IRDenonPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
+					packet = IRDenonPacket(code=code, size=utils.integerArg(self.args["CODE_SIZE"]))
 				else:
 					io.fail("Unknown protocol !")
 					return self.nok()
@@ -71,7 +88,7 @@ class ir_inject(module.WirelessModule):
 
 			elif self.args["DATA"] != "":
 				data = [int(i) for i in utils.listArg(self.args["DATA"])]
-				packet = ir.IRPacket(data=data)
+				packet = IRPacket(data=data)
 
 				io.info("Injecting ...")
 				self.emitter.sendp(packet)

@@ -1,6 +1,7 @@
-from mirage.libs import wireless
+from mirage.libs.wireless_utils.packets import Packet
 
-class WifiPacket(wireless.Packet):
+
+class WifiPacket(Packet):
 	'''
 	Mirage WiFi Packet
 

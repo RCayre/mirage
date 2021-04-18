@@ -1,10 +1,10 @@
-from mirage.libs import wireless
-from mirage.libs.esb_utils.helpers import frequencyToChannel,bytes2bits
-from mirage.libs.esb_utils.dissectors import *
-from struct import pack,unpack
+from mirage.libs.esb_utils.dissectors import LogitechKeystroke, LogitechMousePosition
+from mirage.libs.esb_utils.helpers import frequencyToChannel
+
+from mirage.libs.wireless_utils.packets import AdditionalInformations, Packet
 
 
-class ESBSniffingParameters(wireless.AdditionalInformations):
+class ESBSniffingParameters(AdditionalInformations):
 	'''
 	This class allows to attach some sniffer's data to a Enhanced ShockBurst Packet, such as channel.
 	If the frequency is provided, the corresponding channel is automatically calculated. 
@@ -26,7 +26,7 @@ class ESBSniffingParameters(wireless.AdditionalInformations):
 		return "CH:" + (str(self.channel) if self.channel != -1 else "???")
 
 
-class ESBPacket(wireless.Packet):
+class ESBPacket(Packet):
 	'''
 	Mirage Enhanced ShockBurst Packet
 

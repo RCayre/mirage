@@ -1,5 +1,3 @@
-from mirage.libs import io
-
 class HIDMapping:
 	'''
 	This class provides some helpers functions to manipulate the HID protocol.

@@ -1,24 +1,168 @@
-from scapy.all import *
+from scapy.compat import raw
+from scapy.layers.bluetooth import ATT_Error_Response, \
+	ATT_Exchange_MTU_Request, \
+	ATT_Exchange_MTU_Response, \
+	ATT_Find_By_Type_Value_Request, \
+	ATT_Find_By_Type_Value_Response, \
+	ATT_Find_Information_Request, \
+	ATT_Find_Information_Response, \
+	ATT_Hdr, \
+	ATT_Read_By_Group_Type_Request, \
+	ATT_Read_By_Group_Type_Response, \
+	ATT_Read_By_Type_Request, \
+	ATT_Read_By_Type_Response, \
+	ATT_Read_Request, \
+	ATT_Read_Response, \
+	ATT_Write_Command, \
+	ATT_Write_Request, \
+	ATT_Write_Response, \
+	EIR_Hdr, \
+	HCI_ACL_Hdr, \
+	HCI_Cmd_Connect_Accept_Timeout, \
+	HCI_Cmd_Disconnect, \
+	HCI_Cmd_LE_Connection_Update, \
+	HCI_Cmd_LE_Create_Connection, \
+	HCI_Cmd_LE_Create_Connection_Cancel, \
+	HCI_Cmd_LE_Host_Supported, \
+	HCI_Cmd_LE_Long_Term_Key_Request_Negative_Reply, \
+	HCI_Cmd_LE_Long_Term_Key_Request_Reply, \
+	HCI_Cmd_LE_Set_Advertise_Enable, \
+	HCI_Cmd_LE_Set_Advertising_Parameters, \
+	HCI_Cmd_LE_Set_Random_Address, \
+	HCI_Cmd_LE_Set_Scan_Enable, \
+	HCI_Cmd_LE_Set_Scan_Parameters, \
+	HCI_Cmd_LE_Start_Encryption_Request, \
+	HCI_Cmd_Reset, \
+	HCI_Cmd_Set_Event_Filter, \
+	HCI_Cmd_Set_Event_Mask, \
+	HCI_Command_Hdr, \
+	HCI_Event_Encryption_Change, \
+	HCI_Hdr, \
+	HCI_LE_Meta_Advertising_Report, \
+	HCI_LE_Meta_Connection_Complete, \
+	HCI_LE_Meta_Long_Term_Key_Request, \
+	L2CAP_CmdHdr, \
+	L2CAP_Connection_Parameter_Update_Request, \
+	L2CAP_Connection_Parameter_Update_Response, \
+	L2CAP_Hdr, \
+	SM_Confirm, \
+	SM_Encryption_Information, \
+	SM_Failed, \
+	SM_Hdr, \
+	SM_Identity_Address_Information, \
+	SM_Identity_Information, \
+	SM_Master_Identification, \
+	SM_Pairing_Request, \
+	SM_Pairing_Response, \
+	SM_Random, \
+	SM_Signing_Information
+from scapy.layers.bluetooth4LE import BTLE, \
+	BTLE_ADV, \
+	BTLE_ADV_DIRECT_IND, \
+	BTLE_ADV_IND, \
+	BTLE_ADV_NONCONN_IND, \
+	BTLE_ADV_SCAN_IND, \
+	BTLE_CONNECT_REQ, \
+	BTLE_DATA, \
+	BTLE_PPI, \
+	BTLE_SCAN_REQ, \
+	BTLE_SCAN_RSP
+
 from mirage.core.module import WirelessModule
-from mirage.libs.ble_utils.scapy_hci_layers import *
-from mirage.libs.ble_utils.packets import *
-from mirage.libs.ble_utils.constants import *
-from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
-from mirage.libs.ble_utils.ubertooth import *
-from mirage.libs.ble_utils.btlejack import *
-from mirage.libs.ble_utils.nrfsniffer import *
-from mirage.libs.ble_utils.adb import *
-from mirage.libs.ble_utils.hcidump import *
-from mirage.libs.ble_utils.pcap import *
-from mirage.libs.ble_utils.helpers import *
-from mirage.libs.ble_utils.crypto import *
-from mirage.libs.ble_utils.scapy_link_layers import *
-from mirage.libs.ble_utils.dissectors import *
-from mirage.libs.ble_utils.att_server import *
-from mirage.libs import wireless,bt,io
+from mirage.libs import io
+from mirage.libs.ble_utils.adb import ADBDevice
+from mirage.libs.ble_utils.btlejack import BTLEJackDevice
+from mirage.libs.ble_utils.constants import ADV_DIRECT_IND, \
+	ADV_DIRECT_IND_LOW, \
+	ADV_IND, \
+	ADV_NONCONN_IND, \
+	ADV_SCAN_IND, \
+	ADV_TYPES, \
+	BLEOperationMode, \
+	CONTROL_TYPES, \
+	HCI_ADVERTISING_REPORT, \
+	HCI_CONNECTION_COMPLETE, \
+	HCI_DISCONNECTION_COMPLETE, \
+	HCI_ENHANCED_CONNECTION_COMPLETE, \
+	HCI_LE_META, \
+	HCI_LONG_TERM_KEY_REQUEST, \
+	SCAN_RSP, \
+	TYPE_ACL_DATA, \
+	TYPE_HCI_COMMAND, \
+	TYPE_HCI_EVENT
+from mirage.libs.ble_utils.crypto import BLELinkLayerCrypto
+from mirage.libs.ble_utils.hcidump import BLEHcidumpDevice
+from mirage.libs.ble_utils.nrfsniffer import NRFSnifferDevice
+from mirage.libs.ble_utils.packets import BLEAdvDirectInd, \
+	BLEAdvInd, \
+	BLEAdvNonConnInd, \
+	BLEAdvScanInd, \
+	BLEAdvertisement, \
+	BLEConnect, \
+	BLEConnectRequest, \
+	BLEConnectResponse, \
+	BLEConnectionCancel, \
+	BLEConnectionParameterUpdateRequest, \
+	BLEConnectionParameterUpdateResponse, \
+	BLEControlPDU, \
+	BLEDisconnect, \
+	BLEEmptyPDU, \
+	BLEEncryptedPacket, \
+	BLEEncryptionInformation, \
+	BLEErrorResponse, \
+	BLEExchangeMTURequest, \
+	BLEExchangeMTUResponse, \
+	BLEFindByTypeValueRequest, \
+	BLEFindByTypeValueResponse, \
+	BLEFindInformationRequest, \
+	BLEFindInformationResponse, \
+	BLEHandleValueConfirmation, \
+	BLEHandleValueIndication, \
+	BLEHandleValueNotification, \
+	BLEIdentityAddressInformation, \
+	BLEIdentityInformation, \
+	BLELongTermKeyRequest, \
+	BLELongTermKeyRequestReply, \
+	BLEMasterIdentification, \
+	BLEPacket, \
+	BLEPairingConfirm, \
+	BLEPairingFailed, \
+	BLEPairingRandom, \
+	BLEPairingRequest, \
+	BLEPairingResponse, \
+	BLEReadBlobRequest, \
+	BLEReadBlobResponse, \
+	BLEReadByGroupTypeRequest, \
+	BLEReadByGroupTypeResponse, \
+	BLEReadByTypeRequest, \
+	BLEReadByTypeResponse, \
+	BLEReadRequest, \
+	BLEReadResponse, \
+	BLEScanRequest, \
+	BLEScanResponse, \
+	BLESecurityRequest, \
+	BLESigningInformation, \
+	BLESniffingParameters, \
+	BLEWriteCommand, \
+	BLEWriteRequest, \
+	BLEWriteResponse
+from mirage.libs.ble_utils.pcap import BLEPCAPDevice
+from mirage.libs.ble_utils.scapy_hci_layers import HCI_LE_Meta_Enhanced_Connection_Complete, \
+	New_ATT_Handle_Value_Confirmation, \
+	New_ATT_Handle_Value_Indication, \
+	New_ATT_Handle_Value_Notification, \
+	New_ATT_Read_Blob_Request, \
+	New_ATT_Read_Blob_Response, \
+	New_HCI_Cmd_LE_Set_Advertising_Data, \
+	New_HCI_Cmd_LE_Set_Scan_Response_Data, \
+	SM_Security_Request
+from mirage.libs.ble_utils.scapy_link_layers import ControlPDU
+from mirage.libs.ble_utils.ubertooth import BLEUbertoothDevice
+from mirage.libs.bt import BtHCIDevice
+from mirage.libs.wireless import Emitter, Receiver
 
 
-class BLEHCIDevice(bt.BtHCIDevice):
+class BLEHCIDevice(BtHCIDevice):
 	'''
 	This device allows to communicate with an HCI Device in order to use Bluetooth Low Energy protocol.
 	The corresponding interfaces are : ``hciX`` (e.g. "hciX")
@@ -26,7 +170,7 @@ class BLEHCIDevice(bt.BtHCIDevice):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability 						| Available ?    |
 	+===================================+================+
 	| SCANNING                          | yes            |
 	+-----------------------------------+----------------+
@@ -219,7 +363,7 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		:Example:
 
 			>>> device.setScan(enable=True, passive=True) # scanning mode enabled in passive mode
- 			>>> device.setScan(enable=False) # scanning mode disabled
+			>>> device.setScan(enable=False) # scanning mode disabled
 		
 		.. note::
 
@@ -437,8 +581,8 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			
 			It is possible to encrypt the link using directly the encryption-related packets, such as :
 
-			  * ``mirage.libs.ble_utils.packets.BLELongTermKeyRequest``
-			  * ``mirage.libs.ble_utils.packets.BLELongTermKeyRequestReply``
+				* ``mirage.libs.ble_utils.packets.BLELongTermKeyRequest``
+				* ``mirage.libs.ble_utils.packets.BLELongTermKeyRequestReply``
 	
 		.. note::
 
@@ -461,18 +605,18 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		self._exitCommandMode()
 		return encryptionChange.enabled
 
-class BLEEmitter(wireless.Emitter):
+class BLEEmitter(Emitter):
 	'''
 	This class is an Emitter for the Bluetooth Low Energy protocol ("ble").
 
 	It can instantiates the following devices :
 
-	  * HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
-	  * Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
-	  * BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
-	  * ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
-	  * HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
-	  * PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
+		* HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
+		* Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
+		* BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
+		* ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
+		* HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
+		* PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
 
 	'''
 	def __init__(self, interface="hci0"):
@@ -621,8 +765,8 @@ class BLEEmitter(wireless.Emitter):
 
 					if (
 						isinstance(packet,BLEConnectionParameterUpdateRequest) or
-					     	isinstance(packet,BLEConnectionParameterUpdateResponse)
-					   ):
+							isinstance(packet,BLEConnectionParameterUpdateResponse)
+					):
 							packet.packet /= L2CAP_Hdr()/L2CAP_CmdHdr(id=packet.l2capCmdId)
 					elif (
 						isinstance(packet,BLESecurityRequest) or
@@ -785,18 +929,18 @@ class BLEEmitter(wireless.Emitter):
 		return packet.packet
 
 
-class BLEReceiver(wireless.Receiver):
+class BLEReceiver(Receiver):
 	'''
 	This class is a Receiver for the Bluetooth Low Energy protocol ("ble").
 
 	It can instantiates the following devices :
 
-	  * HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
-	  * Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
-	  * BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
-	  * ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
-	  * HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
-	  * PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
+		* HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
+		* Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
+		* BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
+		* ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
+		* HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
+		* PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
 
 	'''
 	def __init__(self,interface="hci0"):

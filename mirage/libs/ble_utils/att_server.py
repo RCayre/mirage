@@ -1,16 +1,19 @@
-from mirage.libs.ble_utils.dissectors import *
-from mirage.libs.ble_utils.constants import *
-from mirage.libs import utils,io
+import struct
+
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.constants import ATT_ERR_ATTR_NOT_FOUND, ATT_ERR_READ_NOT_PERMITTED, ATT_ERR_WRITE_NOT_PERMITTED
+from mirage.libs.ble_utils.dissectors import CharacteristicDeclaration, CharacteristicDescriptor, PermissionsFlag, Service, UUID
+
 
 class ATT_Attribute:
 	'''
 	This class describes an ATT attribute.
 	An ATT attribute is composed of four main fields :
 
-	  * **handle** : ATT handle (it can be described as the index of an attribute of an ATT Database)
-	  * **value** : binary value linked to this attribute
-	  * **type** : UUID (12 bits or 128 bits) indicating the type of attribute, such as a Device Name or a Characteristic Declaration.
-	  * **permissions** : flag indicating the access permissions attached to this attribute, such as readable or writeable.
+		* **handle** : ATT handle (it can be described as the index of an attribute of an ATT Database)
+		* **value** : binary value linked to this attribute
+		* **type** : UUID (12 bits or 128 bits) indicating the type of attribute, such as a Device Name or a Characteristic Declaration.
+		* **permissions** : flag indicating the access permissions attached to this attribute, such as readable or writeable.
 
 	It overloads the method `__str__` in order to provide a pretty representation.
 
@@ -40,7 +43,7 @@ class ATT_Attribute:
 
 	def __str__(self):
 		return ("handle = " + hex(self.handle) + " / value = "+self.value.hex() +
-		       " / type = "+self.type.UUID128.hex()+" / permissions = "+str(self.permissions.permissions))
+				" / type = "+self.type.UUID128.hex()+" / permissions = "+str(self.permissions.permissions))
 
 
 class ATT_Database:
@@ -83,8 +86,8 @@ class ATT_Database:
 				attributeHandle = "0x{:04x}".format(att.handle)
 				formattedAttributes.append([attributeHandle, attributeType,attributeValue])
 		io.chart(["Attribute Handle", "Attribute Type", "Attribute Value"],
-			 formattedAttributes,
-			 io.colorize("Attributes","yellow")
+			formattedAttributes,
+			io.colorize("Attributes","yellow")
 			)
 
 	def showGATT(self):
@@ -114,8 +117,8 @@ class ATT_Database:
 					formattedServices[-1][1] = "0x{:04x}".format(att.handle - 1)
 				formattedServices.append([startHandle,"0x{:04x}".format(0xFFFF),serviceUUID16, serviceUUID128,serviceName])
 		io.chart(["Start Handle","End Handle", "UUID16", "UUID128", "Name"],
-			 formattedServices,
-			 io.colorize("Services", "yellow")
+			formattedServices,
+			io.colorize("Services", "yellow")
 			)
 		return formattedServices
 
@@ -127,7 +130,7 @@ class ATT_Database:
 		:type startHandle: int
 		:param endHandle: last ATT handle
 		:type endHandle: int
-	 	:param title: Title of the chart
+		:param title: Title of the chart
 		:type title: str
 		'''
 		formattedCharacteristics = []
@@ -140,7 +143,7 @@ class ATT_Database:
 					uuid16 = ("0x{:04x}".format(characteristic.UUID.UUID16) 
 							if characteristic.UUID.UUID16 is not None
 							else ""
-						 )
+						)
 					uuid128 = (characteristic.UUID.UUID128.hex() 
 							if characteristic.UUID.UUID128 is not None
 							else ""
@@ -160,7 +163,7 @@ class ATT_Database:
 					descriptors = ""
 					while (startDescriptor < len(self.attributes) and 
 						self.attributes[startDescriptor] is not None and
-					       (self.attributes[startDescriptor].type != UUID(name="Characteristic Declaration") and
+						(self.attributes[startDescriptor].type != UUID(name="Characteristic Declaration") and
 						self.attributes[startDescriptor].type != UUID(name="Primary Service") and
 						self.attributes[startDescriptor].type != UUID(name="Secondary Service"))):
 						descriptor = self.attributes[startDescriptor]
@@ -502,8 +505,8 @@ class ATT_Server:
 		.. note::
 			The returned tuple is composed of two main fields :
 
-			  * *success* : this field is a boolean indicating if the request was successful or not
-			  * *body* : this field is the response's body (array of bytes) if the request was successful or the error code (integer) if the request was not successful
+				* *success* : this field is a boolean indicating if the request was successful or not
+				* *body* : this field is the response's body (array of bytes) if the request was successful or the error code (integer) if the request was not successful
 
 		'''
 		(exist,authorized,value) = self.database.read(handle)
@@ -526,8 +529,8 @@ class ATT_Server:
 		.. note::
 			The returned tuple is composed of two main fields :
 
-			  * *success* : this field is a boolean indicating if the request was successful or not
-			  * *body* : this field is the response's body (array of bytes) if the request was successful or the error code (integer) if the request was not successful
+				* *success* : this field is a boolean indicating if the request was successful or not
+				* *body* : this field is the response's body (array of bytes) if the request was successful or the error code (integer) if the request was not successful
 
 		'''
 		(exist,authorized,value) = self.database.read(handle)
@@ -551,8 +554,8 @@ class ATT_Server:
 		.. note::
 			The returned tuple is composed of two main fields :
 
-			  * *success* : this field is a boolean indicating if the request was successful or not
-			  * *body* : this field is the response's body (None)
+				* *success* : this field is a boolean indicating if the request was successful or not
+				* *body* : this field is the response's body (None)
 
 		'''
 		self.database.write(handle,value)
@@ -573,8 +576,8 @@ class ATT_Server:
 		.. note::
 			The returned tuple is composed of two main fields :
 
-			  * *success* : this field is a boolean indicating if the request was successful or not
-			  * *body* : this field is the error code (int) if the request was not successful
+				* *success* : this field is a boolean indicating if the request was successful or not
+				* *body* : this field is the error code (int) if the request was not successful
 
 		'''
 		(exist,authorized) = self.database.write(handle,value)
@@ -598,8 +601,8 @@ class ATT_Server:
 		.. note::
 			The returned tuple is composed of two main fields :
 
-			  * *success* : this field is a boolean indicating if the request was successful or not
-			  * *body* : this field is the response's body (list of dict - see output of ``ATT_Database.readByType``) if the request was successful or an error code (int) if the request was not successful
+				* *success* : this field is a boolean indicating if the request was successful or not
+				* *body* : this field is the response's body (list of dict - see output of ``ATT_Database.readByType``) if the request was successful or an error code (int) if the request was not successful
 
 		'''
 		response = self.database.readByType(start,end,type)
@@ -616,7 +619,7 @@ class ATT_Server:
 				size_handle = 2
 				size_value = len(elmt["value"])
 				if ((last_size_value is None or last_size_value == size_value) and 
-				    total_size + size_handle + size_value < self.mtu - 1):
+					total_size + size_handle + size_value < self.mtu - 1):
 					body.append(elmt)
 					total_size += size_handle + size_value
 					last_size_value = size_value
@@ -641,8 +644,8 @@ class ATT_Server:
 		.. note::
 			The returned tuple is composed of two main fields :
 
-			  * *success* : this field is a boolean indicating if the request was successful or not
-			  * *body* : this field is the response's body (list of dict - see output of ``ATT_Database.readByGroupType``) if the request was successful or an error code (int) if the request was not successful
+				* *success* : this field is a boolean indicating if the request was successful or not
+				* *body* : this field is the response's body (list of dict - see output of ``ATT_Database.readByGroupType``) if the request was successful or an error code (int) if the request was not successful
 
 		'''
 		reponse = self.database.readByGroupType(start,end,type)
@@ -659,7 +662,7 @@ class ATT_Server:
 				size_handle = 4
 				size_value = len(elmt["value"])
 				if ((last_size_value is None or last_size_value == size_value) and 
-				     total_size + size_handle + size_value <  self.mtu - 1):
+					total_size + size_handle + size_value <  self.mtu - 1):
 					body.append(elmt)
 					total_size += size_handle + size_value
 					last_size_value = size_value
@@ -682,8 +685,8 @@ class ATT_Server:
 		.. note::
 			The returned tuple is composed of two main fields :
 
-			  * *success* : this field is a boolean indicating if the request was successful or not
-			  * *body* : this field is the response's body (list of dict - see output of ``ATT_Database.findInformation``) if the request was successful or an error code (int) if the request was not successful
+				* *success* : this field is a boolean indicating if the request was successful or not
+				* *body* : this field is the response's body (list of dict - see output of ``ATT_Database.findInformation``) if the request was successful or an error code (int) if the request was not successful
 
 		'''
 		response = self.database.findInformation(start,end)
@@ -700,7 +703,7 @@ class ATT_Server:
 				size_handle = 2
 				size_type = len(elmt["type"])
 				if ((last_size_type is None or last_size_type == size_type) and 
-				     total_size + size_handle + size_type <  self.mtu - 1):
+					total_size + size_handle + size_type <  self.mtu - 1):
 					body.append(elmt)
 					size_type += size_handle + size_type
 					last_size_type = size_type
