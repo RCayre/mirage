@@ -1,5 +1,7 @@
-from mirage.libs import io,bt
 from mirage.core import module
+from mirage.libs import io
+from mirage.libs.bt import BluetoothEmitter
+
 
 class bt_info(module.Module):
 	def init(self):
@@ -11,7 +13,7 @@ class bt_info(module.Module):
 			}
 
 	def run(self):
-		self.emitter = bt.BluetoothEmitter(interface=self.args["INTERFACE"])
+		self.emitter =BluetoothEmitter(interface=self.args["INTERFACE"])
 		interface = self.args["INTERFACE"]
 		address = self.emitter.getAddress()
 		localName = self.emitter.getLocalName()

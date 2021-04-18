@@ -1,7 +1,11 @@
-import subprocess,sys
-from mirage.libs import io,utils,esb,wireless
-from mirage.core import module,interpreter
+import subprocess
 from threading import Lock
+
+from mirage.core import interpreter, module
+from mirage.libs import io, utils
+from mirage.libs.esb_utils.packets import ESBPacket, ESBPingRequestPacket
+from mirage.libs.wireless_utils.packetQueue import StoppableThread
+
 
 class esb_ptx(module.WirelessModule, interpreter.Interpreter):
 	def init(self):
@@ -93,7 +97,7 @@ class esb_ptx(module.WirelessModule, interpreter.Interpreter):
 			for payload in payloads.split(","):
 				try:
 					esbPayload = bytes.fromhex(payload)
-					self.emitter.sendp(esb.ESBPacket(address=self.target,payload=esbPayload))
+					self.emitter.sendp(ESBPacket(address=self.target,payload=esbPayload))
 					found = False
 					start = utils.now()
 					while utils.now() - start < 1:
@@ -129,7 +133,7 @@ class esb_ptx(module.WirelessModule, interpreter.Interpreter):
 	def _pingPRX(self):
 		utils.wait(seconds=1)
 		self.ackLock.acquire()
-		self.emitter.sendp(esb.ESBPingRequestPacket(address=self.target))
+		self.emitter.sendp(ESBPingRequestPacket(address=self.target))
 		found = False
 		start = utils.now()
 		while utils.now() - start < 1:
@@ -148,7 +152,7 @@ class esb_ptx(module.WirelessModule, interpreter.Interpreter):
 
 	def startFollowing(self):
 		if self.checkActiveScanningCapabilities():
-			self.followThread = wireless.StoppableThread(self._pingPRX)
+			self.followThread = StoppableThread(self._pingPRX)
 			self.followThread.start()
 			return True
 		else:

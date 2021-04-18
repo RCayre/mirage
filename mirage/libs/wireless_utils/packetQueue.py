@@ -1,6 +1,7 @@
-import time,threading
+import threading
+import time
 from queue import Queue
-from mirage.libs.utils import exitMirage
+
 
 class StoppableThread(threading.Thread):
 	'''

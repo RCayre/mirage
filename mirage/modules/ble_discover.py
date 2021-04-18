@@ -1,6 +1,17 @@
-from mirage.libs import io,utils,ble
-from mirage.core import module
 import configparser
+
+from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.dissectors import CharacteristicDeclaration, CharacteristicDescriptor, Service, UUID
+from mirage.libs.ble_utils.packets import BLEErrorResponse,\
+	BLEFindInformationRequest,\
+	BLEFindInformationResponse,\
+	BLEReadByGroupTypeRequest,\
+	BLEReadByGroupTypeResponse,\
+	BLEReadByTypeRequest,\
+	BLEReadByTypeResponse,\
+	BLEReadRequest,\
+	BLEReadResponse
 
 
 class ble_discover(module.WirelessModule):
@@ -109,7 +120,7 @@ class ble_discover(module.WirelessModule):
 			descriptors = ""
 			if "descriptors" in characteristic:
 				for desc in characteristic["descriptors"]:
-					namedesc = ble.CharacteristicDescriptor(data=desc["type"]).UUID.name
+					namedesc = CharacteristicDescriptor(data=desc["type"]).UUID.name
 					valuedesc = (desc["value"].replace(b"\x00",b"").decode("ascii") 
 							if utils.isPrintable(desc["value"]) and len(desc["value"])>0
 							else desc["value"].hex()
@@ -148,7 +159,7 @@ class ble_discover(module.WirelessModule):
 	def printAttributes(self,attributes):
 		formattedAttributes = []
 		for attribute in attributes:
-			aType = ble.UUID(data=attribute["type"])
+			aType = UUID(data=attribute["type"])
 			if aType.name is not None:
 				attributeType = aType.name
 			elif aType.UUID16 is not None:
@@ -170,17 +181,17 @@ class ble_discover(module.WirelessModule):
 		services = []
 		while continuer:
 
-			request = ble.BLEReadByGroupTypeRequest(startHandle=start,endHandle=end,uuid=uuid)
+			request = BLEReadByGroupTypeRequest(startHandle=start,endHandle=end,uuid=uuid)
 			
 			self.emitter.sendp(request)
 
-			p = self.receive([ble.BLEReadByGroupTypeResponse,ble.BLEErrorResponse],retry=request)
+			p = self.receive([BLEReadByGroupTypeResponse,BLEErrorResponse],retry=request)
 
-			if isinstance(p,ble.BLEReadByGroupTypeResponse):
+			if isinstance(p,BLEReadByGroupTypeResponse):
 
 				for i in p.attributes:
 
-					service = ble.Service(data=i['value'][::-1])
+					service = Service(data=i['value'][::-1])
 
 					serviceStruct = {
 						"startHandle":i["attributeHandle"],
@@ -192,18 +203,18 @@ class ble_discover(module.WirelessModule):
 						services.append(serviceStruct)
 				start = p.attributes[-1]["endGroupHandle"] + 1
 				continuer = (start <= 0xFFFF)
-			elif isinstance(p,ble.BLEErrorResponse):
+			elif isinstance(p,BLEErrorResponse):
 				continuer = False
 			else:
 				pass
 		return services
 
 	def primaryServicesDiscovery(self,startHandle = 0x0001, endHandle = 0xffff):
-		uuid = ble.UUID(name="Primary Service").UUID16
+		uuid = UUID(name="Primary Service").UUID16
 		return self.servicesDiscovery(uuid,startHandle=startHandle,endHandle=endHandle)
 
 	def secondaryServicesDiscovery(self,startHandle = 0x0001, endHandle = 0xffff):
-		uuid = ble.UUID(name="Secondary Service").UUID16
+		uuid = UUID(name="Secondary Service").UUID16
 		return self.servicesDiscovery(uuid,startHandle=startHandle,endHandle=endHandle)
 
 	def allServicesDiscovery(self, startHandle = 0x0001, endHandle = 0xffff):
@@ -216,20 +227,20 @@ class ble_discover(module.WirelessModule):
 		return primary + secondary
 
 	def characteristicsDiscovery(self,startHandle=0x0001, endHandle=0xFFFF):
-		characteristicDeclarationUUID = ble.UUID(name="Characteristic Declaration").UUID16
+		characteristicDeclarationUUID = UUID(name="Characteristic Declaration").UUID16
 		start, end, continuer = startHandle,endHandle,True
 		characteristics = []
 		while continuer:
-			request = ble.BLEReadByTypeRequest(startHandle=start,endHandle=end,uuid= characteristicDeclarationUUID)
+			request = BLEReadByTypeRequest(startHandle=start,endHandle=end,uuid= characteristicDeclarationUUID)
 			self.emitter.sendp(request)
 
-			p = self.receive([ble.BLEReadByTypeResponse,ble.BLEErrorResponse],retry=request)
+			p = self.receive([BLEReadByTypeResponse,BLEErrorResponse],retry=request)
 
-			if isinstance(p,ble.BLEReadByTypeResponse):
+			if isinstance(p,BLEReadByTypeResponse):
 
 				for i in p.attributes:
 
-					characteristicDeclaration =  ble.CharacteristicDeclaration(data=i['value'][::-1])
+					characteristicDeclaration =  CharacteristicDeclaration(data=i['value'][::-1])
 					characteristic = {
 						"declarationHandle":i["attributeHandle"],
 						"valueHandle":characteristicDeclaration.valueHandle,
@@ -238,10 +249,10 @@ class ble_discover(module.WirelessModule):
 						"value":b""
 						}
 					if "Read" in characteristicDeclaration.permissionsFlag:
-						request = ble.BLEReadRequest(handle=characteristicDeclaration.valueHandle)
+						request = BLEReadRequest(handle=characteristicDeclaration.valueHandle)
 						self.emitter.sendp(request)
-						p = self.receive([ble.BLEReadResponse,ble.BLEErrorResponse],retry=request)
-						if isinstance(p,ble.BLEReadResponse):
+						p = self.receive([BLEReadResponse,BLEErrorResponse],retry=request)
+						if isinstance(p,BLEReadResponse):
 							characteristic["value"]  = p.value
 
 
@@ -251,7 +262,7 @@ class ble_discover(module.WirelessModule):
 				start = start + 1
 				continuer = (start <= 0xFFFF)
 
-			elif isinstance(p,ble.BLEErrorResponse):
+			elif isinstance(p,BLEErrorResponse):
 				continuer = False
 			else:
 				pass
@@ -261,10 +272,10 @@ class ble_discover(module.WirelessModule):
 		attributes = []
 		start, end, continuer = startHandle,endHandle, True
 		while continuer:
-			request = ble.BLEFindInformationRequest(startHandle=start, endHandle=end)
+			request = BLEFindInformationRequest(startHandle=start, endHandle=end)
 			self.emitter.sendp(request)
-			p = self.receive([ble.BLEFindInformationResponse,ble.BLEErrorResponse],retry=request)
-			if isinstance(p,ble.BLEFindInformationResponse):
+			p = self.receive([BLEFindInformationResponse,BLEErrorResponse],retry=request)
+			if isinstance(p,BLEFindInformationResponse):
 				for i in p.attributes:
 					attribute = {"handle":i["attributeHandle"], "type":i["type"], "value":b""}
 					if attribute not in attributes:
@@ -272,17 +283,17 @@ class ble_discover(module.WirelessModule):
 				start = i["attributeHandle"] + 1
 
 				continuer = (start < 0xFFFF)
-			elif isinstance(p,ble.BLEErrorResponse):
+			elif isinstance(p,BLEErrorResponse):
 				continuer = False
 			else:
 				pass
 
 		for attribute in attributes:
-			request = ble.BLEReadRequest(handle=attribute["handle"])
+			request = BLEReadRequest(handle=attribute["handle"])
 			self.emitter.sendp(request)
-			p = self.receive([ble.BLEReadResponse,ble.BLEErrorResponse],retry=request)
+			p = self.receive([BLEReadResponse,BLEErrorResponse],retry=request)
 
-			if isinstance(p,ble.BLEReadResponse):
+			if isinstance(p,BLEReadResponse):
 				attribute["value"] = p.value
 
 		return attributes
@@ -291,17 +302,17 @@ class ble_discover(module.WirelessModule):
 		descriptors = []
 		start, end, continuer = startHandle,endHandle, True
 		while continuer:
-			request = ble.BLEFindInformationRequest(startHandle=start, endHandle=end)
+			request = BLEFindInformationRequest(startHandle=start, endHandle=end)
 			self.emitter.sendp(request)
-			p = self.receive([ble.BLEFindInformationResponse,ble.BLEErrorResponse],retry=request)
-			if isinstance(p,ble.BLEFindInformationResponse):
+			p = self.receive([BLEFindInformationResponse,BLEErrorResponse],retry=request)
+			if isinstance(p,BLEFindInformationResponse):
 				for i in p.attributes:
 					attribute = {"handle":i["attributeHandle"], "type":i["type"], "value":""}
 					if attribute not in descriptors:
-						request2 = ble.BLEReadRequest(handle=i["attributeHandle"])
+						request2 = BLEReadRequest(handle=i["attributeHandle"])
 						self.emitter.sendp(request2)
-						p2 = self.receive([ble.BLEReadResponse,ble.BLEErrorResponse],retry=request2)
-						if isinstance(p2,ble.BLEReadResponse):
+						p2 = self.receive([BLEReadResponse,BLEErrorResponse],retry=request2)
+						if isinstance(p2,BLEReadResponse):
 							attribute["value"]  = p2.value
 						else:
 							attribute["value"] = b""
@@ -309,7 +320,7 @@ class ble_discover(module.WirelessModule):
 				start = i["attributeHandle"] + 1
 
 				continuer = (start < 0xFFFF)
-			elif isinstance(p,ble.BLEErrorResponse):
+			elif isinstance(p,BLEErrorResponse):
 				continuer = False
 			else:
 				pass
@@ -323,17 +334,17 @@ class ble_discover(module.WirelessModule):
 		if filterType=="":
 			return None
 		if utils.isNumber(filterType):
-			return ble.UUID(UUID16=int(filterType)).data
+			return UUID(UUID16=int(filterType)).data
 		elif utils.isHexadecimal(filterType) and len(filterType)<=6:
-			return ble.UUID(UUID16=int(filterType, 16)).data
+			return UUID(UUID16=int(filterType, 16)).data
 		elif utils.isHexadecimal(filterType) and len(filterType)>6:
-			uuid = ble.UUID(UUID128=bytes.fromhex(filterType)).data
+			uuid = UUID(UUID128=bytes.fromhex(filterType)).data
 			if uuid is None:
 				return bytes.fromhex(filterType)
 			else:
 				return uuid
 		else:
-			return ble.UUID(name=filterType).data
+			return UUID(name=filterType).data
 	def applyFilter(self, attributes):
 		filteredAttributes = attributes
 		filterBy = self.args["FILTER_BY"].lower()

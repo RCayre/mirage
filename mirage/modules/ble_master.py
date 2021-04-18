@@ -1,6 +1,17 @@
 import subprocess
-from mirage.libs import io,utils,ble
-from mirage.core import module,interpreter
+
+from mirage.core import interpreter, module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.packets import BLEConnectionParameterUpdateResponse, \
+	BLEDisconnect, \
+	BLEErrorResponse, \
+	BLEHandleValueConfirmation, \
+	BLEReadRequest, \
+	BLEReadResponse, \
+	BLEWriteCommand, \
+	BLEWriteRequest, \
+	BLEWriteResponse
+
 
 class ble_master(module.WirelessModule, interpreter.Interpreter):
 	def init(self):
@@ -104,7 +115,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 
 	def disconnect(self):
 		if self.receiver.isConnected():
-			self.emitter.sendp(ble.BLEDisconnect())
+			self.emitter.sendp(BLEDisconnect())
 			utils.wait(seconds=1)
 			io.success("Disconnected !")
 			if self.receiver.isConnected():
@@ -211,20 +222,20 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 	def read(self,handle):
 		if self.receiver.isConnected():
 			if utils.isHexadecimal(handle):
-				self.emitter.sendp(ble.BLEReadRequest(handle = int(handle,16)))
+				self.emitter.sendp(BLEReadRequest(handle = int(handle,16)))
 				io.info("Read Request : handle = "+handle)
 
 				response = self.receiver.next(timeout=3)
 				retry = 3
-				while not (isinstance(response,ble.BLEReadResponse)  or
-					isinstance(response,ble.BLEErrorResponse) or
+				while not (isinstance(response,BLEReadResponse)  or
+					isinstance(response,BLEErrorResponse) or
 					retry == 0
 					):
 					response = self.receiver.next(timeout=1)
 					retry -= 1
-				if isinstance(response,ble.BLEReadResponse):
+				if isinstance(response,BLEReadResponse):
 					io.success("Response : handle = "+str(handle)+" / Values (hex) = "+response.value.hex())
-				elif isinstance(response, ble.BLEErrorResponse):
+				elif isinstance(response, BLEErrorResponse):
 					io.fail("Error response")
 			else:
 				io.fail("Handle is not correctly formatted (hexadecimal)")
@@ -234,20 +245,20 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 	def write_req(self,handle,value):
 		if self.receiver.isConnected():
 			if utils.isHexadecimal(handle) and utils.isHexadecimal(value):
-				self.emitter.sendp(ble.BLEWriteRequest(handle = int(handle,16),value=bytes.fromhex(value)))
+				self.emitter.sendp(BLEWriteRequest(handle = int(handle,16),value=bytes.fromhex(value)))
 				io.info("Write Request : handle = "+handle+" / value = "+value)
 
 				response = self.receiver.next(timeout=3)
 				retry = 3
-				while not (isinstance(response,ble.BLEWriteResponse)  or
-					isinstance(response,ble.BLEErrorResponse) or
+				while not (isinstance(response,BLEWriteResponse)  or
+					isinstance(response,BLEErrorResponse) or
 					retry == 0
 					):
 					response = self.receiver.next(timeout=1)
 					retry -= 1
-				if isinstance(response,ble.BLEWriteResponse):
+				if isinstance(response,BLEWriteResponse):
 					io.success("Response : success")
-				elif isinstance(response, ble.BLEErrorResponse):
+				elif isinstance(response, BLEErrorResponse):
 					io.fail("Error response !")
 				elif retry == 0:
 					io.fail("Timeout error !")
@@ -259,7 +270,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 	def write_cmd(self,handle,value):
 		if self.receiver.isConnected():
 			if utils.isHexadecimal(handle) and utils.isHexadecimal(value):
-				self.emitter.sendp(ble.BLEWriteCommand(handle = int(handle,16),value=bytes.fromhex(value)))
+				self.emitter.sendp(BLEWriteCommand(handle = int(handle,16),value=bytes.fromhex(value)))
 				io.success("Write Command : handle = "+handle+" / value = "+value)
 			else:
 				io.fail("Handle or value is not correctly formatted (hexadecimal) !")
@@ -295,7 +306,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		io.info(" => Minimum interval: "+str(packet.minInterval))
 		io.info(" => Maximum interval: "+str(packet.maxInterval))
 		self.emitter.updateConnectionParameters(timeout=packet.timeoutMult,latency=packet.slaveLatency, minInterval=packet.minInterval,maxInterval=packet.maxInterval,minCe=0,maxCe=0)
-		self.emitter.sendp(ble.BLEConnectionParameterUpdateResponse(l2capCmdId = packet.l2capCmdId,moveResult=0))
+		self.emitter.sendp(BLEConnectionParameterUpdateResponse(l2capCmdId = packet.l2capCmdId,moveResult=0))
 
 	@module.scenarioSignal("onSlaveHandleValueNotification")
 	def onNotification(self,packet):
@@ -304,7 +315,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 	@module.scenarioSignal("onSlaveHandleValueIndication")
 	def onIndication(self,packet):
 		io.info("Incoming indication : handle = "+hex(packet.handle)+" / value = "+packet.value.hex())
-		self.emitter.sendp(ble.BLEHandleValueConfirmation())
+		self.emitter.sendp(BLEHandleValueConfirmation())
 
 	def initializeCallbacks(self):
 		self.receiver.onEvent("BLEDisconnect",callback=self.onDisconnect)

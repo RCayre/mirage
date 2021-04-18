@@ -1,7 +1,9 @@
-from mirage.libs import mosart,utils,io,wireless
-from mirage.libs.common.parsers import DuckyScriptParser
-from mirage.libs.common.hid import HIDMapping
 from mirage.core import module
+from mirage.libs import io,  utils
+from mirage.libs.common.hid import HIDMapping
+from mirage.libs.common.parsers import DuckyScriptParser
+from mirage.libs.mosart_utils.packets import MosartKeyboardKeystrokePacket
+from mirage.libs.wireless_utils.packets import WaitPacket
 
 
 class mosart_keyinjector(module.WirelessModule):
@@ -35,22 +37,22 @@ class mosart_keyinjector(module.WirelessModule):
 		hid,mod = HIDMapping(locale=locale).getHIDCodeFromKey(key=key)
 
 		if mod == 0:
-			keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
-			keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
+			keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
+			keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
 
 			self.counter = self.counter + 1 if self.counter + 1 <= 15 else 0
 		else:
-			keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="pressed"))
-			keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="pressed"))
-			keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
-			keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
+			keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="pressed"))
+			keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="pressed"))
+			keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
+			keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="pressed"))
 			
 			self.counter = self.counter + 1 if self.counter + 1 <= 15 else 0	
-		keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="released"))
-		keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="released"))
-		keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="released"))
-		keystrokes.append(mosart.MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="released"))
-		keystrokes.append(wireless.WaitPacket(time=0.4))
+		keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="released"))
+		keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=hid,modifiers=0,state="released"))
+		keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="released"))
+		keystrokes.append(MosartKeyboardKeystrokePacket(sequenceNumber=self.counter,address=self.args["TARGET"],hidCode=0,modifiers=mod,state="released"))
+		keystrokes.append(WaitPacket(time=0.4))
 		self.counter = self.counter + 1 if self.counter + 1 <= 15 else 0
 		return keystrokes
 
@@ -65,7 +67,7 @@ class mosart_keyinjector(module.WirelessModule):
 
 	def addMosartDelay(self,duration=1000):
 		keystrokes = []
-		keystrokes.append(wireless.WaitPacket(time=0.0001*duration))
+		keystrokes.append(WaitPacket(time=0.0001*duration))
 		return keystrokes
 
 

@@ -1,6 +1,7 @@
-from scapy.all import *
 from mirage.core import module
-from mirage.libs import utils,io,wifi
+from mirage.libs import io, utils
+from mirage.libs.wifi_utils.packets import WifiDeauth, WifiDisas
+
 
 class wifi_deauth(module.WirelessModule):
 
@@ -78,8 +79,8 @@ class wifi_deauth(module.WirelessModule):
 			self.emitter.setChannel(utils.integerArg(self.args["CHANNEL"]))
 
 			# We forge the deauthentication and disassociation packet, while spoofing the client's MAC
-			self.deauth_packet = wifi.WifiDeauth(destMac=self.target,srcMac=self.source,reason=self.reason)
-			self.disas_packet = wifi.WifiDisas(destMac=self.target,srcMac=self.source,reason=self.reason)
+			self.deauth_packet = WifiDeauth(destMac=self.target,srcMac=self.source,reason=self.reason)
+			self.disas_packet = WifiDisas(destMac=self.target,srcMac=self.source,reason=self.reason)
 
 			self.send_deauth()
 

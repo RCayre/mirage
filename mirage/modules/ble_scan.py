@@ -1,6 +1,9 @@
 import queue
-from mirage.libs import io,ble,utils
+
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
+
 
 class ble_scan(module.WirelessModule):
 	def init(self):
@@ -30,11 +33,11 @@ class ble_scan(module.WirelessModule):
 				if hasattr(part,"local_name"):
 					localName = part.local_name.decode('ascii','ignore').replace("\0", "")
 				elif hasattr(part, "company_id"):
-					company = ble.AssignedNumbers.getCompanyByNumber(int(part.company_id))
+					company = AssignedNumbers.getCompanyByNumber(int(part.company_id))
 					if company is None:
 						company = ""
 				elif hasattr(part,"flags"):
-					flags = ble.AssignedNumbers.getStringsbyFlags(part.flags)
+					flags = AssignedNumbers.getStringsbyFlags(part.flags)
 			#print ({"address":address,"name":localName,"company":company, "flags":flags,"data":data})
 			self.devicesQueue.put({"address":address,"name":localName,"company":company, "flags":flags,"data":data, "pType":packet.type})
 

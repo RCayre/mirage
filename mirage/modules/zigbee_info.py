@@ -1,5 +1,6 @@
-from mirage.libs import io,zigbee,utils
 from mirage.core import module
+from mirage.libs import io, utils
+
 
 class zigbee_info(module.WirelessModule):
 	def init(self):

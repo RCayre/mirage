@@ -1,12 +1,19 @@
-from mirage.libs.mosart_utils.rfstorm import *
-from mirage.libs.mosart_utils.scapy_mosart_layers import *
-from mirage.libs.mosart_utils.packets import *
-from mirage.libs.mosart_utils.pcap import *
-from mirage.libs.mosart_utils.helpers import *
-from mirage.libs import wireless,io,utils
-from mirage.core.module import WirelessModule
 
-class MosartEmitter(wireless.Emitter):
+from mirage.core.module import WirelessModule
+from mirage.libs.mosart_utils.helpers import addressToInteger, integerToAddress
+from mirage.libs.mosart_utils.packets import MosartDonglePacket, \
+	MosartKeyboardKeystrokePacket, \
+	MosartMouseClickPacket,\
+	MosartMouseMovementPacket, \
+	MosartPacket, \
+	MosartSniffingParameters
+from mirage.libs.mosart_utils.pcap import MosartPCAPDevice
+from mirage.libs.mosart_utils.rfstorm import MosartRFStormDevice
+from mirage.libs.mosart_utils.scapy_mosart_layers import Mosart_Action_Packet, Mosart_Dongle_Sync_Packet, Mosart_Hdr, Mosart_Mouse_Movement_Packet
+from mirage.libs.wireless import Emitter, Receiver
+
+
+class MosartEmitter(Emitter):
 	def __init__(self,interface="rfstorm0"):
 		if "rfstorm" in interface:
 			deviceClass = MosartRFStormDevice
@@ -39,7 +46,7 @@ class MosartEmitter(wireless.Emitter):
 
 			
 		
-class MosartReceiver(wireless.Receiver):
+class MosartReceiver(Receiver):
 	def __init__(self,interface="rfstorm0"):
 		if "rfstorm" in interface:
 			deviceClass = MosartRFStormDevice

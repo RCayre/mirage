@@ -1,7 +1,10 @@
-import subprocess,sys
-from mirage.libs import io,utils,esb,wireless
-from mirage.core import module,interpreter
-from threading import Lock
+import subprocess
+import sys
+
+from mirage.core import interpreter, module
+from mirage.libs import io, utils
+from mirage.libs.esb_utils.packets import ESBAckResponsePacket
+
 
 class esb_prx(module.WirelessModule, interpreter.Interpreter):
 	def init(self):
@@ -124,7 +127,7 @@ class esb_prx(module.WirelessModule, interpreter.Interpreter):
 			for payload in payloads.split(","):
 				try:
 					esbPayload = bytes.fromhex(payload)
-					self.emitter.sendp(esb.ESBAckResponsePacket(address=self.target,payload=esbPayload))
+					self.emitter.sendp(ESBAckResponsePacket(address=self.target,payload=esbPayload))
 				except ValueError:
 					io.fail("You must specify an hexadecimal payload.")
 	

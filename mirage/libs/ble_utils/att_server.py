@@ -1,6 +1,9 @@
-from mirage.libs.ble_utils.dissectors import *
-from mirage.libs.ble_utils.constants import *
-from mirage.libs import utils,io
+import struct
+
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.constants import ATT_ERR_ATTR_NOT_FOUND, ATT_ERR_READ_NOT_PERMITTED, ATT_ERR_WRITE_NOT_PERMITTED
+from mirage.libs.ble_utils.dissectors import CharacteristicDeclaration, CharacteristicDescriptor, PermissionsFlag, Service, UUID
+
 
 class ATT_Attribute:
 	'''

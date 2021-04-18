@@ -1,6 +1,8 @@
-from mirage.libs import mosart,utils,io
-from mirage.core import module
 import sys
+
+from mirage.core import module
+from mirage.libs import io, utils
+
 
 class mosart_scan(module.WirelessModule):
 	def init(self):

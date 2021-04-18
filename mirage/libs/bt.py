@@ -1,16 +1,81 @@
-from scapy.all import *
 from queue import Queue
 from threading import Lock
-from mirage.core.module import WirelessModule
-from mirage.libs.bt_utils.packets import *
-from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
-from mirage.libs.bt_utils.scapy_layers import *
-from mirage.libs.bt_utils.scapy_vendor_specific import *
-from mirage.libs.bt_utils.hciconfig import HCIConfig
-from mirage.libs.bt_utils.constants import *
-from mirage.libs import wireless,io,utils
 
-class BtHCIDevice(wireless.Device):
+from scapy.layers.bluetooth import BluetoothCommandError, \
+	BluetoothSocketError, \
+	BluetoothUserSocket, \
+	HCI_ACL_Hdr, \
+	HCI_Cmd_Connect_Accept_Timeout, \
+	HCI_Cmd_Read_BD_Addr, \
+	HCI_Cmd_Reset, \
+	HCI_Cmd_Set_Event_Mask, \
+	HCI_Command_Hdr, \
+	HCI_Hdr, \
+	L2CAP_CmdHdr, \
+	L2CAP_ConfReq, \
+	L2CAP_ConfResp, \
+	L2CAP_ConnReq, \
+	L2CAP_ConnResp, \
+	L2CAP_Hdr, \
+	L2CAP_InfoReq, \
+	L2CAP_InfoResp
+
+from mirage.core.module import WirelessModule
+from mirage.libs import io, utils
+from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
+from mirage.libs.bt_utils.hciconfig import HCIConfig
+from mirage.libs.bt_utils.packets import BluetoothAcceptConnectionRequest, \
+	BluetoothConnect, \
+	BluetoothConnectResponse, \
+	BluetoothConnectionRequest, \
+	BluetoothInquiry, \
+	BluetoothInquiryComplete, \
+	BluetoothInquiryScanResult, \
+	BluetoothL2CAPConfigurationRequest, \
+	BluetoothL2CAPConfigurationResponse, \
+	BluetoothL2CAPConnectionRequest, \
+	BluetoothL2CAPConnectionResponse, \
+	BluetoothL2CAPInformationRequest, \
+	BluetoothL2CAPInformationResponse, \
+	BluetoothMaxSlotChange, \
+	BluetoothPacket, \
+	BluetoothRejectConnectionRequest, \
+	BluetoothRemoteNameRequest, \
+	BluetoothRemoteNameResponse, \
+	BluetoothWriteExtendedInquiryResponse, \
+	BluetoothWriteScanEnable
+from mirage.libs.bt_utils.scapy_layers import HCI_Cmd_Accept_Connection_Request, \
+	HCI_Cmd_Create_Connection, \
+	HCI_Cmd_Inquiry, \
+	HCI_Cmd_Read_Local_Name, \
+	HCI_Cmd_Reject_Connection_Request, \
+	HCI_Cmd_Remote_Name_Request, \
+	HCI_Cmd_Write_Extended_Inquiry_Response, \
+	HCI_Cmd_Write_Inquiry_Mode, \
+	HCI_Cmd_Write_Local_Name, \
+	HCI_Cmd_Write_Scan_Enable, \
+	HCI_Evt_Connection_Complete, \
+	HCI_Evt_Connection_Request, \
+	HCI_Evt_Extended_Inquiry_Result, \
+	HCI_Evt_Inquiry_Complete, \
+	HCI_Evt_Inquiry_Result, \
+	HCI_Evt_Inquiry_Result_With_RSSI, \
+	HCI_Evt_Max_Slot_Change, \
+	HCI_Evt_Remote_Name_Request_Complete
+from mirage.libs.bt_utils.scapy_vendor_specific import COMPATIBLE_VENDORS, \
+	HCI_Cmd_BCM_Write_BD_Address, \
+	HCI_Cmd_CSR_Reset, \
+	HCI_Cmd_CSR_Write_BD_Address, \
+	HCI_Cmd_Ericsson_Write_BD_Address, \
+	HCI_Cmd_Read_Local_Version_Information, \
+	HCI_Cmd_ST_Write_BD_Address, \
+	HCI_Cmd_TI_Write_BD_Address, \
+	HCI_Cmd_Zeevo_Write_BD_Address
+from mirage.libs.wireless import Emitter, Receiver
+from mirage.libs.wireless_utils.device import Device
+
+
+class BtHCIDevice(Device):
 	'''
 	This device allows to communicate with an HCI Device in order to use Bluetooth protocol.
 	The corresponding interfaces are : ``hciX`` (e.g. "hci0")
@@ -490,7 +555,7 @@ class BtHCIDevice(wireless.Device):
 		return success
 
 
-class BluetoothEmitter(wireless.Emitter):
+class BluetoothEmitter(Emitter):
 	'''
 	This class is an Emitter for the Bluetooth protocol ("bt").
 
@@ -548,7 +613,7 @@ class BluetoothEmitter(wireless.Emitter):
 
 		return p.packet
 
-class BluetoothReceiver(wireless.Receiver):
+class BluetoothReceiver(Receiver):
 	'''
 	This class is a Receiver for the Bluetooth protocol ("bt").
 
@@ -599,7 +664,7 @@ class BluetoothReceiver(wireless.Receiver):
 			elif L2CAP_ConfReq in packet:
 				return BluetoothL2CAPConfigurationRequest(dcid=packet.dcid,flags=packet.flags, connectionHandle=packet.handle)
 			elif L2CAP_ConfResp in packet:
-				return BluetoothL2CAPConfigurationResponse(scid=packet.scid,flags=packets.flags,result=packet.result, connectionHandle=packet.handle)
+				return BluetoothL2CAPConfigurationResponse(scid=packet.scid,flags=packet.flags,result=packet.result, connectionHandle=packet.handle)
 			return new
 
 

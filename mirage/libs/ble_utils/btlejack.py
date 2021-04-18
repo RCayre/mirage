@@ -1,13 +1,52 @@
-from threading import Lock
-from queue import Queue
+import struct
 import time
-from serial.tools.list_ports import comports
-from serial import Serial,SerialException
-from mirage.libs.ble_utils.constants import *
-from mirage.libs.ble_utils.scapy_btlejack_layers import *
-from mirage.libs import io,utils,wireless
+from queue import Queue
+from threading import Lock
 
-class BTLEJackDevice(wireless.Device):
+from scapy.compat import raw
+from scapy.layers.bluetooth4LE import BTLE, BTLE_ADV, BTLE_DATA, BTLE_PPI, CtrlPDU
+from scapy.layers.netflow import port
+from serial import Serial, SerialException
+from serial.tools.list_ports import comports
+
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.constants import BLESniffingMode
+from mirage.libs.ble_utils.scapy_btlejack_layers import BTLEJack_Access_Address_Notification, \
+	BTLEJack_Advertisement_Packet_Notification, \
+	BTLEJack_Advertisements_Add_Rule_Command, \
+	BTLEJack_Advertisements_Command, \
+	BTLEJack_Advertisements_Disable_Jamming_Command, \
+	BTLEJack_Advertisements_Disable_Sniff_Command, \
+	BTLEJack_Advertisements_Enable_Jamming_Command, \
+	BTLEJack_Advertisements_Enable_Sniff_Command, \
+	BTLEJack_Advertisements_Reset_Policy_Command, \
+	BTLEJack_CRCInit_Notification, \
+	BTLEJack_Channel_Map_Notification, \
+	BTLEJack_Connection_Lost_Notification, \
+	BTLEJack_Connection_Request_Notification, \
+	BTLEJack_Enable_Hijacking_Command, \
+	BTLEJack_Enable_Jamming_Command, \
+	BTLEJack_Filtering_Rule, \
+	BTLEJack_Hdr, \
+	BTLEJack_Hijack_Status_Notification, \
+	BTLEJack_Hop_Increment_Notification, \
+	BTLEJack_Hop_Interval_Notification, \
+	BTLEJack_Nordic_Tap_Packet_Notification, \
+	BTLEJack_Recover_Channel_Map_Command, \
+	BTLEJack_Recover_Command, \
+	BTLEJack_Recover_Connection_AA_Command, \
+	BTLEJack_Recover_Hopping_Parameters_Command, \
+	BTLEJack_Reset_Command, \
+	BTLEJack_Scan_Connections_Command, \
+	BTLEJack_Send_Packet_Command, \
+	BTLEJack_Sniff_Connection_Request_Command, \
+	BTLEJack_Verbose_Response, \
+	BTLEJack_Version_Command
+from mirage.libs.wireless_utils.device import Device
+from mirage.libs.wireless_utils.packetQueue import StoppableThread
+
+
+class BTLEJackDevice(Device):
 	'''
 	This device allows to communicate with a BTLEJack Device in order to sniff Bluetooth Low Energy protocol.
 	The corresponding interfaces are : ``microbitX`` (e.g. "microbit0")
@@ -1073,7 +1112,7 @@ class BTLEJackDevice(wireless.Device):
 			self.sniffAdvertisements()
 
 			if self.scanThreadInstance is None:
-				self.scanThreadInstance = wireless.StoppableThread(target=self._scanThread)
+				self.scanThreadInstance = StoppableThread(target=self._scanThread)
 				self.scanThreadInstance.start()
 		else:
 			self.scanThreadInstance.stop()
@@ -1092,7 +1131,7 @@ class BTLEJackDevice(wireless.Device):
 
 	def _startSweepingThread(self):
 		self._stopSweepingThread()
-		self.sweepingThreadInstance = wireless.StoppableThread(target=self._sweepingThread)
+		self.sweepingThreadInstance = StoppableThread(target=self._sweepingThread)
 		self.sweepingThreadInstance.start()
 
 	def _stopSweepingThread(self):

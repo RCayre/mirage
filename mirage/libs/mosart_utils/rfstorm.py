@@ -1,16 +1,37 @@
-from mirage.libs.esb_utils.constants import *
-from mirage.libs.mosart_utils.constants import *
-from mirage.libs.mosart_utils.helpers import *
-from mirage.libs.mosart_utils.scapy_mosart_layers import *
-from mirage.libs import io,wireless,utils
-from threading import Lock
-from fcntl import ioctl
-import usb.core,usb.util
 import struct
-import queue
-import array,time
+from fcntl import ioctl
+from threading import Lock
 
-class MosartRFStormDevice(wireless.Device):
+import usb.core
+import usb.util
+from scapy.compat import raw
+
+from mirage.libs import io
+from mirage.libs.esb_utils.constants import NRF24_COMMAND_ENDPOINT, \
+	NRF24_ENABLE_LNA_PA, \
+	NRF24_ENTER_PROMISCUOUS_MODE, \
+	NRF24_ENTER_PROMISCUOUS_MODE_GENERIC, \
+	NRF24_ENTER_SNIFFER_MODE, \
+	NRF24_ENTER_TONE_TEST_MODE, \
+	NRF24_GET_CHANNEL, \
+	NRF24_ID_PRODUCT, \
+	NRF24_ID_VENDOR, \
+	NRF24_RECEIVE_PAYLOAD, \
+	NRF24_RESPONSE_ENDPOINT, \
+	NRF24_SET_CHANNEL, \
+	NRF24_TRANSMIT_ACK_PAYLOAD, \
+	NRF24_TRANSMIT_PAYLOAD, \
+	NRF24_TRANSMIT_PAYLOAD_GENERIC, \
+	RF_RATE_1M, \
+	RF_RATE_2M, \
+	USBDEVFS_RESET
+from mirage.libs.mosart_utils.constants import MosartOperationMode
+from mirage.libs.mosart_utils.helpers import crc
+from mirage.libs.mosart_utils.scapy_mosart_layers import Mosart_Dongle_Sync_Packet, Mosart_Hdr
+from mirage.libs.wireless_utils.device import Device
+
+
+class MosartRFStormDevice(Device):
 	'''
 	This device allows to communicate with a NRF24 Device using the RFStorm firmware from Bastille in order to sniff and inject Mosart frames.
 	The corresponding interfaces are : ``rfstormX`` (e.g. "rfstorm0")

@@ -1,7 +1,9 @@
 import os
 from string import Template
-from mirage.core import interpreter,loader,taskManager,module,config,templates
-from mirage.libs import io,utils
+
+from mirage.core import config, interpreter, loader, module, taskManager, templates
+from mirage.libs import io, utils
+
 
 class App(interpreter.Interpreter):
 	'''

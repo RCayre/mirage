@@ -1,8 +1,12 @@
-from Cryptodome.Cipher import AES
+import struct
+import time
+from multiprocessing import Manager, Process, cpu_count
 from os import urandom
-from multiprocessing import Process, Manager,cpu_count
-import time,struct
+
+from Cryptodome.Cipher import AES
+
 from mirage.libs import io
+
 
 class BLECrypto:
 	'''

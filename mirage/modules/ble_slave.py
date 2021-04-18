@@ -1,6 +1,21 @@
-import configparser,os.path,subprocess
-from mirage.libs import io,utils,ble
-from mirage.core import module,interpreter
+import configparser
+import os.path
+import subprocess
+
+from mirage.core import interpreter, module
+from mirage.libs import io, utils
+from mirage.libs.ble_utils.att_server import GATT_Server
+from mirage.libs.ble_utils.packets import BLEDisconnect,\
+	BLEErrorResponse,\
+	BLEExchangeMTUResponse,\
+	BLEFindInformationResponse,\
+	BLEHandleValueNotification,\
+	BLEReadBlobResponse,\
+	BLEReadByGroupTypeResponse,\
+	BLEReadByTypeResponse,\
+	BLEReadResponse,\
+	BLEWriteResponse
+
 
 class ble_slave(module.WirelessModule,interpreter.Interpreter):
 	def init(self):
@@ -66,7 +81,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 
 	def disconnect(self):
 		if self.emitter.isConnected():
-			self.emitter.sendp(ble.BLEDisconnect())
+			self.emitter.sendp(BLEDisconnect())
 		self.updatePrompt()
 
 	def notification(self,handle,value):
@@ -77,7 +92,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 			else:
 				value = bytes(value,"ascii")
 
-			self.emitter.sendp(ble.BLEHandleValueNotification(handle=handle, value=value))
+			self.emitter.sendp(BLEHandleValueNotification(handle=handle, value=value))
 		except:
 			io.fail("An error happened during notification emission !")
 
@@ -86,7 +101,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 
 
 	def initializeServer(self):
-		self.server = ble.GATT_Server()
+		self.server = GATT_Server()
 
 	def identifyLayer(self,filename):
 		config = configparser.ConfigParser()
@@ -145,10 +160,10 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 			" / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
 		(success,response) = self.server.readByType(packet.startHandle,packet.endHandle,packet.uuid)
 		if success:
-			io.displayPacket(ble.BLEReadByTypeResponse(attributes=response))
-			self.emitter.sendp(ble.BLEReadByTypeResponse(attributes=response))
+			io.displayPacket(BLEReadByTypeResponse(attributes=response))
+			self.emitter.sendp(BLEReadByTypeResponse(attributes=response))
 		else:
-			self.emitter.sendp(ble.BLEErrorResponse(request=0x08,ecode=response, handle=packet.startHandle))
+			self.emitter.sendp(BLEErrorResponse(request=0x08,ecode=response, handle=packet.startHandle))
 
 	@module.scenarioSignal("onMasterFindInformationRequest")
 	def findInformationRequest(self,packet):
@@ -156,10 +171,10 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 			" / endHandle = "+hex(packet.endHandle))
 		(success,response) = self.server.findInformation(packet.startHandle,packet.endHandle)
 		if success:
-			io.displayPacket(ble.BLEFindInformationResponse(attributes=response))
-			self.emitter.sendp(ble.BLEFindInformationResponse(attributes=response))
+			io.displayPacket(BLEFindInformationResponse(attributes=response))
+			self.emitter.sendp(BLEFindInformationResponse(attributes=response))
 		else:
-			self.emitter.sendp(ble.BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
+			self.emitter.sendp(BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
 
 	@module.scenarioSignal("onMasterReadByGroupTypeRequest")
 	def readByGroupTypeRequest(self,packet):
@@ -167,19 +182,19 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 				" / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
 		(success,response) = self.server.readByGroupType(packet.startHandle, packet.endHandle, packet.uuid)
 		if success:
-			io.displayPacket(ble.BLEReadByGroupTypeResponse(attributes=response))
-			self.emitter.sendp(ble.BLEReadByGroupTypeResponse(attributes=response))
+			io.displayPacket(BLEReadByGroupTypeResponse(attributes=response))
+			self.emitter.sendp(BLEReadByGroupTypeResponse(attributes=response))
 		else:
-			self.emitter.sendp(ble.BLEErrorResponse(request=0x10,ecode=response,handle=packet.startHandle))
+			self.emitter.sendp(BLEErrorResponse(request=0x10,ecode=response,handle=packet.startHandle))
 
 	@module.scenarioSignal("onMasterReadRequest")
 	def readRequest(self,packet):
 		io.info("Read Request : handle = "+hex(packet.handle))
 		(success,response) = self.server.read(packet.handle)
 		if success:
-			self.emitter.sendp(ble.BLEReadResponse(value=response))
+			self.emitter.sendp(BLEReadResponse(value=response))
 		else:
-			self.emitter.sendp(ble.BLEErrorResponse(request=0x0a, ecode=response,handle=packet.handle))
+			self.emitter.sendp(BLEErrorResponse(request=0x0a, ecode=response,handle=packet.handle))
 
 
 	@module.scenarioSignal("onMasterReadBlobRequest")
@@ -187,9 +202,9 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 		io.info("Read Blob Request : handle = "+hex(packet.handle) + " / offset = "+str(packet.offset))
 		(success,response) = self.server.readBlob(packet.handle,packet.offset)
 		if success:
-			self.emitter.sendp(ble.BLEReadBlobResponse(value=response))
+			self.emitter.sendp(BLEReadBlobResponse(value=response))
 		else:
-			self.emitter.sendp(ble.BLEErrorResponse(request=0x0a, ecode=response,handle=packet.handle))
+			self.emitter.sendp(BLEErrorResponse(request=0x0a, ecode=response,handle=packet.handle))
 
 
 	@module.scenarioSignal("onMasterWriteRequest")
@@ -197,9 +212,9 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 		io.info("Write Request : handle = "+hex(packet.handle)+" / value = "+packet.value.hex())
 		(success,code) = self.server.writeRequest(packet.handle,packet.value)
 		if success:
-			self.emitter.sendp(ble.BLEWriteResponse())
+			self.emitter.sendp(BLEWriteResponse())
 		else:
-			self.emitter.sendp(ble.BLEErrorResponse(request=0x12,ecode=code,handle=packet.handle))
+			self.emitter.sendp(BLEErrorResponse(request=0x12,ecode=code,handle=packet.handle))
 
 	@module.scenarioSignal("onMasterWriteCommand")
 	def writeCommand(self,packet):
@@ -210,7 +225,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 	def exchangeMTURequest(self,packet):
 		io.info("Exchange MTU Request : mtu = "+str(packet.mtu))
 		self.server.setMtu(packet.mtu)
-		self.emitter.sendp(ble.BLEExchangeMTUResponse(mtu=packet.mtu))
+		self.emitter.sendp(BLEExchangeMTUResponse(mtu=packet.mtu))
 
 	@module.scenarioSignal("onMasterConnect")
 	def connection(self,packet):

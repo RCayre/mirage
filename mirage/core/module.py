@@ -1,6 +1,8 @@
 import keyboard
+
 from mirage.core.scenario import scenarioSignal
 from mirage.libs import io
+
 '''
 This submodule defines two main classes of the framework : Module & WirelessModule.
 The modules defined in the framework inherits from these classes in order to 

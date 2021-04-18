@@ -1,5 +1,5 @@
-from mirage.libs import mosart,utils,io,wireless
 from mirage.core import module
+from mirage.libs import io, utils
 
 
 class mosart_inject(module.WirelessModule):

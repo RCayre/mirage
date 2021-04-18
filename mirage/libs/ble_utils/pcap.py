@@ -1,14 +1,13 @@
-from struct import pack,unpack
-from scapy.all import *
-from mirage.libs.wireless_utils.pcapDevice import PCAPDevice
-from mirage.libs.ble_utils.packets import *
-from mirage.libs.ble_utils.constants import *
-from mirage.libs.ble_utils.scapy_link_layers import *
-from mirage.libs.ble_utils.helpers import rssiToDbm, crc24
-from mirage.libs import io, utils
-import time
+from struct import pack, unpack
 
-class BLEPCAPDevice(wireless.PCAPDevice):
+from scapy.layers.bluetooth4LE import BTLE, BTLE_ADV, BTLE_CONNECT_REQ, BTLE_DATA, BTLE_PPI, BTLE_RF
+
+from mirage.libs.ble_utils.constants import BLESniffingMode
+from mirage.libs.ble_utils.scapy_link_layers import ControlPDU
+from mirage.libs.wireless_utils.pcapDevice import PCAPDevice
+
+
+class BLEPCAPDevice(PCAPDevice):
 	'''
 	This device allows to communicate with a PCAP file in order to write and read Bluetooth Low Energy packets.
 	

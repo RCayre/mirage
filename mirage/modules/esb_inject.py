@@ -1,5 +1,5 @@
-from mirage.libs import esb,utils,io
 from mirage.core import module
+from mirage.libs import io, utils
 
 
 class esb_inject(module.WirelessModule):

@@ -1,11 +1,11 @@
-from mirage.libs import wireless
+from mirage.libs.wireless_utils.packets import Packet
 
 '''
 This module contains Mirage Packets for the Bluetooth protocol.
 '''
 PSM_PROTOCOLS = {1: "SDP", 3: "RFCOMM", 5: "telephony control"}
 
-class BluetoothPacket(wireless.Packet):
+class BluetoothPacket(Packet):
 	'''
 	Mirage Bluetooth Packet
 	'''

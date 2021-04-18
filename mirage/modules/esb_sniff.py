@@ -1,6 +1,9 @@
-from mirage.libs import esb,utils,io
-from mirage.core import module
 import configparser
+
+from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.esb_utils.packets import ESBAckResponsePacket
+
 
 class esb_sniff(module.WirelessModule):
 	def init(self):
@@ -39,7 +42,7 @@ class esb_sniff(module.WirelessModule):
 		self.miceDatas.append({"x":packet.x, "y":packet.y, "rightClick":packet.button == "right","leftClick":packet.button == "left"})
 
 	def show(self,packet):
-		if utils.booleanArg(self.args["ACK_PACKETS"]) or (not utils.booleanArg(self.args["ACK_PACKETS"]) and not isinstance(packet,esb.ESBAckResponsePacket)):
+		if utils.booleanArg(self.args["ACK_PACKETS"]) or (not utils.booleanArg(self.args["ACK_PACKETS"]) and not isinstance(packet,ESBAckResponsePacket)):
 			io.displayPacket(packet)
 			self.lastReceivedFrameTimestamp = utils.now()
 			if self.pcap is not None:

@@ -1,6 +1,9 @@
-from .task import Task
 from copy import copy
+
 import psutil
+
+from .task import Task
+
 
 class TaskManager:
 	'''

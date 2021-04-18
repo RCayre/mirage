@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from mirage.core import app,argParser,loader
+from mirage.core import app,argParser
 from mirage.libs.utils import initializeHomeDir
 
 

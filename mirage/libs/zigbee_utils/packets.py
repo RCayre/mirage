@@ -1,7 +1,9 @@
-from mirage.libs import wireless,utils
+from mirage.libs import utils
+from mirage.libs.wireless_utils.packets import AdditionalInformations, Packet
 from mirage.libs.zigbee_utils import helpers
 
-class ZigbeeSniffingParameters(wireless.AdditionalInformations):
+
+class ZigbeeSniffingParameters(AdditionalInformations):
 	'''
 	This class allows to attach some sniffer's data to a Mirage Zigbee Packet, such as RSSI, valid CRC,link quality indicator or channel.
 	If the frequency is provided, the corresponding channel is automatically calculated. 
@@ -35,7 +37,7 @@ class ZigbeeSniffingParameters(wireless.AdditionalInformations):
 		return "CH:" + str(self.channel)+"|RSSI:"+str(self.rssi)+"dBm"+"|LKI:"+str(self.linkQualityIndicator)+"/255"+"|CRC:"+("OK" if self.validCrc else "NOK")
 
 
-class ZigbeePacket(wireless.Packet):
+class ZigbeePacket(Packet):
 	'''
 	Mirage Zigbee Packet
 

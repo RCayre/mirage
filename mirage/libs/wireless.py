@@ -1,11 +1,13 @@
-from queue import Queue,Empty
 import time
+from queue import Empty, Queue
+
+from scapy.packet import Packet
+
 import mirage.libs.io as io
-from mirage.libs.wireless_utils.packets import *
-from mirage.libs.wireless_utils.packetQueue import PacketQueue,StoppableThread
 from mirage.libs.wireless_utils.callbacks import Callback
 from mirage.libs.wireless_utils.device import Device
-from mirage.libs.wireless_utils.pcapDevice import PCAPDevice
+from mirage.libs.wireless_utils.packetQueue import PacketQueue
+from mirage.libs.wireless_utils.packets import WaitPacket
 
 
 class Emitter(PacketQueue):

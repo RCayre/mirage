@@ -1,8 +1,11 @@
-from mirage.libs.zigbee_utils.scapy_xbee_layers import *
-from mirage.libs.zigbee_utils.helpers import *
-from mirage.libs import wireless
+from scapy.layers.dot15d4 import Dot15d4
 
-class ZigbeePCAPDevice(wireless.PCAPDevice):
+from mirage.libs.wireless_utils.packets import WaitPacket
+from mirage.libs.wireless_utils.pcapDevice import PCAPDevice
+from mirage.libs.zigbee_utils.helpers import fcs
+
+
+class ZigbeePCAPDevice(PCAPDevice):
 	'''
 	This device allows to communicate with a PCAP file in order to write and read Zigbee packets.
 	
@@ -80,7 +83,7 @@ class ZigbeePCAPDevice(wireless.PCAPDevice):
 				currentTimestamp = timestamp
 			else:
 				wait = (timestamp - currentTimestamp)
-				stream.append(wireless.WaitPacket(time=wait))
+				stream.append(WaitPacket(time=wait))
 				currentTimestamp = timestamp
 
 			stream.append(self.publish("convertRawToMiragePacket",packet))

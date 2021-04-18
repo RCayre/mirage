@@ -1,5 +1,5 @@
-from mirage.libs import zigbee,utils,io
 from mirage.core import module
+from mirage.libs import io, utils
 
 
 class zigbee_inject(module.WirelessModule):

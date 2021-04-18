@@ -1,6 +1,8 @@
-from mirage.libs import utils,io
-from mirage.core import module
 import configparser
+
+from mirage.core import module
+from mirage.libs import io
+
 
 class mouse_visualizer(module.Module):
 	def init(self):

@@ -1,5 +1,6 @@
-from mirage.libs import io,ir,utils
 from mirage.core import module
+from mirage.libs import io, utils
+
 
 class ir_info(module.WirelessModule):
 	def init(self):

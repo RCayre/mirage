@@ -1,5 +1,8 @@
-from mirage.libs import bt,utils,io
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.bt import BluetoothEmitter, BluetoothReceiver
+from mirage.libs.bt_utils.packets import BluetoothInquiry, BluetoothInquiryComplete, BluetoothInquiryScanResult
+
 
 class bt_scan(module.Module):
 	def init(self):
@@ -38,17 +41,17 @@ class bt_scan(module.Module):
 			self.displayDevices()
 
 	def run(self):
-		self.emitter = bt.BluetoothEmitter(interface=self.args['INTERFACE'])
-		self.receiver = bt.BluetoothReceiver(interface=self.args['INTERFACE'])
+		self.emitter = BluetoothEmitter(interface=self.args['INTERFACE'])
+		self.receiver = BluetoothReceiver(interface=self.args['INTERFACE'])
 		time = utils.integerArg(self.args['TIME'])
-		self.emitter.sendp(bt.BluetoothInquiry(inquiryLength=time))
+		self.emitter.sendp(BluetoothInquiry(inquiryLength=time))
 		
 		scanning = True
 		while scanning:
 			packet = self.receiver.next()
-			if isinstance(packet,bt.BluetoothInquiryComplete):
+			if isinstance(packet,BluetoothInquiryComplete):
 				scanning = False
-			elif isinstance(packet,bt.BluetoothInquiryScanResult):
+			elif isinstance(packet,BluetoothInquiryScanResult):
 				self.updateDevices(packet)
 				
 		return self.ok()

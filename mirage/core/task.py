@@ -1,6 +1,10 @@
-from mirage.libs import utils
-import multiprocessing,os,sys
+import multiprocessing
+import os
+import sys
 from ctypes import c_char_p
+
+from mirage.libs import utils
+
 
 class Task(multiprocessing.Process):
 	'''

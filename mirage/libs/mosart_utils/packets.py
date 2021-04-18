@@ -1,8 +1,8 @@
-from mirage.libs import wireless
-from mirage.libs.mosart_utils.dissectors import *
+from mirage.libs.mosart_utils.dissectors import MosartKeystroke
+from mirage.libs.wireless_utils.packets import AdditionalInformations, Packet
 
 
-class MosartSniffingParameters(wireless.AdditionalInformations):
+class MosartSniffingParameters(AdditionalInformations):
 	'''
 	This class allows to attach some sniffer's data to a Mirage Mosart Packet, such as channel.
 
@@ -20,7 +20,7 @@ class MosartSniffingParameters(wireless.AdditionalInformations):
 	def toString(self):
 		return "CH:" + str(self.channel)
 
-class MosartPacket(wireless.Packet):
+class MosartPacket(Packet):
 	'''
 	Mirage Mosart Packet
 

@@ -1,4 +1,24 @@
-from scapy.all import *
+import scapy
+from scapy.fields import BitField, \
+	ByteEnumField, \
+	FieldLenField, \
+	LEShortField, \
+	PacketListField, \
+	PadField, StrField, \
+	StrLenField, \
+	XByteField, \
+	XLEShortField
+from scapy.layers.bluetooth import ATT_Handle_Value_Indication,\
+	ATT_Handle_Value_Notification, \
+	ATT_Hdr, ATT_Read_Blob_Request, \
+	ATT_Read_Blob_Response, \
+	EIR_Hdr, \
+	HCI_Cmd_LE_Create_Connection, \
+	HCI_Command_Hdr, \
+	HCI_Event_LE_Meta, \
+	LEMACField, \
+	SM_Hdr
+from scapy.packet import Packet, bind_layers, split_layers
 
 '''
 This module contains some scapy definitions for communicating with an HCI device.

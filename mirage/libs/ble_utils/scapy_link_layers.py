@@ -1,8 +1,11 @@
-from scapy.all import *
+from scapy.fields import XByteField, XLEIntField, XLELongField, XLEShortField
+from scapy.layers.bluetooth4LE import BTLE_DATA, CtrlPDU
+from scapy.packet import Packet, bind_layers, split_layers
 
 '''
 This module contains some scapy definitions of Link Layer Bluetooth Low Energy packets.
 '''
+
 
 class ControlPDU(Packet):
 	name = "Control PDU"

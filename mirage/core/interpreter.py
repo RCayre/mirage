@@ -1,7 +1,15 @@
-from mirage.libs import io
-import readline,shlex,re,inspect,glob,sys
+import glob
+import inspect
 import os
+import re
+import readline
+import shlex
+import sys
+
 import keyboard
+
+from mirage.libs import io
+
 
 class Interpreter:
 	'''

@@ -1,6 +1,10 @@
-from mirage.libs import io,zigbee,utils
-from mirage.core import module
 import sys
+
+from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.zigbee_utils.helpers import addressToString
+from mirage.libs.zigbee_utils.packets import ZigbeeBeacon, ZigbeeBeaconRequest
+
 
 class zigbee_scan(module.WirelessModule):
 	def init(self):
@@ -27,14 +31,14 @@ class zigbee_scan(module.WirelessModule):
 		nodes = ""
 		for panID,network in self.devices.items():
 			for node,role in network["nodes"].items():
-				nodes += zigbee.addressToString(node)+"("+role+")"+"\n"
+				nodes += addressToString(node)+"("+role+")"+"\n"
 			networks.append([hex(panID),str(network["channel"]),"yes" if network["associationPermitted"] else ("unknown" if network["associationPermitted"] is None else "no"),nodes[:-1]])
 		io.chart(columnsNames,networks)
 
 	def updateDevices(self,packet):
 		changes = 0
 
-		if isinstance(packet,zigbee.ZigbeeBeacon):
+		if isinstance(packet,ZigbeeBeacon):
 			if packet.srcPanID not in self.devices:
 				changes += 1
 				self.devices[packet.srcPanID] = {"channel":self.receiver.getChannel(),"associationPermitted":packet.assocPermit,"nodes":{packet.srcAddr:"coordinator" if packet.coordinator else "router"}}
@@ -70,14 +74,14 @@ class zigbee_scan(module.WirelessModule):
 			output["NETWORK_ASSOC_PERMIT"+str(networkCount)] = "yes" if network["associationPermitted"] else "no"
 			for node,role in network["nodes"].items():
 				if role == "coordinator":
-					output["NETWORK_COORDINATOR"+str(networkCount)] = zigbee.addressToString(node)
-				output["DEVICE_ADDR"+str(deviceCount)] = zigbee.addressToString(node)
+					output["NETWORK_COORDINATOR"+str(networkCount)] = addressToString(node)
+				output["DEVICE_ADDR"+str(deviceCount)] = addressToString(node)
 				output["DEVICE_ROLE"+str(deviceCount)] = role
 				output["DEVICE_CHANNEL"+str(deviceCount)] = str(network["channel"])
 				output["DEVICE_PANID"+str(deviceCount)] = "0x"+'{:04x}'.format(panID).upper()
 
 				if deviceCount == 1:
-					output["TARGET"] = zigbee.addressToString(node)
+					output["TARGET"] = addressToString(node)
 					output["TARGET_PANID"] = "0x"+'{:04x}'.format(panID).upper()
 					output["CHANNEL"] = str(network["channel"])
 
@@ -105,7 +109,7 @@ class zigbee_scan(module.WirelessModule):
 					io.progress(i,total=numberOfChannels,suffix="Channel: "+(" " if len(str(channels[i]))==1 else "")+str(channels[i]))
 				self.receiver.setChannel(channels[i])
 				if utils.booleanArg(self.args["ACTIVE"]):
-					self.emitter.sendp(zigbee.ZigbeeBeaconRequest(sequenceNumber=1,destPanID=0xFFFF,destAddr=0xFFFF))
+					self.emitter.sendp(ZigbeeBeaconRequest(sequenceNumber=1,destPanID=0xFFFF,destAddr=0xFFFF))
 				utils.wait(seconds=0.1)
 				i = (i + 1) % len(channels)
 

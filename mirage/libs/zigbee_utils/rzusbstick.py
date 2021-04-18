@@ -1,11 +1,33 @@
-from scapy.all import *
-from mirage.libs import wireless,io,utils
-from mirage.libs.zigbee_utils.constants import *
-from threading import Lock
 from fcntl import ioctl
-import usb.core, usb.util
+from threading import Lock
 
-class RZUSBStickDevice(wireless.Device):
+import usb.core
+import usb.util
+from scapy.config import conf
+from scapy.layers.dot15d4 import Dot15d4
+
+from mirage.libs import io
+from mirage.libs.wireless_utils.device import Device
+from mirage.libs.zigbee_utils.constants import RZUSBSTICK_ID_PRODUCT,\
+	RZUSBSTICK_ID_VENDOR,\
+	RZ_AIRCAPTURE_DATA,\
+	RZ_CLOSE_STREAM,\
+	RZ_COMMAND_ENDPOINT,\
+	RZ_INJECT_FRAME,\
+	RZ_JAMMER_OFF,\
+	RZ_JAMMER_ON,\
+	RZ_MODE_AIRCAPTURE,\
+	RZ_MODE_NONE,\
+	RZ_OPEN_STREAM,\
+	RZ_PACKET_ENDPOINT,\
+	RZ_RESPONSE_ENDPOINT,\
+	RZ_RESP_SUCCESS,\
+	RZ_SET_CHANNEL,\
+	RZ_SET_MODE,\
+	USBDEVFS_RESET
+
+
+class RZUSBStickDevice(Device):
 	'''
 	This device allows to communicate with a RZUSBstick in order to interact with the Zigbee protocol.
 	The corresponding interfaces are : ``rzusbstickX`` (e.g. "rzusbstick0")

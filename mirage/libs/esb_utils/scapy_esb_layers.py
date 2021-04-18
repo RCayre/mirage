@@ -1,12 +1,28 @@
-from mirage.libs.esb_utils.constants import *
-from mirage.libs.esb_utils.helpers import *
-from scapy.all import *
+import struct
+
+from scapy.fields import BitEnumField, \
+	BitField, \
+	ByteField, \
+	FieldLenField, \
+	IntField, \
+	ShortField, \
+	StrField, \
+	StrFixedLenField, \
+	StrLenField, \
+	X3BytesField, \
+	XByteField, \
+	XShortField
+from scapy.packet import Packet, bind_layers
+
+from mirage.libs.esb_utils.helpers import bits2bytes, bytes2bits, calcCrc
 
 '''
 This module contains some scapy definitions for Enhanced ShockBurst packets.
 '''
 
+
 # Field representing a ShockBurst address
+
 class SBAddressField(StrLenField):
 	def __init__(self, name, default, length_from):
 		StrLenField.__init__(self, name, default,length_from=length_from)

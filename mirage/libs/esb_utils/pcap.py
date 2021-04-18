@@ -1,7 +1,9 @@
-from mirage.libs.esb_utils.scapy_esb_layers import *
-from mirage.libs import wireless
+from mirage.libs.esb_utils.scapy_esb_layers import ESB_Hdr
+from mirage.libs.wireless_utils.packets import WaitPacket
+from mirage.libs.wireless_utils.pcapDevice import PCAPDevice
 
-class ESBPCAPDevice(wireless.PCAPDevice):
+
+class ESBPCAPDevice(PCAPDevice):
 	'''
 	This device allows to communicate with a PCAP file in order to write and read Enhanced ShockBurst packets.
 	
@@ -13,7 +15,7 @@ class ESBPCAPDevice(wireless.PCAPDevice):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability					    | Available ?    |
 	+===================================+================+
 	| INJECTING                         | yes            |
 	+-----------------------------------+----------------+
@@ -173,7 +175,7 @@ class ESBPCAPDevice(wireless.PCAPDevice):
 				currentTimestamp = timestamp
 			else:
 				wait = (timestamp - currentTimestamp)
-				stream.append(wireless.WaitPacket(time=wait))
+				stream.append(WaitPacket(time=wait))
 				currentTimestamp = timestamp
 
 			stream.append(self.publish("convertRawToMiragePacket",packet))

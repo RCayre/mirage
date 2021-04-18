@@ -1,8 +1,12 @@
-from scapy.all import *
-import subprocess,struct
-from mirage.libs import io,utils,wireless
+import subprocess
 
-class BLEHcidumpDevice(wireless.Device):
+from scapy.layers.bluetooth import HCI_Hdr
+
+from mirage.libs import io, utils
+from mirage.libs.wireless_utils.device import Device
+
+
+class BLEHcidumpDevice(Device):
 	'''
 	This device allows to monitor an HCI interface using **hcidump**. 
 	
@@ -11,7 +15,7 @@ class BLEHcidumpDevice(wireless.Device):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability					    | Available ?    |
 	+===================================+================+
 	| SCANNING                          | no             |
 	+-----------------------------------+----------------+

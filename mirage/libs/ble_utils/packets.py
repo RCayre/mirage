@@ -1,9 +1,13 @@
-from mirage.libs.ble_utils import helpers
-from mirage.libs import wireless
-from scapy.all import *
 import struct
 
-class BLESniffingParameters(wireless.AdditionalInformations):
+from scapy.compat import raw
+from scapy.layers.bluetooth import SM_Hdr, SM_Pairing_Request, SM_Pairing_Response
+
+from mirage.libs.ble_utils import helpers
+from mirage.libs.wireless_utils.packets import AdditionalInformations, Packet
+
+
+class BLESniffingParameters(AdditionalInformations):
 	'''
 	This class allows to attach some sniffer's data to a Mirage BLE Packet, such as RSSI or channel.
 	If the frequency is provided, the corresponding channel is automatically calculated. 
@@ -51,7 +55,7 @@ class BLESniffingParameters(wireless.AdditionalInformations):
 	def toString(self):
 		return "CH:" + str(self.channel)+"|CLK:"+str(self.clock)+"|RSSI:"+str(self.rssi)+"dBm"
 
-class BLEPacket(wireless.Packet):
+class BLEPacket(Packet):
 	'''
 	Mirage Bluetooth Low Energy Packet
 	'''

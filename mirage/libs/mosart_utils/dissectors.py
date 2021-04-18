@@ -1,5 +1,5 @@
+from mirage.libs.mosart_utils.keyboard_codes import MosartKeyboardCodes
 from mirage.libs.wireless_utils.dissectors import Dissector
-from mirage.libs.mosart_utils.keyboard_codes import *
 
 class MosartKeystroke(Dissector):
 	'''

@@ -1,8 +1,33 @@
-from scapy.all import *
 '''
 This module contains some scapy definitions for Bluetooth protocol.
 Some of them have been recently included in the latest scapy development version, these changes will be taken into account soon.
 '''
+import struct
+
+from scapy.fields import BitEnumField, \
+	ByteEnumField, \
+	ByteField, \
+	ConditionalField, \
+	FieldListField, \
+	IntField, \
+	LEShortField, \
+	LongField, \
+	PacketListField, \
+	ShortEnumField, \
+	ShortField, \
+	SignedIntField, \
+	SignedShortField, \
+	StrField, \
+	StrFixedLenField, \
+	StrLenField, \
+	StrNullField, \
+	ThreeBytesField, \
+	XLEIntField, \
+	XLELongField, \
+	XLEShortField, \
+	XShortField
+from scapy.layers.bluetooth import EIR_Hdr, HCI_Command_Hdr, HCI_Event_Command_Complete, HCI_Event_Hdr, L2CAP_Hdr, LEMACField
+from scapy.packet import Packet, bind_layers
 
 bluetooth_error_codes = {
 0x01 : "Unknown HCI Command.",

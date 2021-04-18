@@ -1,5 +1,13 @@
-import psutil,time,os,sys,string,random,imp
-from os.path import expanduser,exists
+import imp
+import os
+import random
+import string
+import sys
+import time
+from os.path import exists, expanduser
+
+import psutil
+
 
 def generateModulesDictionary(moduleDir, moduleUserDir):
 	'''

@@ -1,6 +1,6 @@
-from mirage.libs import mosart,utils,io
-from mirage.libs.common.hid import HIDMapping
 from mirage.core import module
+from mirage.libs import io, utils
+from mirage.libs.common.hid import HIDMapping
 
 
 class mosart_keylogger(module.WirelessModule):

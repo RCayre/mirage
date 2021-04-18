@@ -1,5 +1,24 @@
-from scapy.all import *
 import struct
+
+from scapy.fields import BitEnumField, \
+	BitField, \
+	ByteEnumField, \
+	ByteField, \
+	ConditionalField, \
+	FieldLenField, \
+	LEIntField, \
+	LEShortField, \
+	LEX3BytesField, \
+	PacketField, \
+	PacketListField, \
+	StrField, \
+	StrLenField, \
+	XByteField, \
+	XLEIntField, \
+	XLEShortField
+from scapy.layers.bluetooth4LE import BDAddrField, BTLEChanMapField, BTLE_ADV, BTLE_CONNECT_REQ, BTLE_DATA
+from scapy.packet import Packet, bind_layers
+
 '''
 This module contains some scapy definitions for communicating with a BTLEJack device.
 '''

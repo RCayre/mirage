@@ -1,5 +1,5 @@
 from scapy.all import Packet, bind_layers
-from scapy.fields import *
+from scapy.fields import BitField, ByteEnumField, SignedByteField, XByteField, XIntField, XShortField
 '''
 This module contains some scapy definitions for Mosart protocol.
 '''

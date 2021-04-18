@@ -1,5 +1,6 @@
-from mirage.libs import io,wifi,utils
 from mirage.core import module
+from mirage.libs import io, utils
+
 
 class wifi_info(module.WirelessModule):
 	def init(self):

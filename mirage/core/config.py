@@ -1,5 +1,8 @@
 import configparser
 
+from mirage.libs import io
+
+
 class Config:
 	'''
 	This class is used to parse and generate a configuration file in ".cfg" format.

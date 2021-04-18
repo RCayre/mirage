@@ -1,6 +1,8 @@
-from mirage.libs import esb,utils,io
-from mirage.core import module
 import sys
+
+from mirage.core import module
+from mirage.libs import io, utils
+
 
 class esb_scan(module.WirelessModule):
 	def init(self):

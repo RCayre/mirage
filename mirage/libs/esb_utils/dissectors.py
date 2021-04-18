@@ -1,7 +1,9 @@
-from mirage.libs.wireless_utils.dissectors import Dissector
+from struct import pack
+
 from mirage.libs.common.hid import HIDMapping
 from mirage.libs.esb_utils.helpers import bytes2bits
-from struct import pack
+from mirage.libs.wireless_utils.dissectors import Dissector
+
 
 class LogitechMousePosition(Dissector):
 	'''

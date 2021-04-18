@@ -1,6 +1,8 @@
 import traceback
-from mirage.core import module,app
+
+from mirage.core import app
 from mirage.libs import io
+
 
 class Scenario:
 	'''

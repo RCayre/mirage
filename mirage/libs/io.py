@@ -1,7 +1,9 @@
 import sys
 from enum import IntEnum
-from terminaltables import SingleTable
+
 import matplotlib
+from terminaltables import SingleTable
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation

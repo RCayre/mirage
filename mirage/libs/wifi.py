@@ -1,12 +1,24 @@
-from mirage.core.module import WirelessModule
-from mirage.libs import utils,wireless
-import mirage.libs.io as mio
-from mirage.libs.wifi_utils.packets import *
-from mirage.libs.wifi_utils.constants import *
+import array
+import fcntl
+import math
+import os
+import socket
+import struct
 from threading import Lock
-from scapy.all import *
-import os,socket,fcntl,array,struct
-class WifiDevice(wireless.Device):
+
+from scapy.arch import IFF_UP
+from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11Deauth, Dot11Disas, Dot11Elt, Dot11ProbeReq, Dot11ProbeResp, RadioTap
+from scapy.sendrecv import sendp, sniff
+
+import mirage.libs.io as mio
+from mirage.core.module import WirelessModule
+from mirage.libs.wifi_utils.constants import IFNAMESIZE, IWFREQFIXED, SIOCGIFFLAGS, SIOCGIWFREQ, SIOCGIWMODE, SIOCSIFFLAGS, SIOCSIWFREQ, SIOCSIWMODE, WIFI_MODES
+from mirage.libs.wifi_utils.packets import WifiBeacon, WifiDeauth, WifiDisas, WifiPacket, WifiProbeRequest, WifiProbeResponse
+from mirage.libs.wireless import Emitter, Receiver
+from mirage.libs.wireless_utils.device import Device
+
+
+class WifiDevice(Device):
 	'''
 	This device allows to communicate with a WiFi Device.
 	The corresponding interfaces are : ``wlanX`` (e.g. "wlanX")
@@ -372,7 +384,7 @@ class WifiDevice(wireless.Device):
 		return ''.join(['%02x:' % b for b in info[18:24]])[:-1].upper()
 
 
-class WifiEmitter(wireless.Emitter):
+class WifiEmitter(Emitter):
 	def __init__(self,interface="wlp2s0"):
 		super().__init__(interface=interface,packetType=WifiPacket,deviceType=WifiDevice)
 
@@ -434,7 +446,7 @@ class WifiEmitter(wireless.Emitter):
 			return packet.packet
 		return None
 
-class WifiReceiver(wireless.Receiver):
+class WifiReceiver(Receiver):
 	def __init__(self,interface="wlp2s0",monitorMode=True):
 		super().__init__(interface=interface,packetType=WifiPacket, deviceType=WifiDevice)
 

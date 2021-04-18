@@ -1,8 +1,11 @@
-from mirage.libs import io,utils
-from mirage.libs.wireless_utils.device import Device
-from os.path import isfile
-from struct import unpack,pack
+import errno
 import time
+from os.path import isfile
+from struct import pack, unpack
+
+from mirage.libs import io, utils
+from mirage.libs.wireless_utils.device import Device
+
 
 class PCAPDevice(Device):
 	'''

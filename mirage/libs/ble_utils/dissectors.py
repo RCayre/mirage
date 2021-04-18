@@ -1,7 +1,9 @@
-import struct,copy
-from mirage.libs.wireless_utils.dissectors import Dissector
-from mirage.libs.bt_utils.assigned_numbers import *
+import struct
+
+from mirage.libs.bt_utils.assigned_numbers import AssignedNumbers
 from mirage.libs.common.hid import HIDMapping
+from mirage.libs.wireless_utils.dissectors import Dissector
+
 
 class PermissionsFlag(Dissector):
 	'''
@@ -250,7 +252,7 @@ class InputOutputCapability(Dissector):
 
 		>>> InputOutputCapability(display=True, yesno=False, keyboard=True).data.hex()
 		'04'
-		>>> InputOutputCapability(data=data=bytes.fromhex("04"))
+		>>> InputOutputCapability(data=bytes.fromhex("04"))
 		Input Output Capability(0x4,keyboard:yes|yesno:no|display:yes)
 
 
@@ -303,7 +305,7 @@ class AuthReqFlag(Dissector):
 
 		>>> AuthReqFlag(bonding=True, mitm=True).data.hex()
 		'05'
-		>>> AuthReqFlag(data=data=bytes.fromhex("05"))
+		>>> AuthReqFlag(data=bytes.fromhex("05"))
 		AuthReq Flag(0x5,bonding:yes|mitm:yes|secureConnections:no|keypress:no|ct2:no)
 
 	'''
