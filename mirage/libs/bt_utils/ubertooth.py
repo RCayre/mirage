@@ -149,7 +149,7 @@ class BtUbertoothDevice(wireless.Device):
 		try:		
 			self.ubertooth = list(
 						usb.core.find(idVendor=UBERTOOTH_ID_VENDOR, idProduct=UBERTOOTH_ID_PRODUCT, find_all=True)
-					 )[self.index]
+					)[self.index]
 
 			self.version = '{0:x}.{1:x}'.format((self.ubertooth.bcdDevice >> 8) & 0x0FF,self.ubertooth.bcdDevice & 0x0FF)
 		except:

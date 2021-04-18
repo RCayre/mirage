@@ -33,8 +33,8 @@ class PacketQueue:
 	The private method _task implements a watchdog, allowing to put or get some packets in the queue and manipulate them. This watchdog is called continuously thanks to a Stoppable Thread (``mirage.libs.wireless_utils.packetQueue.StoppableThread``).
 
 	Some parameters may be passed to the constructor :
-	  * waitEmpty : it indicates if the queue should wait for an empty queue before stopping
-	  * autoStart : it indicates if the queue shoud start immediatly after the instanciation of the class
+		* waitEmpty : it indicates if the queue should wait for an empty queue before stopping
+		* autoStart : it indicates if the queue shoud start immediatly after the instanciation of the class
 	'''
 	def __init__(self, waitEmpty = False, autoStart = True):
 		self.waitEmpty = waitEmpty

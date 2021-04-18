@@ -280,7 +280,7 @@ class App(interpreter.Interpreter):
 						if moduleName == module["name"] and (
 											module["module"].dynamicArgs or
 											argName in module["module"].args
-										    ):
+											):
 							module["module"].args[argName] = value
 			else:
 				io.warning("You must provide a module name !")

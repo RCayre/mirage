@@ -5,8 +5,8 @@ This module contains some scapy definitions defining some vendor specific HCI pa
 '''
 COMPATIBLE_VENDORS = [0,10,13,15,18,48,57]
 
- # Packets
- # Read Local Version Information, Command & Event
+# Packets
+# Read Local Version Information, Command & Event
 
 class HCI_Cmd_Read_Local_Version_Information(Packet):
 	name = "Read Local Version Information"

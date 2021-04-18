@@ -41,7 +41,7 @@ class Scenario:
 				else:
 					io.fail("An error occured in scenario "+self.name+" !")
 					if app.App.Instance.debugMode:
-			    			traceback.print_exception(type(e), e, e.__traceback__)
+							traceback.print_exception(type(e), e, e.__traceback__)
 		else:
 			return True
 

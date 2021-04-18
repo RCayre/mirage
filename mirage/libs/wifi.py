@@ -14,17 +14,17 @@ class WifiDevice(wireless.Device):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available?	|
 	+===================================+================+
-	| SCANNING                          | yes            |
+	| SCANNING							| yes			|
 	+-----------------------------------+----------------+
-	| MONITORING                        | yes            |
+	| MONITORING						| yes			|
 	+-----------------------------------+----------------+
-	| COMMUNICATING_AS_ACCESS_POINT     | yes            |
+	| COMMUNICATING_AS_ACCESS_POINT		| yes			|
 	+-----------------------------------+----------------+
-	| COMMUNICATING_AS_STATION          | yes            |
+	| COMMUNICATING_AS_STATION			| yes			|
 	+-----------------------------------+----------------+
-	| JAMMING                           | no             |
+	| JAMMING							| no			|
 	+-----------------------------------+----------------+
 
 	'''
@@ -118,14 +118,14 @@ class WifiDevice(wireless.Device):
 
 		Existing modes: 
 
-		   * 'Auto'
-		   * 'Ad-Hoc'
-		   * 'Managed'
-		   * 'Master'
-		   * 'Repeat'
-		   * 'Second'
-		   * 'Monitor'
-		   * 'Unknown/bug'
+			* 'Auto'
+			* 'Ad-Hoc'
+			* 'Managed'
+			* 'Master'
+			* 'Repeat'
+			* 'Second'
+			* 'Monitor'
+			* 'Unknown/bug'
 		
 		:return: string indicating the mode in use
 		:rtype: str
@@ -154,14 +154,14 @@ class WifiDevice(wireless.Device):
 
 		Existing modes: 
 
-		   * 'Auto'
-		   * 'Ad-Hoc'
-		   * 'Managed'
-		   * 'Master'
-		   * 'Repeat'
-		   * 'Second'
-		   * 'Monitor'
-		   * 'Unknown/bug'
+			* 'Auto'
+			* 'Ad-Hoc'
+			* 'Managed'
+			* 'Master'
+			* 'Repeat'
+			* 'Second'
+			* 'Monitor'
+			* 'Unknown/bug'
 
 		
 		:param mode: string indicating the mode to use
@@ -415,8 +415,8 @@ class WifiEmitter(wireless.Emitter):
 					packet.packet /= Dot11Disas(reason=packet.reason)
 
 				if ( isinstance(packet, WifiBeacon) 		or
-				     isinstance(packet, WifiProbeRequest) 	or
-				     isinstance(packet, WifiProbeResponse) ):
+					isinstance(packet, WifiProbeRequest) 	or
+					isinstance(packet, WifiProbeResponse) ):
 					ssid = Dot11Elt(ID="SSID", info=packet.SSID, len=len(packet.SSID))
 					
 					packet.packet /= ssid
@@ -428,7 +428,7 @@ class WifiEmitter(wireless.Emitter):
 
 					if hasattr(packet,"cypher") and packet.cypher != "OPN":
 						rsn = Dot11Elt(ID='RSNinfo',info=(b'\x01\x00\x00\x0f\xac\x04\x01\x00\x00\x0f'
-										  b'\xac\x04\x01\x00\x00\x0f\xac\x01\x28\x00'))
+										b'\xac\x04\x01\x00\x00\x0f\xac\x01\x28\x00'))
 
 						packet.packet /= rsn
 			return packet.packet

@@ -8,8 +8,8 @@ class LogitechMousePosition(Dissector):
 	This class is a dissector for the Logitech Unifying mouse position value. It inherits from ``Dissector``.
 
 	The following fields are available in the data structure :
-	  * **x** : field indicating x position of the mouse
-	  * **y** : field indicating y position of the mouse
+		* **x** : field indicating x position of the mouse
+		* **y** : field indicating y position of the mouse
 		
 
 	:Example:
@@ -70,12 +70,12 @@ class LogitechKeystroke(Dissector):
 	This class is a dissector for the Logitech Unifying unencrypted keystroke payload. It inherits from ``Dissector``.
 
 	The following fields are available in the data structure :
-	  * **locale** : string indicating the locale (language layout)
-	  * **key** : string indicating the key
-	  * **ctrl** : boolean indicating if the Ctrl key is pressed
-	  * **alt** : boolean indicating if the Alt key is pressed
-	  * **super** : boolean indicating if the Super key is pressed
-	  * **shift** : boolean indicating if the Shift key is pressed
+		* **locale** : string indicating the locale (language layout)
+		* **key** : string indicating the key
+		* **ctrl** : boolean indicating if the Ctrl key is pressed
+		* **alt** : boolean indicating if the Alt key is pressed
+		* **super** : boolean indicating if the Super key is pressed
+		* **shift** : boolean indicating if the Shift key is pressed
 		
 
 	:Example:

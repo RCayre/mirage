@@ -70,12 +70,12 @@ class Module:
 		This method is an initialization method, called at the end of the constructor's execution.
 
 		It must be overloaded in order to define the parameters of module, especially :
-		  - type : it defines the type of the module (e.g. "sniffing", "mitm" ...)
-		  - technology : it defines the type of technology used by the module (e.g. "ble", "wifi", ...)
-		  - description : a short string indicating the role of the module
-		  - args : a dictionary of string describing the input parameters and their potential default values
-		  - dependencies : an array of string indicating the dependencies of the module
-		  - dynamicArgs : a boolean indicating if the user can provide input parameters not defined in the args dictionary
+			- type : it defines the type of the module (e.g. "sniffing", "mitm" ...)
+			- technology : it defines the type of technology used by the module (e.g. "ble", "wifi", ...)
+			- description : a short string indicating the role of the module
+			- args : a dictionary of string describing the input parameters and their potential default values
+			- dependencies : an array of string indicating the dependencies of the module
+			- dynamicArgs : a boolean indicating if the user can provide input parameters not defined in the args dictionary
 		'''
 		pass
 

@@ -77,7 +77,7 @@ class ble_mitm(module.WirelessModule):
 
 		if not self.a2mEmitter.isAddressChangeable() and utils.booleanArg(self.args["SLAVE_SPOOFING"]):
 			io.warning("Interface "+attackerToMasterInterface+" is not able to change its address : "
-				   "Address spoofing will not be enabled !")
+				"Address spoofing will not be enabled !")
 
 
 	# Stage related methods
@@ -386,7 +386,7 @@ class ble_mitm(module.WirelessModule):
 			"\n=> maxKeySize = "+ str(packet.maxKeySize) + 
 			"\n=> initiatorKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.initiatorKeyDistribution]))))+
 			"\n=> responderKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.responderKeyDistribution]))))
-			 
+
 			io.info ("Storing Pairing Request's payload :"+packet.payload.hex())
 			self.pReq = packet.payload[::-1]
 			

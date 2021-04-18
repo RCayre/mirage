@@ -15,7 +15,7 @@ class BTLEJackDevice(wireless.Device):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available ?    |
 	+===================================+================+
 	| SCANNING                          | yes            |
 	+-----------------------------------+----------------+
@@ -477,8 +477,7 @@ class BTLEJackDevice(wireless.Device):
 		if channel is not None and not self.sweepingMode:
 			self.setChannel(channel)
 
-		self._internalCommand(BTLEJack_Sniff_Connection_Request_Command(address=address,channel=self.getChannel() if
-													 channel is None else channel))
+		self._internalCommand(BTLEJack_Sniff_Connection_Request_Command(address=address,channel=self.getChannel() if channel is None else channel))
 
 	# Existing Connection Sniffing methods
 	def sniffExistingConnections(self,accessAddress=None,crcInit=None,channelMap=None):
@@ -615,10 +614,9 @@ class BTLEJackDevice(wireless.Device):
 			if channel is not None:
 				self.setChannel(channel)
 			self._internalCommand(BTLEJack_Advertisements_Command()/BTLEJack_Advertisements_Enable_Jamming_Command(
-											offset=offset,
-										    	pattern=pattern,
-										    	channel=self.getChannel() if
-										 	channel is None else channel))
+					offset=offset,
+					pattern=pattern,
+					channel=self.getChannel() if channel is None else channel))
 		else:
 			io.fail("Jamming advertisements is not supported by BTLEJack firmware,"
 				" a Custom Mirage Firmware is available.")
@@ -1063,7 +1061,7 @@ class BTLEJackDevice(wireless.Device):
 		:Example:
 
 			>>> device.setScan(enable=True) # scanning mode enabled
- 			>>> device.setScan(enable=False) # scanning mode disabled
+			>>> device.setScan(enable=False) # scanning mode disabled
 		
 		.. note::
 
@@ -1157,7 +1155,7 @@ class BTLEJackDevice(wireless.Device):
 			try:
 				(major,minor) = self._getFirmwareVersion()
 				io.success("BTLEJack device "+("#"+str(self.index) if isinstance(self.index,int) else str(self.index))+
-					   " successfully instantiated (firmware version : "+str(major)+"."+str(minor)+")")
+						" successfully instantiated (firmware version : "+str(major)+"."+str(minor)+")")
 				if major == 3 and minor == 14:
 					io.info("Custom Mirage Firmware used ! Advertisements sniffing and jamming will be supported.")
 					self.capabilities += ["SNIFFING_ADVERTISEMENTS","SCANNING","JAMMING_ADVERTISEMENTS"]
@@ -1167,4 +1165,3 @@ class BTLEJackDevice(wireless.Device):
 			except:
 				self.microbit = None
 				self.ready = False
-				

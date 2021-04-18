@@ -511,12 +511,12 @@ class BLEFindInformationResponse(BLEPacket):
 
 	.. note::
 		Please note the following behaviour :
-		  * **If only the data is provided**, the attributes list is automatically generated (thanks to the ``decode`` method.) 
-		  * **If the attributes are provided**, the corresponding data is automatically generated (thanks to the ``build`` method)
+			* **If only the data is provided**, the attributes list is automatically generated (thanks to the ``decode`` method.)
+			* **If the attributes are provided**, the corresponding data is automatically generated (thanks to the ``build`` method)
 
 		An attribute is described as a dictionary composed of two fields :
-		  * *attributeHandle* : indicating the handle of the corresponding ATT attribute
-		  * *type* : indicating the UUID (type of the ATT attribute)
+			* *attributeHandle* : indicating the handle of the corresponding ATT attribute
+			* *type* : indicating the UUID (type of the ATT attribute)
 
 		**Example :** ``{"attributeHandle":0x0001, "type":type}``
 	'''
@@ -651,14 +651,14 @@ class BLEReadByGroupTypeResponse(BLEPacket):
 	.. note::
 		Please note the following behaviour :
 
-		  * **If only the data is provided**, the group type list is automatically generated (thanks to the ``decode`` method.) 
-		  * **If the attributes are provided**, the corresponding data is automatically generated (thanks to the ``build`` method)
+			* **If only the data is provided**, the group type list is automatically generated (thanks to the ``decode`` method.)
+			* **If the attributes are provided**, the corresponding data is automatically generated (thanks to the ``build`` method)
 
 		A group type of attribute is described as a dictionary composed of three fields :
 
-		  * *attributeHandle* : indicating the lowest handle of the corresponding ATT group type
-		  * *value* : indicating the value of the ATT attribute
-		  * *endGroupHandle* :  indicating the highest handle of the corresponding ATT group type
+			* *attributeHandle* : indicating the lowest handle of the corresponding ATT group type
+			* *value* : indicating the value of the ATT attribute
+			* *endGroupHandle* :  indicating the highest handle of the corresponding ATT group type
 
 		**Example :** ``{'attributeHandle': 1, 'endGroupHandle': 11, 'value': b'\x00\x18'}``
 	'''
@@ -746,13 +746,13 @@ class BLEReadByTypeResponse(BLEPacket):
 	.. note::
 		Please note the following behaviour :
 
-		  * **If only the data is provided**, the list of attributes is automatically generated (thanks to the ``decode`` method.) 
-		  * **If the attributes are provided**, the corresponding data is automatically generated (thanks to the ``build`` method)
+			* **If only the data is provided**, the list of attributes is automatically generated (thanks to the ``decode`` method.)
+			* **If the attributes are provided**, the corresponding data is automatically generated (thanks to the ``build`` method)
 
 		An attribute is described as a dictionary composed of two fields :
 
-		  * *attributeHandle* : indicating the handle of the ATT attribute
-		  * *value* : indicating the value of the ATT attribute
+			* *attributeHandle* : indicating the handle of the ATT attribute
+			* *value* : indicating the value of the ATT attribute
 
 		**Example :** ``{'attributeHandle': 1, 'value': b'\x00\x18'}``
 	'''
@@ -1140,7 +1140,7 @@ class BLESecurityRequest(BLEPacket):
 
 		Some dissectors are provided in order to fill the fields included in this packet :
 
-		  * ``mirage.libs.ble_utils.dissectors.AuthReqFlag`` : authentication field
+			* ``mirage.libs.ble_utils.dissectors.AuthReqFlag`` : authentication field
 
 	'''
 	def __init__(self,connectionHandle = -1,  authentication = b"\x00"):
@@ -1179,9 +1179,9 @@ class BLEPairingRequest(BLEPacket):
 
 		Some dissectors are provided in order to fill the fields included in this packet :
 
-		  * ``mirage.libs.ble_utils.dissectors.AuthReqFlag`` : authentication field
-		  * ``mirage.libs.ble_utils.dissectors.InputOutputCapability`` : input output capability field
-		  * ``mirage.libs.ble_utils.dissectors.KeyDistributionFlag`` : initiatorKeyDistribution and responderKeyDistribution fields
+			* ``mirage.libs.ble_utils.dissectors.AuthReqFlag`` : authentication field
+			* ``mirage.libs.ble_utils.dissectors.InputOutputCapability`` : input output capability field
+			* ``mirage.libs.ble_utils.dissectors.KeyDistributionFlag`` : initiatorKeyDistribution and responderKeyDistribution fields
 
 	'''
 	def __init__(self,connectionHandle = -1,  outOfBand = False,inputOutputCapability = 0,maxKeySize = 16, authentication = b"\x00", initiatorKeyDistribution = b"\x00", responderKeyDistribution=b"\x00", payload=b""):

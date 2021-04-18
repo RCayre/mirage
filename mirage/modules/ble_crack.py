@@ -32,7 +32,7 @@ class ble_crack(module.WirelessModule):
 				self.args["RESPONDER_ADDRESS"] != "" and 
 				self.args["INITIATOR_ADDRESS_TYPE"] != "" and 
 				self.args["RESPONDER_ADDRESS_TYPE"] != ""
-			    )
+				)
 		payloads = (self.args["PAIRING_REQUEST"] != "" and self.args["PAIRING_RESPONSE"] != "")
 		return couple and addresses and payloads
 

@@ -8,8 +8,8 @@ class MosartPCAPDevice(wireless.PCAPDevice):
 	
 	The corresponding interfaces are : ``<filename>.pcap`` (e.g. "out.pcap")
 	
-	  * If the file exists, the MosartPCAPDevice is in *read* mode, and the corresponding receiver is able to use it as a classic Mosart sniffer.
-	  * If the file doesn't exist, the MosartPCAPDevice is in *write* mode, and the corresponding emitter is able to write packets in the file.
+		* If the file exists, the MosartPCAPDevice is in *read* mode, and the corresponding receiver is able to use it as a classic Mosart sniffer.
+		* If the file doesn't exist, the MosartPCAPDevice is in *write* mode, and the corresponding emitter is able to write packets in the file.
 
 	The following capabilities are actually supported :
 

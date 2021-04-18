@@ -114,12 +114,12 @@ class ESB_Payload_Hdr(Packet):
 			return Packet.guess_payload_class(self, payload)
 
 class ESB_Ping_Request(Packet):
-    	name = "ESB Ping Request"
-    	fields_desc = [StrFixedLenField('ping_payload', '\x0f\x0f\x0f\x0f', length=4)] 
+		name = "ESB Ping Request"
+		fields_desc = [StrFixedLenField('ping_payload', '\x0f\x0f\x0f\x0f', length=4)]
 
 class ESB_Ack_Response(Packet):
-    	name = "ESB Ack Response"
-    	fields_desc = [StrField('ack_payload', '')] 
+		name = "ESB Ack Response"
+		fields_desc = [StrField('ack_payload', '')]
 
 class Logitech_Unifying_Hdr(Packet):
 	name = "Logitech Unifying Payload"

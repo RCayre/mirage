@@ -13,7 +13,7 @@ class RZUSBStickDevice(wireless.Device):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available ?    |
 	+===================================+================+
 	| SNIFFING                          | yes            |
 	+-----------------------------------+----------------+
@@ -31,8 +31,8 @@ class RZUSBStickDevice(wireless.Device):
 	.. warning::
 
 		Some features provided by this hardware seems unstable :
-		  * A small amount of time is required to switch from TX to RX, so some frames may be missing
-		  * The jamming feature seems to send a very short signal which is not strong and long enough to jam a Zigbee channel
+			* A small amount of time is required to switch from TX to RX, so some frames may be missing
+			* The jamming feature seems to send a very short signal which is not strong and long enough to jam a Zigbee channel
 	
 		I'm not sure if the problem is linked to my hardware or if the Killerbee firmare is buggy.
 

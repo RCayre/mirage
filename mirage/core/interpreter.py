@@ -229,8 +229,8 @@ class Interpreter:
 					len(inspect.getfullargspec(getattr(self,opcode)).args)-1 == len(arguments) or
 					(
 						inspect.getfullargspec(getattr(self,opcode)).defaults is not None and 
-						len(inspect.getfullargspec(getattr(self,opcode)).args) - 1 
-					  	- len(inspect.getfullargspec(getattr(self,opcode)).defaults) <= len(arguments) and
+						len(inspect.getfullargspec(getattr(self,opcode)).args) - 1
+						- len(inspect.getfullargspec(getattr(self,opcode)).defaults) <= len(arguments) and
 						len(arguments) <= len(inspect.getfullargspec(getattr(self,opcode)).defaults)
 					)
 				)

@@ -53,7 +53,7 @@ class MosartReceiver(wireless.Receiver):
 		address = integerToAddress(packet.address)
 		new = MosartPacket(address=address, payload = bytes(packet),sequenceNumber = packet.seq_num)
 		if Mosart_Dongle_Sync_Packet in packet:
-             		new = MosartDonglePacket(address=address, payload = bytes(packet))
+			new = MosartDonglePacket(address=address, payload = bytes(packet))
 		if Mosart_Mouse_Movement_Packet in packet:
 			new = MosartMouseMovementPacket(
 								address=address,

@@ -116,14 +116,14 @@ class ble_sniff(module.WirelessModule):
 		isAnEmpty = isinstance(packet,ble.BLEEmptyPDU)
 		unknownInName = "Unknown" in packet.name
 		isConnectReq = isinstance(packet,ble.BLEConnectRequest)
-		addressMatching = (    isConnectReq
-				   and packet.addr == utils.addressArg(self.args["TARGET"])
-				   or  self.args["TARGET"] == ""
-				   or  (hasattr(packet,"addr") and packet.addr == utils.addressArg(self.args["TARGET"])))
+		addressMatching = (isConnectReq
+				and packet.addr == utils.addressArg(self.args["TARGET"])
+				or  self.args["TARGET"] == ""
+				or  (hasattr(packet,"addr") and packet.addr == utils.addressArg(self.args["TARGET"])))
 		if (
 			(not advMode and (not isAnAdv or isConnectReq) and not isAnEmpty and not unknownInName) 
-			 or (advMode and isAnAdv and addressMatching)
-		   ):
+			or (advMode and isAnAdv and addressMatching)
+		):
 			io.displayPacket(packet)
 			if self.pcap is not None:
 				self.pcap.sendp(packet)
@@ -190,7 +190,7 @@ class ble_sniff(module.WirelessModule):
 			interfaceb  = self.args["INTERFACEB"]
 			self.emitters.append(self.getEmitter(interface=interfaceb))
 			self.receivers.append(self.getReceiver(interface=interfaceb))
-	 
+
 	def displayConnection(self,index=0):
 		aa = "0x{:8x}".format(self.receivers[index].getAccessAddress())
 		crcInit = "0x{:6x}".format(self.receivers[index].getCrcInit())

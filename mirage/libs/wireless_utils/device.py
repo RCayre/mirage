@@ -6,11 +6,11 @@ class Device:
 	This class is used to communicate with a specific hardware component.
 	Every class communicating with a given hardware component must inherits from this class, and implements the following methods :
 
-	  * ``init()`` : this method initializes the communication with the hardware component
-	  * ``isUp()`` : this method allows to check if the initialization was successful and if the device is usable
-	  * ``send(packet)`` : this method allows to send data (as a raw representation, e.g. bytes array or scapy frame)
-	  * ``recv()`` : this method allows to receive data (as a raw representation)
-	  * ``close()`` : this method closes the communication with the hardware component
+		* ``init()`` : this method initializes the communication with the hardware component
+		* ``isUp()`` : this method allows to check if the initialization was successful and if the device is usable
+		* ``send(packet)`` : this method allows to send data (as a raw representation, e.g. bytes array or scapy frame)
+		* ``recv()`` : this method allows to receive data (as a raw representation)
+		* ``close()`` : this method closes the communication with the hardware component
 
 	Every device is unique and identified by an interface name : this is a string stored in the ``interface`` attribute.
 	Some devices may provide some additional features, such as address configuration, multiple modes, etc. In order to implement this specific behaviours, some additional methods can be implemented in the child classes, and their name may be appended to the class attribute ``sharedMethods`` (list of strings). Every shared method will be callable by user using the corresponding Emitter (``mirage.libs.wireless.Emitter``) and/or the corresponding Receiver (``mirage.libs.wireless.Receiver``) : they will expose these additional methods thanks to the Proxy design pattern.

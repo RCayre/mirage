@@ -8,13 +8,13 @@ class PCAPDevice(Device):
 	'''
 	This class provides an easy way to implement a PCAP writer or reader as a Mirage Device.
 
-	  * If the provided interface is an existing file, the PCAPDevice is set in "reading mode".
-	  * If the provided interface is a non existing file, the PCAPDevice is set in "writing mode".
+		* If the provided interface is an existing file, the PCAPDevice is set in "reading mode".
+		* If the provided interface is a non existing file, the PCAPDevice is set in "writing mode".
 
 	Every child classes of PCAPDevice should provide :
 
-	  * the *DLT* class attribute, defining the DLT of the PCAP file
-	  * the *SCAPY_LAYER* class attribute (optional), defining a scapy layer automatically used to encapsulate the packets
+		* the *DLT* class attribute, defining the DLT of the PCAP file
+		* the *SCAPY_LAYER* class attribute (optional), defining a scapy layer automatically used to encapsulate the packets
 
 	The ``send`` and ``recv`` methods uses the timestamp in order to write and read the pcap "in real time".
 	The ``putPacket``, ``getPacket`` and ``getAllPackets`` methods allow to manipulate directly the packets without taking into account the timestamp values.

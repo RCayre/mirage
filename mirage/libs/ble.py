@@ -26,7 +26,7 @@ class BLEHCIDevice(bt.BtHCIDevice):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability 						| Available ?    |
 	+===================================+================+
 	| SCANNING                          | yes            |
 	+-----------------------------------+----------------+
@@ -219,7 +219,7 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		:Example:
 
 			>>> device.setScan(enable=True, passive=True) # scanning mode enabled in passive mode
- 			>>> device.setScan(enable=False) # scanning mode disabled
+			>>> device.setScan(enable=False) # scanning mode disabled
 		
 		.. note::
 
@@ -437,8 +437,8 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			
 			It is possible to encrypt the link using directly the encryption-related packets, such as :
 
-			  * ``mirage.libs.ble_utils.packets.BLELongTermKeyRequest``
-			  * ``mirage.libs.ble_utils.packets.BLELongTermKeyRequestReply``
+				* ``mirage.libs.ble_utils.packets.BLELongTermKeyRequest``
+				* ``mirage.libs.ble_utils.packets.BLELongTermKeyRequestReply``
 	
 		.. note::
 
@@ -467,12 +467,12 @@ class BLEEmitter(wireless.Emitter):
 
 	It can instantiates the following devices :
 
-	  * HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
-	  * Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
-	  * BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
-	  * ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
-	  * HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
-	  * PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
+		* HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
+		* Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
+		* BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
+		* ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
+		* HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
+		* PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
 
 	'''
 	def __init__(self, interface="hci0"):
@@ -621,8 +621,8 @@ class BLEEmitter(wireless.Emitter):
 
 					if (
 						isinstance(packet,BLEConnectionParameterUpdateRequest) or
-					     	isinstance(packet,BLEConnectionParameterUpdateResponse)
-					   ):
+							isinstance(packet,BLEConnectionParameterUpdateResponse)
+					):
 							packet.packet /= L2CAP_Hdr()/L2CAP_CmdHdr(id=packet.l2capCmdId)
 					elif (
 						isinstance(packet,BLESecurityRequest) or
@@ -791,12 +791,12 @@ class BLEReceiver(wireless.Receiver):
 
 	It can instantiates the following devices :
 
-	  * HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
-	  * Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
-	  * BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
-	  * ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
-	  * HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
-	  * PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
+		* HCI Device (``mirage.libs.ble.BLEHCIDevice``) **[ interface "hciX" (e.g. "hci0") ]**
+		* Ubertooth Device (``mirage.libs.ble_utils.ubertooth.BLEUbertoothDevice``) **[ interface "ubertoothX" (e.g. "ubertooth0") ]**
+		* BTLEJack Device (``mirage.libs.ble_utils.btlejack.BTLEJackDevice``) **[ interface "microbitX" (e.g. "microbit0") ]**
+		* ADB Device (``mirage.libs.ble_utils.adb.ADBDevice``) **[ interface "adbX" (e.g. "adb0") ]**
+		* HCIDump Device (``mirage.libs.ble_utils.hcidump.BLEHcidumpDevice``) **[ interface "hcidumpX" (e.g. "hcidump0") ]**
+		* PCAP Device (``mirage.libs.ble_utils.pcap.BLEPCAPDevice``) **[ interface "<file>.pcap" (e.g. "pairing.pcap") ]**
 
 	'''
 	def __init__(self,interface="hci0"):

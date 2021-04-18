@@ -11,7 +11,7 @@ class ble_monitor(module.WirelessModule):
 				"INTERFACE":"adb0",
 				"SCENARIO":"",
 				"TIME":""
-			    }
+				}
 
 	def checkMonitoringCapabilities(self):
 		return self.receiver.hasCapabilities("HCI_MONITORING")

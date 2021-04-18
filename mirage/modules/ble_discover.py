@@ -54,7 +54,7 @@ class ble_discover(module.WirelessModule):
 								"permissions":permissions,
 								"value":value,
 								"valueHandle":valueHandle
-							    }
+								}
 				if "descriptors" in characteristic:
 					for descriptor in characteristic["descriptors"]:
 						uuid = descriptor["type"].hex()
@@ -93,7 +93,7 @@ class ble_discover(module.WirelessModule):
 			uuid16 = (hex(characteristic["uuid"].UUID16) 
 					if characteristic["uuid"].UUID16 is not None
 					else ""
-				 )
+				)
 			uuid128 = (characteristic["uuid"].UUID128.hex() 
 					if characteristic["uuid"].UUID128 is not None
 					else ""
@@ -130,7 +130,7 @@ class ble_discover(module.WirelessModule):
 			uuid16 = (hex(service["uuid"].UUID16) 
 					if service["uuid"].UUID16 is not None
 					else ""
-				 )
+					)
 			uuid128 = (service["uuid"].UUID128.hex() 
 					if service["uuid"].UUID128 is not None
 					else ""
@@ -141,8 +141,8 @@ class ble_discover(module.WirelessModule):
 				)
 			formattedServices.append([startHandle,endHandle,uuid16, uuid128,name])
 		io.chart(["Start Handle","End Handle", "UUID16", "UUID128", "Name"],
-			 formattedServices,
-			 io.colorize(title, "yellow")
+			formattedServices,
+			io.colorize(title, "yellow")
 			)
 
 	def printAttributes(self,attributes):
@@ -160,8 +160,8 @@ class ble_discover(module.WirelessModule):
 			attributeHandle = "0x{:04x}".format(attribute["handle"])
 			formattedAttributes.append([attributeHandle, attributeType,attributeValue])
 		io.chart(["Attribute Handle", "Attribute Type", "Attribute Value"],
-			 formattedAttributes,
-			 io.colorize("Attributes","yellow")
+		formattedAttributes,
+			io.colorize("Attributes","yellow")
 			)
 
 

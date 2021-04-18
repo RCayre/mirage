@@ -14,7 +14,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available ?    |
 	+===================================+================+
 	| SCANNING                          | yes            |
 	+-----------------------------------+----------------+
@@ -104,7 +104,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def _sweepingThread(self):
 		for channel in self.sweepingSequence:
 			if ((self.sniffingMode == BLESniffingMode.NEW_CONNECTION and not self.synchronized) or
-			     self.sniffingMode == BLESniffingMode.ADVERTISEMENT):
+				self.sniffingMode == BLESniffingMode.ADVERTISEMENT):
 				self.setChannel(channel=channel)
 			utils.wait(seconds=0.1)
 
@@ -573,8 +573,8 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		.. warning::
 			Please note the following warnings :
 
-			  * Ubertooth is actually not able to set CRC Init value and uses a full Channel Map (0x1fffffffff). This parameters are provided in order to provide the same API for Ubertooth and BTLEJack devices.
-			  * If no access address is provided, Ubertooth tries to get multiple candidate access addresses and select the most probable address
+				* Ubertooth is actually not able to set CRC Init value and uses a full Channel Map (0x1fffffffff). This parameters are provided in order to provide the same API for Ubertooth and BTLEJack devices.
+				* If no access address is provided, Ubertooth tries to get multiple candidate access addresses and select the most probable address
 
 		.. note::
 
@@ -650,7 +650,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		:Example:
 
 			>>> device.setScan(enable=True) # scanning mode enabled
- 			>>> device.setScan(enable=False) # scanning mode disabled
+			>>> device.setScan(enable=False) # scanning mode disabled
 		
 		.. note::
 

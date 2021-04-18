@@ -13,13 +13,13 @@ class Emitter(PacketQueue):
 	This class allows an user to communicate with a device in order to send data. Indeed, Mirage provides no direct access to the device component from the modules : the hardware components are manipulated thanks to the Emitter class and the Receiver class. Emitters' classes for a given technology inherits from this class.
 	The packet are manipulated as an abstract representation in Emitters and Receivers (``mirage.libs.wireless_utils.packets.Packet``) and as a raw representation in Device (e.g. bytes array or scapy frame). That's why an Emitter must implement the following method :
 
-	  * convert(self,packet) : this method converts a Mirage Packet into its raw representation
+		* convert(self,packet) : this method converts a Mirage Packet into its raw representation
 
 	The constructor of an Emitter needs three parameters :
 
-	  * `interface` : indicating the interface to use to instantiate the device, generally it will be provided by the user
-	  * `packetType` : indicating the child class of Packet for the technology implemented by the Emitter
-	  * `deviceType` : indicating the child class of Device to instanciate
+		* `interface` : indicating the interface to use to instantiate the device, generally it will be provided by the user
+		* `packetType` : indicating the child class of Packet for the technology implemented by the Emitter
+		* `deviceType` : indicating the child class of Device to instanciate
 
 	A `_task` method is implemented by default. It gets a Mirage Packet from the queue, calls the convert method on it and calls the send method of a Device on the result. If you want to customize this behaviour, you can overload this method.
 	
@@ -138,13 +138,13 @@ class Receiver(PacketQueue):
 
 	The packet are manipulated as an abstract representation in Emitters and Receivers (``mirage.libs.wireless_utils.packets.Packet``) and as a raw representation in Device (e.g. bytes array or scapy frame). That's why a Receiver must implement the following method :
 
-	  * convert(self,packet) : this method converts a raw representation of a packet into a Mirage Packet
+		* convert(self,packet) : this method converts a raw representation of a packet into a Mirage Packet
 
 	The constructor of a Receiver needs three parameters :
 
-	  * `interface` : indicating the interface to use to instantiate the device, generally it will be provided by the user
-	  * `packetType` : indicating the child class of Packet for the technology implemented by the Emitter
-	  * `deviceType` : indicating the child class of Device to instanciate
+		* `interface` : indicating the interface to use to instantiate the device, generally it will be provided by the user
+		* `packetType` : indicating the child class of Packet for the technology implemented by the Emitter
+		* `deviceType` : indicating the child class of Device to instanciate
 
 	A `_task` method is implemented by default. It calls the recv method of a Device, converts the result (if it is not None) to a Mirage Packet and adds it to the queue. If you want to customize this behaviour, you can overload this method.
 	
@@ -300,9 +300,9 @@ class Receiver(PacketQueue):
 		It is linked to an *event*, which is a string indicating when should the callback be called.
 		Three formats exists describing an event :
 
-		  * *\** : indicating "the callback is called every times a packet is received"
-		  * *n* : indicating "the callback is called every times n packets have been received"
-		  * *packetType* : indicating "the callback is called every times a packet of type 'packetType' is received"
+			* *\** : indicating "the callback is called every times a packet is received"
+			* *n* : indicating "the callback is called every times n packets have been received"
+			* *packetType* : indicating "the callback is called every times a packet of type 'packetType' is received"
 
 		Some examples are represented in the following table:
 

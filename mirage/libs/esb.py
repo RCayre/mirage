@@ -17,8 +17,8 @@ class ESBEmitter(wireless.Emitter):
 
 	It can instantiates the following devices :
 
-	  * RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
-	  * PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
+		* RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
+		* PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
 
 	'''
 	def __init__(self,interface="rfstorm0"):
@@ -63,8 +63,8 @@ class ESBReceiver(wireless.Receiver):
 
 	It can instantiates the following devices :
 
-	  * RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
-	  * PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
+		* RFStorm Device (``mirage.libs.esb_utils.rfstorm.ESBRFStormDevice``) **[ interface "rfstormX" (e.g. "rfstormX") ]**
+		* PCAP Device (``mirage.libs.esb_utils.pcap.ESBPCAPDevice``) **[ interface "<file>.pcap" (e.g. "capture.pcap") ]**
 
 	'''
 	def __init__(self,interface="rfstorm0"):

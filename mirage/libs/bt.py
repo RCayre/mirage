@@ -481,7 +481,7 @@ class BtHCIDevice(wireless.Device):
 							18 : HCI_Cmd_Zeevo_Write_BD_Address,
 							48 : HCI_Cmd_ST_Write_BD_Address,
 							57 : HCI_Cmd_Ericsson_Write_BD_Address
-						  }
+						}
 				self._internalCommand(modificationPackets[manufacturer](addr=address))
 				self._internalCommand(HCI_Cmd_Reset())
 				io.success("BD Address successfully modified !")
@@ -496,7 +496,7 @@ class BluetoothEmitter(wireless.Emitter):
 
 	It can instantiates the following devices :
 
-	  * HCI Device (``mirage.libs.bt.BtHCIDevice``)
+	* HCI Device (``mirage.libs.bt.BtHCIDevice``)
 
 	'''
 	def __init__(self,interface="hci0"):
@@ -554,7 +554,7 @@ class BluetoothReceiver(wireless.Receiver):
 
 	It can instantiates the following devices :
 
-	  * HCI Device (``mirage.libs.bt.BtHCIDevice``)
+	* HCI Device (``mirage.libs.bt.BtHCIDevice``)
 
 	'''
 	def __init__(self, interface="hci0"):

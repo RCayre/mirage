@@ -24,7 +24,7 @@ class keyboard_hid_over_gatt(scenario.Scenario):
 			1 + len(advertisementServices),
 			# Complete list of 16-bit Service UUIDs data type value.
 			0x03,
-		    	]
+		]
 		) + advertisementServices
 		self.emitter.setAdvertisingParameters(data=data)
 		self.emitter.setScanningParameters(data=bytes.fromhex("0d094576696c4b6579626f617264") + data)

@@ -33,10 +33,11 @@ class Ubertooth_Hdr(Packet):
 class BTLE_Promiscuous_Data(Packet):
 	name = "BTLE Promiscuous Data"
 	fields_desc = [
-			ByteEnumField("state",None,{0x00 : "access_address",
-						   0x01 : "crc_init",
-						   0x02 : "hop_interval",
-						   0x03 : "hop_increment"})
+			ByteEnumField("state",None,{
+						0x00 : "access_address",
+						0x01 : "crc_init",
+						0x02 : "hop_interval",
+						0x03 : "hop_increment"})
 			]
 
 class BTLE_Promiscuous_Access_Address(Packet):

@@ -15,7 +15,7 @@ class NRFSnifferDevice(wireless.Device):
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability						| Available ?    |
 	+===================================+================+
 	| SCANNING                          | yes            |
 	+-----------------------------------+----------------+
@@ -375,7 +375,7 @@ class NRFSnifferDevice(wireless.Device):
 			self.sniffingMode = BLESniffingMode.NEW_CONNECTION
 			version = self.getFirmwareVersion()
 			io.success("NRFSniffer device "+("#"+str(self.index) if isinstance(self.index,int) else str(self.index))+
-				   " successfully instantiated (firmware version : "+str(version)+")")
+				" successfully instantiated (firmware version : "+str(version)+")")
 			self.channel = None
 			self._goIdle()
 			self.targets = {}
@@ -647,7 +647,7 @@ class NRFSnifferDevice(wireless.Device):
 		:Example:
 
 			>>> device.setScan(enable=True) # scanning mode enabled
- 			>>> device.setScan(enable=False) # scanning mode disabled
+			>>> device.setScan(enable=False) # scanning mode disabled
 		
 		.. note::
 
