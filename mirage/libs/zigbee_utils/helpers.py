@@ -6,7 +6,7 @@ This module provides some helpers in order to manipulate Zigbee packets.
 def frequencyToChannel(frequency):
 	'''
 	This function converts a frequency to the corresponding Zigbee channel.
-	
+
 	:param frequency: frequency to convert (MHz)
 	:type frequency: int
 	:return: channel associated to the provided frequency
@@ -25,7 +25,7 @@ def frequencyToChannel(frequency):
 def channelToFrequency(channel):
 	'''
 	This function converts a Zigbee channel to the corresponding frequency.
-	
+
 	:param channel: Zigbee channel to convert
 	:type channel: int
 	:return: corresponding frequency (MHz)
@@ -82,10 +82,13 @@ def addressToString(address):
 		'11:22:33:44:55:66:77:88'
 
 	'''
-	if address <= 0xFFFF:
-		return "0x"+'{:04x}'.format(address).upper()
-	else:
-		return ':'.join('{:02x}'.format(i).upper() for i in struct.pack('>Q',address))
+	try:
+		if address <= 0xFFFF:
+			return "0x"+'{:04x}'.format(address).upper()
+		else:
+			return ':'.join('{:02x}'.format(i).upper() for i in struct.pack('>Q',address))
+	except:
+		return "0x????"
 
 def convertAddress(address):
 	'''
@@ -115,3 +118,21 @@ def convertAddress(address):
 			return struct.unpack('>H' if len(address) == 2 else '>Q',address)[0]
 		else:
 			return address
+
+
+def bits2bytes(bits):
+	'''
+	This function converts a binary string to a sequence of bytes.
+
+	:param bits: binary string to convert
+	:type bits: str
+	:return: equivalent sequence of bytes
+	:rtype: bytes
+
+	:Example:
+
+		>>> bits2bytes("1111000001010101101010").hex()
+		'0faa15'
+
+	'''
+	return bytes([int(((8-len(j))*"0")+j,2) for j in [bits[i:i + 8][::-1] for i in range(0, len(bits), 8)]])

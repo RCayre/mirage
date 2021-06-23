@@ -21,7 +21,7 @@ class esb_info(module.WirelessModule):
 	def run(self):
 		self.emitter = self.getEmitter(interface=self.args["INTERFACE"])
 
-		if utils.booleanArg(self.args["SHOW_CAPABILITIES"]):		
+		if utils.booleanArg(self.args["SHOW_CAPABILITIES"]):
 			self.displayCapabilities()
 
 		if "rfstorm" in self.args["INTERFACE"]:
@@ -34,7 +34,6 @@ class esb_info(module.WirelessModule):
 					"INDEX":index,
 					"MODE":mode
 					})
-
 		elif ".pcap" in self.args["INTERFACE"]:
 			interface = self.args["INTERFACE"]
 			mode = self.emitter.getMode()
@@ -43,4 +42,3 @@ class esb_info(module.WirelessModule):
 					"MODE":mode
 					})
 		return self.nok()
-					

@@ -31,7 +31,13 @@ class BTLEJackDevice(wireless.Device):
 	+-----------------------------------+----------------+
 	| JAMMING_ADVERTISEMENTS            | yes            |
 	+-----------------------------------+----------------+
-	| HIJACKING_CONNECTIONS             | yes            |
+	| HIJACKING_MASTER                  | yes            |
+	+-----------------------------------+----------------+
+	| HIJACKING_SLAVE                   | no             |
+	+-----------------------------------+----------------+
+	| INJECTING                         | no             |
+	+-----------------------------------+----------------+
+	| MITMING_EXISTING_CONNECTION       | no             |
 	+-----------------------------------+----------------+
 	| INITIATING_CONNECTION             | no             |
 	+-----------------------------------+----------------+
@@ -50,12 +56,12 @@ class BTLEJackDevice(wireless.Device):
 			"getDeviceIndex",
 			"setCRCChecking",
 
-			"setChannel", 
+			"setChannel",
 			"getChannel",
 
 			"sniffNewConnections",
 			"sniffExistingConnections",
-			"sniffAdvertisements", 
+			"sniffAdvertisements",
 
 			"jamAdvertisements",
 			"disableAdvertisementsJamming",
@@ -67,9 +73,9 @@ class BTLEJackDevice(wireless.Device):
 			"getConnections",
 			"switchConnection",
 			"getCurrentConnection",
+			"getCurrentHandle",
 			"isConnected",
 			"isSynchronized",
-			"getCurrentHandle",
 			"getAccessAddress",
 			"getCrcInit",
 			"getChannelMap",
@@ -82,12 +88,12 @@ class BTLEJackDevice(wireless.Device):
 	def setJamming(self,enable=True):
 		'''
 		This method allows to enable or disable the jamming mode.
-	
+
 		:param enable: boolean indicating if the jamming mode must be enabled or disabled
 		:type enable: bool
 
 		:Example:
-		
+
 			>>> device.setJamming(enable=True) # jamming mode enabled
 			>>> device.setJamming(enable=False) # jamming mode disabled
 
@@ -102,12 +108,12 @@ class BTLEJackDevice(wireless.Device):
 	def setHijacking(self,enable=True):
 		'''
 		This method allows to enable or disable the hijacking mode.
-	
+
 		:param enable: boolean indicating if the hijacking mode must be enabled or disabled
 		:type enable: bool
 
 		:Example:
-		
+
 			>>> device.setHijacking(enable=True) # hijacking mode enabled
 			>>> device.setHijacking(enable=False) # hijacking mode disabled
 
@@ -128,7 +134,7 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: int
 
 		.. warning::
-		
+
 			This method always returns 1, it allows to provides the same API as the HCI Device.
 
 		.. note::
@@ -147,12 +153,12 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: list of dict
 
 		:Example:
-			
+
 			>>> device.getConnections()
 			[{'handle':1, 'address':'0x12345678'}]
 
 		.. warning::
-		
+
 			The connection handle is always 1, it allows to provides the same API as the HCI Device.
 
 		.. note::
@@ -170,10 +176,10 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: str
 
 		:Example:
-		
+
 			>>> device.getCurrentConnection()
 			'0x12345678'
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -200,7 +206,7 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: bool
 
 		:Example:
-		
+
 			>>> device.isConnected()
 			True
 
@@ -233,7 +239,7 @@ class BTLEJackDevice(wireless.Device):
 	@classmethod
 	def findMicrobits(cls,index=None):
 		'''
-		This class method allows to find a specific BTLEJack device, by providing the device's index. 
+		This class method allows to find a specific BTLEJack device, by providing the device's index.
 		If no index is provided, it returns a list of every devices found.
 		If no device has been found, None is returned.
 
@@ -243,21 +249,21 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: str
 
 		:Example:
-			
+
 			>>> BTLEJackDevice.findMicrobits(0)
 			'/dev/ttyACM0'
 			>>> BTLEJackDevice.findMicrobits()
 			['/dev/ttyACM0','/dev/ttyACM1']
 
-		
+
 		'''
-		microbitList = [i[0] for i in comports() if 
+		microbitList = [i[0] for i in comports() if
 				(isinstance(i,tuple) and "VID:PID=0d28:0204" in port[-1]) or
 				(i.vid == 0x0D28 and i.pid == 0x0204)
 				]
 		if index is None:
 			return microbitList
-		else:			
+		else:
 			try:
 				microbit = microbitList[index]
 			except IndexError:
@@ -340,7 +346,7 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: int
 
 		:Example:
-			
+
 			>>> device.getChannel()
 			37
 			>>> device.setChannel(channel=38)
@@ -352,7 +358,7 @@ class BTLEJackDevice(wireless.Device):
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
 
 		'''
-		return self.channel 
+		return self.channel
 
 	def _flush(self):
 		while self.microbit.in_waiting:
@@ -377,7 +383,7 @@ class BTLEJackDevice(wireless.Device):
 
 			getResponse = getFunction()
 			response = getResponse()
-			while response is None or response.packet_type == 4 or response.opcode != packet.opcode:				
+			while response is None or response.packet_type == 4 or response.opcode != packet.opcode:
 				getResponse = getFunction()
 				response = getResponse()
 			return response
@@ -397,7 +403,7 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: tuple of (int,int)
 
 		:Example:
-			
+
 			>>> device.getFirmwareVersion()
 			(3,14)
 
@@ -418,7 +424,7 @@ class BTLEJackDevice(wireless.Device):
 		:rtype: int
 
 		:Example:
-			
+
 			>>> device.getDeviceIndex()
 			0
 
@@ -460,7 +466,7 @@ class BTLEJackDevice(wireless.Device):
 			>>> device.sniffNewConnections()
 			>>> device.sniffNewConnections(channel=38)
 			>>> device.sniffNewConnections(address="1A:2B:3C:4D:5E:6F")
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -499,7 +505,7 @@ class BTLEJackDevice(wireless.Device):
 			>>> device.sniffExistingConnections(accessAddress=0xe5e296e9)
 			>>> device.sniffExistingConnections(accessAddress=0xe5e296e9, crcInit=0x0bd54a)
 			>>> device.sniffExistingConnections(accessAddress=0xe5e296e9, crcInit=0x0bd54a, channelMap=0x1fffffffff)
-			
+
 		.. warning::
 
 			If no access address is provided, BTLEJack tries to get multiple candidate access addresses and select the most probable address.
@@ -554,9 +560,9 @@ class BTLEJackDevice(wireless.Device):
 			>>> device.sniffAdvertisements(address="1A:2B:3C:4D:5E:6F")
 
 		.. warning::
-		
+
 			This method requires the custom Mirage Firmware in order to sniff advertisements.
-				
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -568,7 +574,7 @@ class BTLEJackDevice(wireless.Device):
 			self.hijacked = False
 			if channel is not None and not self.sweepingMode:
 				self.setChannel(channel)
-			
+
 			if address.upper() == "FF:FF:FF:FF:FF:FF":
 				self._resetFilteringPolicy("blacklist")
 			else:
@@ -600,9 +606,9 @@ class BTLEJackDevice(wireless.Device):
 			>>> device.jamAdvertisements(pattern=pattern,offset=2,channel=39) # jam the advertisements transmitted by 1A:2B:3C:4D:5E:6F on channel 39
 
 		.. warning::
-		
+
 			This method requires the custom Mirage Firmware in order to jam advertisements.
-				
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -622,7 +628,7 @@ class BTLEJackDevice(wireless.Device):
 		else:
 			io.fail("Jamming advertisements is not supported by BTLEJack firmware,"
 				" a Custom Mirage Firmware is available.")
-		
+
 	def _listAccessAddress(self):
 		io.info("Recovering access address ...")
 		self._internalCommand(BTLEJack_Scan_Connections_Command())
@@ -719,7 +725,7 @@ class BTLEJackDevice(wireless.Device):
 
 	def _recv(self):
 		self.lock.acquire()
-		if self.microbit is not None and self.microbit.in_waiting:	
+		if self.microbit is not None and self.microbit.in_waiting:
 			self.receptionBuffer += self.microbit.read()
 		self.lock.release()
 
@@ -761,19 +767,19 @@ class BTLEJackDevice(wireless.Device):
 	def setCRCChecking(self,enable=True):
 		'''
 		This method enables CRC Checking.
-		
+
 		:param enable: boolean indicating if CRC Checking must be enabled
 		:type enable: bool
 
 		:Example:
-	
+
 			>>> device.setCRCChecking(enable=True) # CRC Checking enabled
 			>>> device.setCRCChecking(enable=False) # CRC Checking disabled
 
 		.. warning::
 
 			BTLEJack calculates the CRC directly in the firmware, so this command is ignored. It is present in order to provide a similar API to Ubertooth.
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -785,7 +791,7 @@ class BTLEJackDevice(wireless.Device):
 	def setAccessAddress(self,accessAddress):
 		'''
 		This method sets the access address to use.
-	
+
 		:param accessAddress: new access address
 		:type accessAddress: int
 
@@ -804,7 +810,7 @@ class BTLEJackDevice(wireless.Device):
 	def getAccessAddress(self):
 		'''
 		This method returns the access address actually in use.
-	
+
 		:return: access address
 		:rtype: int
 
@@ -824,7 +830,7 @@ class BTLEJackDevice(wireless.Device):
 	def getCrcInit(self):
 		'''
 		This method returns the CRCInit actually in use.
-	
+
 		:return: CRCInit
 		:rtype: int
 
@@ -843,7 +849,7 @@ class BTLEJackDevice(wireless.Device):
 	def getChannelMap(self):
 		'''
 		This method returns the Channel Map actually in use.
-	
+
 		:return: Channel Map
 		:rtype: int
 
@@ -863,7 +869,7 @@ class BTLEJackDevice(wireless.Device):
 	def getHopInterval(self):
 		'''
 		This method returns the Hop Interval actually in use.
-	
+
 		:return: Hop Interval
 		:rtype: int
 
@@ -883,7 +889,7 @@ class BTLEJackDevice(wireless.Device):
 	def getHopIncrement(self):
 		'''
 		This method returns the Hop Increment actually in use.
-	
+
 		:return: Hop Increment
 		:rtype: int
 
@@ -906,7 +912,7 @@ class BTLEJackDevice(wireless.Device):
 		This method restarts the sniffing mode.
 
 		:Example:
-	
+
 			>>> device.restartSniffingMode()
 
 		.. note::
@@ -930,12 +936,12 @@ class BTLEJackDevice(wireless.Device):
 				timestamp = time.time()
 				ts_sec = int(timestamp)
 				ts_usec = int((timestamp - ts_sec)*1000000)
-								
+
 				if pkt.crc_ok == 0x01:
 					io.success("CRC OK !")
 				else:
 					io.fail("CRC not OK !")
-				
+
 				if pkt.crc_ok != 0x01 and self.crcEnabled:
 					return None
 
@@ -974,12 +980,12 @@ class BTLEJackDevice(wireless.Device):
 
 			if BTLEJack_Hijack_Status_Notification in pkt:
 				self.hijacked = (pkt.status == 0x00)
-						
+
 			if BTLEJack_Nordic_Tap_Packet_Notification in pkt:
 				timestamp = time.time()
 				ts_sec = int(timestamp)
 				ts_usec = int((timestamp - ts_sec)*1000000)
-				
+
 				return BTLE_PPI(
 						btle_channel=pkt.channel,
 						btle_clkn_high=ts_sec,
@@ -1027,7 +1033,7 @@ class BTLEJackDevice(wireless.Device):
 	def setScanInterval(self,seconds=1):
 		'''
 		This method allows to provide the scan interval (in second).
-	
+
 		:param seconds: number of seconds to wait between two channels
 		:type seconds: float
 
@@ -1064,7 +1070,7 @@ class BTLEJackDevice(wireless.Device):
 
 			>>> device.setScan(enable=True) # scanning mode enabled
  			>>> device.setScan(enable=False) # scanning mode disabled
-		
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -1106,13 +1112,13 @@ class BTLEJackDevice(wireless.Device):
 	def setSweepingMode(self,enable=True,sequence=[37,38,39]):
 		'''
 		This method allows to enable or disable the Sweeping mode. It allows to provide a subset of advertising channels to monitor sequentially.
-	
+
 		:param enable: boolean indicating if the Sweeping mode is enabled.
 		:type enable: bool
 		:param sequence: sequence of channels to use
 		:type sequence: list of int
 
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -1153,7 +1159,7 @@ class BTLEJackDevice(wireless.Device):
 			self.lastTarget = "FF:FF:FF:FF:FF:FF"
 			self.setScanInterval()
 			self.candidateAccessAddresses = {}
-			self.capabilities = ["SNIFFING_EXISTING_CONNECTION", "SNIFFING_NEW_CONNECTION", "HIJACKING_CONNECTIONS", "JAMMING_CONNECTIONS", "COMMUNICATING_AS_MASTER"]
+			self.capabilities = ["SNIFFING_EXISTING_CONNECTION", "SNIFFING_NEW_CONNECTION", "HIJACKING_MASTER", "JAMMING_CONNECTIONS", "COMMUNICATING_AS_MASTER"]
 			try:
 				(major,minor) = self._getFirmwareVersion()
 				io.success("BTLEJack device "+("#"+str(self.index) if isinstance(self.index,int) else str(self.index))+
@@ -1167,4 +1173,3 @@ class BTLEJackDevice(wireless.Device):
 			except:
 				self.microbit = None
 				self.ready = False
-				

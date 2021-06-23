@@ -1,9 +1,10 @@
 import keyboard
 from mirage.core.scenario import scenarioSignal
-from mirage.libs import io
+import mirage.libs.io as io
+import mirage.libs.utils as utils
 '''
 This submodule defines two main classes of the framework : Module & WirelessModule.
-The modules defined in the framework inherits from these classes in order to 
+The modules defined in the framework inherits from these classes in order to
 provide a standard API.
 '''
 
@@ -89,7 +90,7 @@ class Module:
 	def run(self):
 		'''
 		This method implements the behaviour of the module.
-		It must be overloaded by every module in order to define the module execution. 
+		It must be overloaded by every module in order to define the module execution.
 		'''
 		pass
 
@@ -189,18 +190,22 @@ class Module:
 			except ModuleNotFoundError:
 				io.fail("Scenario "+self.args["SCENARIO"]+" not found !")
 				return False
-			
+
 
 class WirelessModule(Module):
 	'''
 	This class inherits from ``core.module.Module``.
-	It adds some methods in order to facilitate the selection of the right couple of Emitters / Receivers according to 
+	It adds some methods in order to facilitate the selection of the right couple of Emitters / Receivers according to
 	the ``technology`` attribute.
 	'''
 	EmittersClass = {}
 	ReceiversClass = {}
 	Emitters = {}
 	Receivers = {}
+
+	def __init__(self):
+		super().__init__()
+		self.sdrConfig = {}
 
 	@classmethod
 	def registerEmitter(cls,technology,emitter=None):
@@ -233,7 +238,7 @@ class WirelessModule(Module):
 	def getEmitter(self,interface=""):
 		'''
 		Helper allowing to easily get a specific Emitter instance according to the ``technology`` attribute.
-		
+
 		:param interface: string indicating the interface to use
 		:type interface: str
 		:return: Emitter instance
@@ -241,13 +246,18 @@ class WirelessModule(Module):
 		'''
 		interface = interface if interface != "" else self.args['INTERFACE']
 		if interface not in self.__class__.Emitters:
-			self.__class__.Emitters[interface] = self.__class__.EmittersClass[self.technology](interface=interface)
+			try:
+				self.__class__.Emitters[interface] = self.__class__.EmittersClass[self.technology](interface=interface)
+			except AttributeError:
+				io.fail("Device not found !")
+				utils.exitMirage()
+		self.__class__.Emitters[interface].updateSDRConfig(self.sdrConfig)
 		return self.__class__.Emitters[interface]
 
 	def getReceiver(self,interface=""):
 		'''
 		Helper allowing to easily get a specific Receiver instance according to the ``technology`` attribute.
-		
+
 		:param interface: string indicating the interface to use
 		:type interface: str
 		:return: Receiver instance
@@ -255,7 +265,10 @@ class WirelessModule(Module):
 		'''
 		interface = interface if interface != "" else self.args['INTERFACE']
 		if interface not in self.__class__.Receivers:
-			self.__class__.Receivers[interface] = self.__class__.ReceiversClass[self.technology](interface=interface)
-
+			try:
+				self.__class__.Receivers[interface] = self.__class__.ReceiversClass[self.technology](interface=interface)
+			except AttributeError:
+				io.fail("Device not found !")
+				utils.exitMirage()
+		self.__class__.Receivers[interface].updateSDRConfig(self.sdrConfig)
 		return self.__class__.Receivers[interface]
-

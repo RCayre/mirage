@@ -8,7 +8,7 @@ This module contains some scapy definitions for communicating with an HCI device
 
 class HCI_Cmd_LE_Rand(Packet):
 	name = "HCI Command LE Rand"
-	fields_desc = []	
+	fields_desc = []
 
 class HCI_LE_Meta_Enhanced_Connection_Complete(Packet):
     name = "Enhanced Connection Complete"
@@ -79,7 +79,7 @@ class New_ATT_Read_Blob_Response(Packet):
         StrField("value", "")
     ]
 
-class New_ATT_Handle_Value_Confirmation(Packet):
+class ATT_Handle_Value_Confirmation(Packet):
     name = "Handle Value Confirmation"
     fields_desc = []
 
@@ -90,6 +90,7 @@ bind_layers(SM_Hdr, SM_Security_Request, sm_command=0xb)
 bind_layers(HCI_Command_Hdr, New_HCI_Cmd_LE_Set_Advertising_Data, opcode=0x2008)
 bind_layers(HCI_Command_Hdr, New_HCI_Cmd_LE_Set_Scan_Response_Data, opcode=0x2009)
 
+'''
 split_layers(ATT_Hdr,ATT_Handle_Value_Notification)
 bind_layers( ATT_Hdr,New_ATT_Handle_Value_Notification, opcode=0x1b)
 
@@ -109,4 +110,5 @@ if hasattr(scapy.all,"ATT_Read_Blob_Response"):
 
 bind_layers(ATT_Hdr, New_ATT_Read_Blob_Request, opcode=0xc)
 bind_layers(ATT_Hdr, New_ATT_Read_Blob_Response, opcode=0xd)
-bind_layers(ATT_Hdr, New_ATT_Handle_Value_Confirmation, opcode=0x1e)
+'''
+bind_layers(ATT_Hdr, ATT_Handle_Value_Confirmation, opcode=0x1e)

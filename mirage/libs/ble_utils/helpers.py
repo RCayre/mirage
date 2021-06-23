@@ -5,7 +5,7 @@ This module provides some helpers in order to manipulate Bluetooth Low Energy li
 def frequencyToChannel(frequency):
 	'''
 	This function converts a frequency to the corresponding BLE channel.
-	
+
 	:param frequency: frequency to convert (MHz)
 	:type frequency: int
 	:return: channel associated to the provided frequency
@@ -36,7 +36,7 @@ def frequencyToChannel(frequency):
 def channelToFrequency(channel):
 	'''
 	This function converts a BLE channel to the corresponding frequency.
-	
+
 	:param channel: BLE channel to convert
 	:type channel: int
 	:return: corresponding frequency (MHz)
@@ -164,7 +164,7 @@ def rssiToDbm(rssi):
 	:type rssi: int
 	:return: corresponding value in Dbm
 	:rtype: float
-	
+
 	:Example:
 
 		>>> rssiToDbm(12)
@@ -184,3 +184,33 @@ def rssiToDbm(rssi):
 	else:
 		return 0
 
+
+def dewhiten(data,channel):
+	'''
+	This function allows to dewhiten a given raw data according to the channel value.
+
+	:param data: raw data to dewhiten
+	:type data: bytes
+	:param channel: channel number
+	:type channel: int
+	:return: dewhitened data
+	:rtype: bytes
+	'''
+	def _swap_bits(b):
+		o = 0
+		i = 0
+		for i in range(8):
+			o = o << 1
+			o |= 1 if (b & (1<<i)) else 0
+		return o
+	buffer = b""
+	lfsr = _swap_bits(channel) | 2
+	for i in range(len(data)):
+		c = _swap_bits(data[i])
+		for j in range(7,-1,-1):
+			if lfsr & 0x80:
+				lfsr ^= 0x11
+				c ^= (1<<j)
+			lfsr <<= 1
+		buffer+=bytes([_swap_bits(c)])
+	return buffer

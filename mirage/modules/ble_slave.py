@@ -17,7 +17,7 @@ class ble_slave(module.WirelessModule,interpreter.Interpreter):
 		self.dynamicArgs = True
 
 	def checkCapabilities(self):
-		return self.receiver.hasCapabilities("COMMUNICATING_AS_SLAVE", "RECEIVING_CONNECTION")
+		return self.receiver.hasCapabilities("COMMUNICATING_AS_SLAVE")
 
 	def prerun(self):
 		interpreter.Interpreter.__init__(self)

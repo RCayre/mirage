@@ -48,13 +48,17 @@ class ESBEmitter(wireless.Emitter):
 				new /= Logitech_Unencrypted_Keystroke_Payload(hid_data=packet.hidData)
 			elif isinstance(packet,ESBLogitechKeepAlivePacket):
 				new /= Logitech_Keepalive_Payload(timeout=packet.timeout)
+			elif isinstance(packet,ESBLogitechMultimediaKeyPressPacket):
+				new /= Logitech_Multimedia_Key_Payload(hid_key_scan_code=packet.hidData)
+			elif isinstance(packet,ESBLogitechMultimediaKeyReleasePacket):
+				new /= Logitech_Multimedia_Key_Payload(hid_key_scan_code=b"\x00\x00\x00\x00")
 			elif isinstance(packet,ESBLogitechMousePacket):
 				new /= Logitech_Mouse_Payload(movement=packet.move,button_mask=packet.buttonMask)
 			elif isinstance(packet,ESBLogitechEncryptedKeystrokePacket):
 				new /= Logitech_Encrypted_Keystroke_Payload(unknown=packet.unknown,hid_data=packet.hidData, aes_counter=packet.aesCounter)
 		else:
 			new /= ESB_Payload_Hdr(packet.payload)
-		
+
 		return new
 
 class ESBReceiver(wireless.Receiver):
@@ -78,7 +82,7 @@ class ESBReceiver(wireless.Receiver):
 	def convert(self,packet):
 		channel = self.getChannel()
 		payload = raw(packet[ESB_Payload_Hdr:]) if ESB_Payload_Hdr in packet else b""
-		
+
 		new = ESBPacket(address=packet.address, payload=payload)
 		if ESB_Ack_Response in packet or payload == b"":
 			new = ESBAckResponsePacket(address=packet.address,payload=payload)
@@ -136,7 +140,7 @@ class ESBReceiver(wireless.Receiver):
 							aesCounter = packet.aes_counter
 						)
 		new.additionalInformations = ESBSniffingParameters(channel=channel)
-		
+
 		return new
 
 

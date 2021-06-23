@@ -21,7 +21,7 @@ class zigbee_info(module.WirelessModule):
 	def run(self):
 		self.emitter = self.getEmitter(interface=self.args["INTERFACE"])
 
-		if utils.booleanArg(self.args["SHOW_CAPABILITIES"]):		
+		if utils.booleanArg(self.args["SHOW_CAPABILITIES"]):
 			self.displayCapabilities()
 
 		if "rzusbstick" in self.args["INTERFACE"]:
@@ -38,6 +38,25 @@ class zigbee_info(module.WirelessModule):
 					"FIRMWARE_VERSION":firmwareVersion,
 					"MODE":mode
 					})
+		elif "hackrf" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			index = str(self.emitter.getDeviceIndex())
+			serial = str(self.emitter.getSerial())
+			firmwareVersion = str(self.emitter.getFirmwareVersion())
+			apiVersionMajor,apiVersionMinor = self.emitter.getAPIVersion()
+			apiVersion = str(apiVersionMajor)+"."+str(apiVersionMinor)
+			boardName = self.emitter.getBoardName()
+			boardID = str(self.emitter.getBoardID())
+			io.chart(["Interface","Device Index","Serial number","Board Name", "Board ID","Firmware Version", "API Version"],[[interface,"#"+index,serial,boardName, boardID,firmwareVersion, apiVersion]])
+
+			return self.ok({"INTERFACE":interface,
+					"INDEX":index,
+					"SERIAL":serial,
+					"FIRMWARE_VERSION":firmwareVersion,
+					"API_VERSION":apiVersion,
+					"BOARD_NAME":boardName,
+					"BOARD_ID":boardID
+					})
 		elif ".pcap" in self.args["INTERFACE"]:
 			interface = self.args["INTERFACE"]
 			mode = self.emitter.getMode()
@@ -46,4 +65,3 @@ class zigbee_info(module.WirelessModule):
 					"MODE":mode
 					})
 		return self.nok()
-					

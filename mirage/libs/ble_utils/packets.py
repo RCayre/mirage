@@ -27,7 +27,7 @@ class BLESniffingParameters(wireless.AdditionalInformations):
 	:param frequency: frequency of the received packet
 	:type frequency: float
 	'''
-	def __init__(self, rssi=None,rssi_min=0,rssi_max=0,rssi_avg=0,rssi_count=0,clk_100ns=0,clkn_high=0,direction=None,channel=None, frequency=None):
+	def __init__(self, rssi=None,rssi_min=0,rssi_max=0,rssi_avg=0,rssi_count=0,clk_100ns=0,clkn_high=0,direction=None,channel=None, frequency=None, rawPacket=None):
 		if rssi is None:
 			self.rssi_min = rssi_min
 			self.rssi_max = rssi_max
@@ -47,7 +47,8 @@ class BLESniffingParameters(wireless.AdditionalInformations):
 		self.clkn_high = clkn_high
 		self.rssi_count = rssi_count
 		self.clock = clkn_high + (clk_100ns / 1000000)
-
+		self.rawPacket = rawPacket
+		
 	def toString(self):
 		return "CH:" + str(self.channel)+"|CLK:"+str(self.clock)+"|RSSI:"+str(self.rssi)+"dBm"
 

@@ -17,7 +17,7 @@ class StoppableThread(threading.Thread):
 		try:
 			while self.signal:
 				self._target(*(self._args))
-		except (KeyboardInterrupt,EOFError):
+		except:
 			pass
 	def stop(self):
 		'''
@@ -46,7 +46,7 @@ class PacketQueue:
 			self.daemonThread = None
 			if autoStart:
 				self.start()
-		
+
 	def isDeviceUp(self):
 		'''
 		This method allow to check if the Device (``mirage.libs.wireless_utils.device.Device``) linked to this Packet Queue is up and running.
@@ -78,7 +78,7 @@ class PacketQueue:
 		if hasattr(self,"isStarted") and self.isStarted:
 			if self.waitEmpty:
 				while not self.isEmpty():
-					time.sleep(0.05) # necessary ? 
+					time.sleep(0.05) # necessary ?
 			self.daemonThread.stop()
 			self.daemonThread = None
 			self.isStarted = False
@@ -93,7 +93,7 @@ class PacketQueue:
 	def isBusy(self):
 		'''
 		This method indicates if the queue contains some datas.
-		
+
 		:return: boolean indicating if the queue contains some datas
 		:rtype: bool
 		'''
@@ -102,7 +102,7 @@ class PacketQueue:
 	def isEmpty(self):
 		'''
 		This method indicates if the queue is empty.
-		
+
 		:return: boolean indicating if the queue is empty
 		:rtype: bool
 		'''
@@ -116,7 +116,7 @@ class PacketQueue:
 		pass
 
 	def __getattr__(self, name):
-		if (name != "device" and hasattr(self.device, name) and 
+		if (name != "device" and hasattr(self.device, name) and
 			(name in self.device.__class__.sharedMethods or name == "hasCapabilities")):
 			return getattr(self.device,name)
 		else:

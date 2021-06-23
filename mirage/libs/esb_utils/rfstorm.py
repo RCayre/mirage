@@ -33,16 +33,16 @@ class ESBRFStormDevice(wireless.Device):
 
 		The RFStorm firmware can be used with a crazyRadio PA Dongle or with a Logitech Unifying receiver.
 		The firmware can be found `here <https://github.com/BastilleResearch/nrf-research-firmware>`.
-		
+
 	'''
 	sharedMethods = [
-		"setChannel", 
+		"setChannel",
 		"getChannel",
 		"getDeviceIndex",
-		"enterPromiscuousMode", 
-		"enterGenericPromiscuousMode", 
-		"enterSnifferMode", 
-		"getMode", 
+		"enterPromiscuousMode",
+		"enterGenericPromiscuousMode",
+		"enterSnifferMode",
+		"getMode",
 		"getAddress",
 		"setAddress",
 		"isAutoAckEnabled",
@@ -65,14 +65,14 @@ class ESBRFStormDevice(wireless.Device):
 			io.fail("Unable to reset RFStorm device : #"+str(index))
 			return False
 
-	
+
 	def __init__(self,interface):
 		super().__init__(interface=interface)
 		if "rfstorm" == interface:
 			self.index = 0
 			self.interface = "rfstorm0"
 		else:
-			self.index = int(interface.split("rfstorm")[1])	
+			self.index = int(interface.split("rfstorm")[1])
 
 		self.ready = False
 		try:
@@ -94,7 +94,7 @@ class ESBRFStormDevice(wireless.Device):
 	def _enterPromiscuousMode(self,prefix=b""):
 		self._sendUSBCommand(NRF24_ENTER_PROMISCUOUS_MODE,bytes([len(prefix)]) + prefix)
 		self._readUSBResponse()
-		
+
 	def _enterPromiscuousModeGeneric(self,prefix=b"",rate=RF_RATE_2M,payloadLength=32):
 		self._sendUSBCommand(NRF24_ENTER_PROMISCUOUS_MODE_GENERIC, bytes([len(prefix),rate, payloadLength]) + prefix)
 		self._readUSBResponse()
@@ -144,7 +144,7 @@ class ESBRFStormDevice(wireless.Device):
 		self.address = "00:00:00:00:00"
 		self.enterPromiscuousMode()
 
-		
+
 	def getDeviceIndex(self):
 		'''
 		This method returns the index of the current RFStorm device.
@@ -153,7 +153,7 @@ class ESBRFStormDevice(wireless.Device):
 		:rtype: int
 
 		:Example:
-			
+
 			>>> device.getDeviceIndex()
 			0
 
@@ -168,12 +168,12 @@ class ESBRFStormDevice(wireless.Device):
 	def scan(self,channels=None):
 		'''
 		This method allows to launch an active scan in order to find the channel in use by the target device. This method can only be used in sniffer mode.
-	
+
 		:param channels: list of channels to scan
 		:type channels: list of int
 		:return: boolean indicating if the device has been found
 		:rtype: bool
-			
+
 
 		:Example:
 
@@ -269,7 +269,7 @@ class ESBRFStormDevice(wireless.Device):
 		:rtype: str
 
 		:Example:
-			
+
 			>>> device.getAddress()
 			'11:22:33:44:55'
 
@@ -288,7 +288,7 @@ class ESBRFStormDevice(wireless.Device):
 		:type address: str
 
 		:Example:
-			
+
 			>>> device.setAddress('11:22:33:44:55')
 
 		.. note::
@@ -332,7 +332,7 @@ class ESBRFStormDevice(wireless.Device):
 		:rtype: int
 
 		:Example:
-			
+
 			>>> device.getChannel()
 			37
 			>>> device.setChannel(channel=38)
@@ -352,9 +352,9 @@ class ESBRFStormDevice(wireless.Device):
 	def isAutoAckEnabled(self):
 		'''
 		This method returns a boolean indicating if the autoACK feature is enabled.
-	
+
 		:Example:
-			
+
 			>>> device.isAutoAckEnabled()
 			False
 			>>> device.enableAutoAck()
@@ -373,7 +373,7 @@ class ESBRFStormDevice(wireless.Device):
 		This method enables the autoACK feature (an empty ACK frame will be transmitted every time a frame is received).
 
 		:Example:
-			
+
 			>>> device.enableAutoAck()
 
 		.. note::
@@ -388,7 +388,7 @@ class ESBRFStormDevice(wireless.Device):
 		This method disables the autoACK feature (an empty ACK frame will be transmitted every time a frame is received).
 
 		:Example:
-			
+
 			>>> device.disableAutoAck()
 
 		.. note::
@@ -403,7 +403,7 @@ class ESBRFStormDevice(wireless.Device):
 		This method returns the current mode in use (RFStorm device can be set in three modes: PROMISCUOUS, GENERIC_PROMISCUOUS, SNIFFER)
 
 		:Example:
-	
+
 			>>> device.enterSnifferMode('AA:BB:CC:DD:EE')
 			>>> device.getMode()
 			'SNIFFER'
@@ -418,7 +418,7 @@ class ESBRFStormDevice(wireless.Device):
 		elif self.mode == ESBOperationMode.GENERIC_PROMISCUOUS:
 			return "GENERIC_PROMISCUOUS"
 		else:
-			return "SNIFFER"	
+			return "SNIFFER"
 
 
 	def send(self,pkt):

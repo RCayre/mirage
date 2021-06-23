@@ -30,7 +30,13 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	+-----------------------------------+----------------+
 	| JAMMING_ADVERTISEMENTS            | no             |
 	+-----------------------------------+----------------+
-	| HIJACKING_CONNECTIONS             | no             |
+	| HIJACKING_MASTER                  | no             |
+	+-----------------------------------+----------------+
+	| HIJACKING_SLAVE                   | no             |
+	+-----------------------------------+----------------+
+	| INJECTING                         | no             |
+	+-----------------------------------+----------------+
+	| MITMING_EXISTING_CONNECTION       | no             |
 	+-----------------------------------+----------------+
 	| INITIATING_CONNECTION             | no             |
 	+-----------------------------------+----------------+
@@ -55,19 +61,19 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 				"setScanInterval",
 				"setScan",
 				"setJamming",
-				"isSynchronized", 
+				"isSynchronized",
 
 				"getChannel",
 				"getAccessAddress",
 				"getCrcInit",
 				"getChannelMap",
 				"getHopInterval",
-				"getHopIncrement", 
+				"getHopIncrement",
 
 				"setSweepingMode",
-	
+
 				"sniffNewConnections",
-				"sniffExistingConnections", 
+				"sniffExistingConnections",
 				"sniffAdvertisements"
 			]
 	def _initBLE(self):
@@ -85,7 +91,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		self.channelMap = None
 		self.hopInterval = None
 		self.hopIncrement = None
-		
+
 		self._setCRCChecking(False)
 
 		self.setCRCChecking(enable=False)
@@ -122,13 +128,13 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def setSweepingMode(self,enable=True,sequence=[37,38,39]):
 		'''
 		This method allows to enable or disable the Sweeping mode. It allows to provide a subset of advertising channels to monitor sequentially.
-	
+
 		:param enable: boolean indicating if the Sweeping mode is enabled.
 		:type enable: bool
 		:param sequence: sequence of channels to use
 		:type sequence: list of int
 
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -163,12 +169,12 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def setJamming(self,enable=True):
 		'''
 		This method allows to enable or disable the jamming mode.
-	
+
 		:param enable: boolean indicating if the jamming mode must be enabled or disabled
 		:type enable: bool
 
 		:Example:
-		
+
 			>>> device.setJamming(enable=True) # jamming mode enabled
 			>>> device.setJamming(enable=False) # jamming mode disabled
 
@@ -212,7 +218,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def getAccessAddress(self):
 		'''
 		This method returns the access address actually in use.
-	
+
 		:return: access address
 		:rtype: int
 
@@ -232,7 +238,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def getCrcInit(self):
 		'''
 		This method returns the CRCInit actually in use.
-	
+
 		:return: CRCInit
 		:rtype: int
 
@@ -251,7 +257,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def getChannelMap(self):
 		'''
 		This method returns the Channel Map actually in use.
-	
+
 		:return: Channel Map
 		:rtype: int
 
@@ -271,7 +277,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def getHopInterval(self):
 		'''
 		This method returns the Hop Interval actually in use.
-	
+
 		:return: Hop Interval
 		:rtype: int
 
@@ -291,7 +297,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def getHopIncrement(self):
 		'''
 		This method returns the Hop Increment actually in use.
-	
+
 		:return: Hop Increment
 		:rtype: int
 
@@ -343,7 +349,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def init(self):
 		self.initializeBluetooth = False
 		self.sniffingMode = BLESniffingMode.EXISTING_CONNECTION
-		
+
 		super().init()
 		if self.ubertooth is not None:
 			self._initBLE()
@@ -352,12 +358,12 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def setCRCChecking(self,enable=True):
 		'''
 		This method enables CRC Checking.
-		
+
 		:param enable: boolean indicating if CRC Checking must be enabled
 		:type enable: bool
 
 		:Example:
-	
+
 			>>> device.setCRCChecking(enable=True) # CRC Checking enabled
 			>>> device.setCRCChecking(enable=False) # CRC Checking disabled
 
@@ -376,7 +382,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		:rtype: str
 
 		:Example:
-		
+
 			>>> device.getSerial()
 			'1160010b201835ae6d474553-79e1ff0b'
 
@@ -401,7 +407,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 
 			>>> device.getMode()
 			"BLE"
-	
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -417,7 +423,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		:rtype: int
 
 		:Example:
-			
+
 			>>> device.getChannel()
 			37
 			>>> device.setChannel(channel=38)
@@ -458,14 +464,14 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 			self._stop()
 			self._setFrequency(frequency)
 			self._start()
-			self.lock.release()		
+			self.lock.release()
 
 	def restartSniffingMode(self):
 		'''
 		This method restarts the sniffing mode.
 
 		:Example:
-	
+
 			>>> device.restartSniffingMode()
 
 		.. note::
@@ -493,7 +499,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 			>>> device.sniffAdvertisements()
 			>>> device.sniffAdvertisements(channel=38)
 			>>> device.sniffAdvertisements(address="1A:2B:3C:4D:5E:6F")
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -510,7 +516,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		self.lock.release()
 		if channel is None:
 			channel = 37
-		if not self.sweepingMode:	
+		if not self.sweepingMode:
 			self.setChannel(channel)
 
 	def sniffNewConnections(self,address="00:00:00:00:00:00",channel=None):
@@ -527,7 +533,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 			>>> device.sniffNewConnections()
 			>>> device.sniffNewConnections(channel=38)
 			>>> device.sniffNewConnections(address="1A:2B:3C:4D:5E:6F")
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -547,7 +553,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		self.lock.release()
 		if channel is None:
 			channel = 37
-		if not self.sweepingMode:	
+		if not self.sweepingMode:
 			self.setChannel(channel)
 
 
@@ -569,7 +575,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 			>>> device.sniffExistingConnections(accessAddress=0xe5e296e9)
 			>>> device.sniffAdvertisements(accessAddress=0xe5e296e9, crcInit=0x0bd54a)
 			>>> device.sniffAdvertisements(accessAddress=0xe5e296e9, crcInit=0x0bd54a, channelMap=0x1fffffffff)
-			
+
 		.. warning::
 			Please note the following warnings :
 
@@ -581,7 +587,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
 
 		'''
-	
+
 		self.sniffingMode = BLESniffingMode.EXISTING_CONNECTION
 		self.synchronized = False
 		self.lock.acquire()
@@ -616,7 +622,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 	def setScanInterval(self,seconds=1):
 		'''
 		This method allows to provide the scan interval (in second).
-	
+
 		:param seconds: number of seconds to wait between two channels
 		:type seconds: float
 
@@ -651,7 +657,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 
 			>>> device.setScan(enable=True) # scanning mode enabled
  			>>> device.setScan(enable=False) # scanning mode disabled
-		
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -666,7 +672,7 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		else:
 			self.scanThreadInstance.stop()
 			self.scanThreadInstance = None
-		
+
 	def recv(self):
 		self.lock.acquire()
 		data = self._poll()
@@ -733,11 +739,11 @@ class BLEUbertoothDevice(BtUbertoothDevice):
 		utils.wait(seconds=0.5)
 		self.ubertooth.ctrl_transfer(CTRL_OUT,UBERTOOTH_BTLE_SNIFFING,
 						(0 if self.sniffingMode == BLESniffingMode.ADVERTISEMENT else 2), 0)
-	
+
 	def _setPromiscuousMode(self):
 		utils.wait(seconds=0.5)
 		self.ubertooth.ctrl_transfer(CTRL_OUT,UBERTOOTH_BTLE_PROMISC,0, 0)
-		
+
 	def _poll(self):
 		try:
 			result = self.ubertooth.ctrl_transfer(CTRL_IN,UBERTOOTH_POLL,0, 0,512,timeout=100)

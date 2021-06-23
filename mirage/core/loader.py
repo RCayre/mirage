@@ -38,7 +38,7 @@ class Loader:
 		else:
 			return None
 
-	
+
 	def list(self,pattern=""):
 		'''
 		Display the list of module, filtered by the string provided as ``pattern``.
@@ -50,11 +50,11 @@ class Loader:
 
 		for module in self.modulesList:
 			info = self.modulesList[module]().info()
-			technology = (info["technology"]).upper()
+			technology = (info["technology"][:1]).upper() + (info["technology"][1:]).lower()
 			if (
 				pattern in info["description"]	or
 				pattern in info["name"] 	or
-				pattern in info["technology"]	or 
+				pattern in info["technology"]	or
 				pattern in info["type"]
 			):
 				if not technology in displayDict:

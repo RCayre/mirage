@@ -27,8 +27,14 @@ class BLEHcidumpDevice(wireless.Device):
 	+-----------------------------------+----------------+
 	| JAMMING_ADVERTISEMENTS            | no             |
 	+-----------------------------------+----------------+
-	| HIJACKING_CONNECTIONS             | no             |
+	| HIJACKING_MASTER                  | no             |
 	+-----------------------------------+----------------+
+	| HIJACKING_SLAVE                   | no             |
+	+-----------------------------------+----------------+
+	| INJECTING                         | no             |
+	+-----------------------------------+----------------+
+	| MITMING_EXISTING_CONNECTION       | no             |
+	+-----------------------------------+----------------+	
 	| INITIATING_CONNECTION             | no             |
 	+-----------------------------------+----------------+
 	| RECEIVING_CONNECTION              | no             |

@@ -4,7 +4,7 @@ from mirage.libs.zigbee_utils import helpers
 class ZigbeeSniffingParameters(wireless.AdditionalInformations):
 	'''
 	This class allows to attach some sniffer's data to a Mirage Zigbee Packet, such as RSSI, valid CRC,link quality indicator or channel.
-	If the frequency is provided, the corresponding channel is automatically calculated. 
+	If the frequency is provided, the corresponding channel is automatically calculated.
 
 	:param rssi: Received Signal Strength Indication
 	:type rssi: float
@@ -32,7 +32,7 @@ class ZigbeeSniffingParameters(wireless.AdditionalInformations):
 		self.linkQualityIndicator = linkQualityIndicator
 
 	def toString(self):
-		return "CH:" + str(self.channel)+"|RSSI:"+str(self.rssi)+"dBm"+"|LKI:"+str(self.linkQualityIndicator)+"/255"+"|CRC:"+("OK" if self.validCrc else "NOK")
+		return "CH:" + str(self.channel)+("|RSSI:"+str(self.rssi)+"dBm" if self.rssi is not None else "")+("|LKI:"+str(self.linkQualityIndicator)+"/255" if self.linkQualityIndicator is not None else "")+"|CRC:"+("OK" if self.validCrc else "NOK")
 
 
 class ZigbeePacket(wireless.Packet):
@@ -90,13 +90,13 @@ class ZigbeeBeacon(ZigbeePacket):
 		self.routerCapacity = routerCapacity
 		self.endDeviceCapacity = endDeviceCapacity
 		self.extendedPanID = extendedPanID
-		
+
 	def toString(self):
 		return "<< "+self.name +" | srcAddr = "+helpers.addressToString(self.srcAddr)+" | srcPanID = "+hex(self.srcPanID)+" | assocPermit = "+("yes" if self.assocPermit else "no")+" | coordinator = "+("yes" if self.coordinator else "no")+(
-			"" if not self.payload else 
+			"" if not self.payload else
 			" | routerCapacity = "+("yes" if self.routerCapacity else "no")+" | endDeviceCapacity = "+("yes" if self.endDeviceCapacity else "no")+" | extendedPanID = "+hex(self.extendedPanID)
 			)+" >>"
-	
+
 class ZigbeeBeaconRequest(ZigbeePacket):
 	'''
 	Mirage Zigbee Packet - Beacon Request
@@ -406,12 +406,10 @@ class ZigbeeApplicationEncryptedData(ZigbeePacket):
 
 	def toString(self):
 		return "<< "+self.name +" | srcAddr = "+helpers.addressToString(self.srcAddr)+" | destAddr = "+helpers.addressToString(self.destAddr)+" | destPanID = "+hex(self.destPanID)+" | data = "+self.data.hex()+(
-		" | frameCounter = "+str(self.frameCounter) + 
+		" | frameCounter = "+str(self.frameCounter) +
 		" | keyType = "+(ZigbeeApplicationEncryptedData.keyTypes[self.keyType] if self.keyType is not None and self.keyType < len(ZigbeeApplicationEncryptedData.keyTypes) else str(self.keyType)+"(unknown)") +
 		" | securityLevel = "+(ZigbeeApplicationEncryptedData.securityLevels[self.securityLevel] if self.securityLevel is not None and self.securityLevel < len(ZigbeeApplicationEncryptedData.securityLevels) else str(self.securityLevel)+"(unknown)") +
-		(" | source = "+self.source if self.source is not None else "") + 
-		(" | keySequenceNumber = "+str(self.keySequenceNumber) if self.keySequenceNumber is not None else "") + 
+		(" | source = "+self.source if self.source is not None else "") +
+		(" | keySequenceNumber = "+str(self.keySequenceNumber) if self.keySequenceNumber is not None else "") +
 		(" | mic = "+self.mic.hex() if self.mic != b"" else "")
 		)+" >>"
-
-

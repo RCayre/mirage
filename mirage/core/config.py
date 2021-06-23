@@ -13,8 +13,10 @@ class Config:
 		'''
 		self.parser = configparser.ConfigParser()
 		self.datas = {}
+		self.shortcuts = {}
 		self.filename = filename
 		self.generateDatas()
+		self.generateShortcuts()
 
 	def generateDatas(self):
 		'''
@@ -23,12 +25,58 @@ class Config:
 		try:
 			self.parser.read(self.filename)
 			for module in self.parser.sections():
-				arguments = {}
-				for (key,value) in self.parser.items(module):
-					arguments[key.upper()] = value
-				self.datas[module] = arguments
+				if "shortcut:" not in module:
+					arguments = {}
+					for (key,value) in self.parser.items(module):
+						arguments[key.upper()] = value
+					self.datas[module] = arguments
 		except configparser.ParsingError:
 			io.fail("Bad format file !")
+
+	def generateShortcuts(self):
+		'''
+		This method parses the configuration file and store the corresponding arguments in the attribute ``datas``.
+		'''
+		try:
+			self.parser.read(self.filename)
+			for section in self.parser.sections():
+				if "shortcut:" in section:
+					shortcutName = section.split("shortcut:")[1]
+					modules = None
+					description = ""
+					arguments = {}
+					for (key,value) in self.parser.items(section):
+						if key.upper() == "MODULES":
+							modules = value
+						elif key.upper() == "DESCRIPTION":
+							description = value
+						else:
+							if "(" in value and ")" in value:
+								names = value.split("(")[0]
+								defaultValue = value.split("(")[1].split(")")[0]
+
+								arguments[key.upper()] = {
+											"parameters":names.split(","),
+											"value":defaultValue
+								}
+							else:
+								arguments[key.upper()] = {
+											"parameters":value.split(","),
+											"value":None
+								}
+					if modules is not None:
+						self.shortcuts[shortcutName] = {"modules":modules,"description":description,"mapping":arguments}
+		except configparser.ParsingError:
+			io.fail("Bad format file !")
+
+	def getShortcuts(self):
+		'''
+		This method returns the shortcuts loaded from the configuration file.
+
+		:return: dictionary listing the existing shortcuts
+		:rtype: dict
+		'''
+		return self.shortcuts
 
 	def dataExists(self, moduleName, arg):
 		'''

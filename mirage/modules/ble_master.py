@@ -27,7 +27,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 						"write_req",
 						"discover",
 						"clear",
-						"disconnect", 
+						"disconnect",
 						"switch",
 						"connections"
 					]
@@ -59,7 +59,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 				"ltk=",
 				"ediv=",
 				"rand=",
-				"irk=",	
+				"irk=",
 				"addr=",
 				"addr_type=",
 				"csrk=",
@@ -163,7 +163,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 							break
 		else:
 			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to scan devices.")
-	
+
 	def connect(self,target:"!attribute:targets"="",connectionType:["public","random"]=""):
 		if self.checkConnectionCapabilities():
 			target = self.args['TARGET'] if target=="" else target
@@ -334,4 +334,4 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 			return self.ok()
 		else:
 			io.fail("Interface provided ("+str(self.args["INTERFACE"])+") is not able to communicate as a master.")
-			return self.nok()			
+			return self.nok()

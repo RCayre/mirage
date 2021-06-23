@@ -12,7 +12,7 @@ class keyboard_hid_over_gatt(scenario.Scenario):
 			ble.UUID(UUID16=0x180A).data[::-1]+ # Device Information Service
 			ble.UUID(UUID16=0x1812).data[::-1] # BLE HID Service
 		)
-		
+
 		data = bytes([
 			# Length
 			2,
@@ -52,16 +52,16 @@ class keyboard_hid_over_gatt(scenario.Scenario):
 		self.server.addCharacteristic(ble.UUID(name="HID Information").data,bytes.fromhex("00010002")) # version=0x0100 countrycode=0x00 flags=0x02(normally connectable)
 		self.server.addCharacteristic(ble.UUID(name="HID Control Point").data, b"\x00",permissions=['Write Without Response'])
 		self.server.addCharacteristic(ble.UUID(name="Protocol Mode").data,b"\x01",permissions=['Write Without Response', 'Read','Notify'])
-		
+
 	def allowEncryption(self,pkt):
 		pkt.show()
-		self.emitter.sendp(ble.BLELongTermKeyRequestReply(positive=True, ltk=bytes.fromhex("112233445566778899aabbccddeeff")[::-1]))	
-		
+		self.emitter.sendp(ble.BLELongTermKeyRequestReply(positive=True, ltk=bytes.fromhex("112233445566778899aabbccddeeff")[::-1]))
+
 	def initializeServices(self):
 		self.initializeDeviceInformationService()
 		self.initializeBatteryService()
 		self.initializeHIDService()
-		
+
 		self.module.show("gatt")
 
 	def addHIDoverGATTKeystroke(self,locale="fr",key="a",ctrl=False, alt=False, gui=False,shift=False):
@@ -121,7 +121,7 @@ class keyboard_hid_over_gatt(scenario.Scenario):
 				)
 			io.info("You can start the injection by pressing [SPACE]")
 		return True
-		
+
 	def onPairingOK(self,pkt):
 		self.emitter.sendp(ble.BLEDisconnect())
 
@@ -131,10 +131,10 @@ class keyboard_hid_over_gatt(scenario.Scenario):
 			self.receiver.onEvent("BLEMasterIdentification",callback=self.onPairingOK)
 		else:
 			self.receiver.onEvent("BLELongTermKeyRequest",callback=self.allowEncryption)
-		
+
 	def onEnd(self):
 		return True
-	
+
 	def onKey(self,key):
 		if key == "esc":
 			self.emitter.sendp(ble.BLEDisconnect())
@@ -158,4 +158,4 @@ class keyboard_hid_over_gatt(scenario.Scenario):
 					injectedKeystroke = key
 				io.info("Injecting:"+str(injectedKeystroke))
 				self.emitter.sendp(*(self.addHIDoverGATTKeystroke(key=injectedKeystroke,locale="fr")))
-		return False	
+		return False

@@ -11,16 +11,16 @@ import time
 class BLEPCAPDevice(wireless.PCAPDevice):
 	'''
 	This device allows to communicate with a PCAP file in order to write and read Bluetooth Low Energy packets.
-	
+
 	The corresponding interfaces are : ``<filename>.pcap`` (e.g. "out.pcap")
-	
+
 	  * If the file exists, the BLEPCAPDevice is in *read* mode, and the corresponding receiver is able to use it as a classic Bluetooth Low Energy sniffer.
 	  * If the file doesn't exist, the BLEPCAPDevice is in *write* mode, and the corresponding emitter is able to write packets in the file.
 
 	The following capabilities are actually supported :
 
 	+-----------------------------------+----------------+
-	| Capability			    | Available ?    |
+	| Capability                        | Available ?    |
 	+===================================+================+
 	| SCANNING                          | no             |
 	+-----------------------------------+----------------+
@@ -36,7 +36,13 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 	+-----------------------------------+----------------+
 	| JAMMING_ADVERTISEMENTS            | no             |
 	+-----------------------------------+----------------+
-	| HIJACKING_CONNECTIONS             | no             |
+	| HIJACKING_MASTER                  | no             |
+	+-----------------------------------+----------------+
+	| HIJACKING_SLAVE                   | no             |
+	+-----------------------------------+----------------+
+	| INJECTING                         | no             |
+	+-----------------------------------+----------------+
+	| MITMING_EXISTING_CONNECTION       | no             |
 	+-----------------------------------+----------------+
 	| INITIATING_CONNECTION             | no             |
 	+-----------------------------------+----------------+
@@ -51,12 +57,12 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 
 	.. warning::
 
-		This PCAP Device uses the DLT 256, and can be used to read or write some Link Layer packets. It is not compatible with a PCAP file containing HCI frames. 
+		This PCAP Device uses the DLT 256, and can be used to read or write some Link Layer packets. It is not compatible with a PCAP file containing HCI frames.
 
 	'''
 	DLT = 256
 	SCAPY_LAYER = BTLE_RF
-	
+
 	sharedMethods = [
 				"sniffNewConnections",
 				"sniffAdvertisements",
@@ -98,7 +104,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 	def getAccessAddress(self):
 		'''
 		This method returns the access address actually in use.
-	
+
 		:return: access address
 		:rtype: int
 
@@ -118,7 +124,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 	def getCrcInit(self):
 		'''
 		This method returns the CRCInit actually in use.
-	
+
 		:return: CRCInit
 		:rtype: int
 
@@ -137,7 +143,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 	def getChannelMap(self):
 		'''
 		This method returns the Channel Map actually in use.
-	
+
 		:return: Channel Map
 		:rtype: int
 
@@ -157,7 +163,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 	def getHopInterval(self):
 		'''
 		This method returns the Hop Interval actually in use.
-	
+
 		:return: Hop Interval
 		:rtype: int
 
@@ -177,7 +183,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 	def getHopIncrement(self):
 		'''
 		This method returns the Hop Increment actually in use.
-	
+
 		:return: Hop Increment
 		:rtype: int
 
@@ -208,7 +214,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 			>>> device.sniffNewConnections()
 			>>> device.sniffNewConnections(channel=38)
 			>>> device.sniffNewConnections(address="1A:2B:3C:4D:5E:6F")
-			
+
 
 		.. warning::
 
@@ -238,9 +244,9 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 			>>> device.sniffAdvertisements(address="1A:2B:3C:4D:5E:6F")
 
 		.. warning::
-		
+
 			The channel parameter is not used by this method, and is present in order to provide the same API as BTLEJack and Ubertooth devices. However, the address field can be used in order to filter the advertisements frames.
-				
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -302,7 +308,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 					self.synchronized = True
 					return packet
 
-				if ControlPDU in packet and packet.optcode == 0x02:
+				if BTLE_CTRL in packet and packet.opcode == 0x02:
 					if packet.access_addr == 0x8e89bed6:
 						packet.access_addr= self.getAccessAddress()
 					self._setAccessAddress(0x8e89bed6)
@@ -323,7 +329,7 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 			if self.sniffingMode == BLESniffingMode.ADVERTISEMENT:
 				if BTLE_ADV not in packet or (hasattr(packet,"AdvA") and self.target != packet.AdvA.upper() and self.target != "FF:FF:FF:FF:FF:FF"):
 					return
-			
+
 			else:
 
 				if BTLE_CONNECT_REQ in packet:
@@ -341,10 +347,9 @@ class BLEPCAPDevice(wireless.PCAPDevice):
 						packet.access_addr= self.getAccessAddress()
 
 
-				if ControlPDU in packet and packet.optcode == 0x02: # TERMINATE_IND
+				if BTLE_CTRL in packet and packet.opcode == 0x02: # TERMINATE_IND
 					self._setAccessAddress(0x8e89bed6)
 					self.synchronized = False
-				
+
 			data = BTLE_RF(rf_channel = packet.btle_channel) / packet[BTLE:]
 			self.putPacket(bytes(data),timestamp)
-

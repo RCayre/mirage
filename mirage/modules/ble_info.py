@@ -10,7 +10,24 @@ class ble_info(module.WirelessModule):
 				"INTERFACE":"hci0",
 				"SHOW_CAPABILITIES":"yes"
 			}
-		self.capabilities = ["SCANNING", "ADVERTISING", "SNIFFING_ADVERTISEMENTS", "SNIFFING_NEW_CONNECTION", "SNIFFING_EXISTING_CONNECTION","JAMMING_CONNECTIONS","JAMMING_ADVERTISEMENTS","HIJACKING_CONNECTIONS","INITIATING_CONNECTION","RECEIVING_CONNECTION","COMMUNICATING_AS_MASTER","COMMUNICATING_AS_SLAVE","HCI_MONITORING"]
+		self.capabilities = [
+					"SCANNING",
+					"ADVERTISING",
+					"SNIFFING_ADVERTISEMENTS",
+					"SNIFFING_NEW_CONNECTION",
+					"SNIFFING_EXISTING_CONNECTION",
+					"JAMMING_CONNECTIONS",
+					"JAMMING_ADVERTISEMENTS",
+					"HIJACKING_MASTER",
+					"HIJACKING_SLAVE",
+					"INJECTING",
+					"MITMING_EXISTING_CONNECTION",
+					"INITIATING_CONNECTION",
+					"RECEIVING_CONNECTION",
+					"COMMUNICATING_AS_MASTER",
+					"COMMUNICATING_AS_SLAVE",
+					"HCI_MONITORING"
+		]
 
 	def displayCapabilities(self):
 		capabilitiesList = []
@@ -46,6 +63,30 @@ class ble_info(module.WirelessModule):
 					"SNOOP_LOCATION":snoopLocation,
 					"SNOOP_SIZE":snoopSize
 					})
+
+		elif "butterfly" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			versionMajor,versionMinor = self.emitter.getFirmwareVersion()
+			version = str(versionMajor)+"."+str(versionMinor)
+			index = self.emitter.getDeviceIndex()
+			controller = self.emitter.getController()
+			io.chart(["Interface","Device Index","Version","Controller"],[[interface,("#"+str(index) if isinstance(index,int) else str(index)),version,controller]])
+			return self.ok({
+					"INTERFACE":interface,
+					"INDEX":index,
+					"VERSION":version
+					})
+		elif "sniffle" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			versionMajor,versionMinor = self.emitter.getFirmwareVersion()
+			version = str(versionMajor)+"."+str(versionMinor)
+			index = self.emitter.getDeviceIndex()
+			io.chart(["Interface","Device Index","Version"],[[interface,("#"+str(index) if isinstance(index,int) else str(index)),version]])
+			return self.ok({
+					"INTERFACE":interface,
+					"INDEX":index,
+					"VERSION":version
+					})
 		elif "hci" in self.args["INTERFACE"]:
 			interface = self.args["INTERFACE"]
 			address = self.emitter.getAddress()
@@ -60,7 +101,7 @@ class ble_info(module.WirelessModule):
 				"MODE":mode,
 				"MANUFACTURER":manufacturer,
 				"CHANGEABLE_ADDRESS":changeableAddress
-				})		
+				})
 		elif "ubertooth" in self.args["INTERFACE"]:
 			interface = self.args["INTERFACE"]
 			mode = self.emitter.getMode()
@@ -71,7 +112,7 @@ class ble_info(module.WirelessModule):
 				[[interface,mode,"#"+index,version,serial]])
 			return self.ok({
 					"INTERFACE":interface,
-					"MODE":mode, 
+					"MODE":mode,
 					"SERIAL":serial,
 					"INDEX":index,
 					"VERSION":version
@@ -99,6 +140,25 @@ class ble_info(module.WirelessModule):
 					"INDEX":index,
 					"VERSION":version
 					})
+		elif "hackrf" in self.args["INTERFACE"]:
+			interface = self.args["INTERFACE"]
+			index = str(self.emitter.getDeviceIndex())
+			serial = str(self.emitter.getSerial())
+			firmwareVersion = str(self.emitter.getFirmwareVersion())
+			apiVersionMajor,apiVersionMinor = self.emitter.getAPIVersion()
+			apiVersion = str(apiVersionMajor)+"."+str(apiVersionMinor)
+			boardName = self.emitter.getBoardName()
+			boardID = str(self.emitter.getBoardID())
+			io.chart(["Interface","Device Index","Serial number","Board Name", "Board ID","Firmware Version", "API Version"],[[interface,"#"+index,serial,boardName, boardID,firmwareVersion, apiVersion]])
+
+			return self.ok({"INTERFACE":interface,
+					"INDEX":index,
+					"SERIAL":serial,
+					"FIRMWARE_VERSION":firmwareVersion,
+					"API_VERSION":apiVersion,
+					"BOARD_NAME":boardName,
+					"BOARD_ID":boardID
+					})
 		elif ".pcap" in self.args["INTERFACE"]:
 			interface = self.args["INTERFACE"]
 			mode = self.emitter.getMode()
@@ -108,4 +168,3 @@ class ble_info(module.WirelessModule):
 					})
 
 		return self.nok()
-					

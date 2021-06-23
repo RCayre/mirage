@@ -16,7 +16,7 @@ class esb_sniff(module.WirelessModule):
 				"ACK_PACKETS":"no",
 				"CHANNELS":"all",
 				"ACTIVE_SCAN":"yes",
-				"CHANNEL_TIMEOUT":"20", 
+				"CHANNEL_TIMEOUT":"20",
 				"LOST_STREAM_ACTION":"continue" # "stop" or "continue"
 
 			}
@@ -98,7 +98,7 @@ class esb_sniff(module.WirelessModule):
 	def run(self):
 		self.pcap = None
 		self.receiver = self.getReceiver(interface=self.args["INTERFACE"])
-		self.receiver.onEvent("*",callback=self.show)	
+		self.receiver.onEvent("*",callback=self.show)
 		self.receiver.onEvent("ESBLogitechMousePacket",callback=self.addMouseData)
 		self.target = "FF:FF:FF:FF:FF" if self.args["TARGET"] == "" else self.args["TARGET"].upper()
 		if self.target == "FF:FF:FF:FF:FF":
@@ -126,7 +126,7 @@ class esb_sniff(module.WirelessModule):
 
 		if self.args["PCAP_FILE"] != "":
 			self.pcap = self.getEmitter(interface=self.args["PCAP_FILE"])
-		
+
 		channelsTimeout = float(self.args["CHANNEL_TIMEOUT"]) if self.args["CHANNEL_TIMEOUT"] != "" else None
 
 		if self.activeMode and not self.checkActiveScanningCapabilities():
@@ -146,7 +146,7 @@ class esb_sniff(module.WirelessModule):
 					self.searchChannel()
 				else:
 					break
-			
+
 		self.receiver.removeCallbacks()
 		if self.pcap is not None:
 			self.pcap.stop()
@@ -163,4 +163,3 @@ class esb_sniff(module.WirelessModule):
 		self.receiver.removeCallbacks()
 		if self.args["MOUSE_FILE"]!="":
 			self.exportMiceDatas()
-

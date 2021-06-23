@@ -18,11 +18,11 @@ setup(
 
     description="Mirage is an offensive framework dedicated to the security analysis of wireless communication protocols",
 
-    install_requires=["keyboard","terminaltables","pyusb","pyserial","pycryptodomex","psutil","scapy","matplotlib"], 
+    install_requires=["keyboard","terminaltables","pyusb","pyserial","pycryptodomex","psutil","scapy","matplotlib"],
 
     include_package_data=True,
 
-    url='https://redmine.laas.fr/projects/mirage',
+    url='https://github.com/RCayre/mirage',
 
 
     classifiers=[

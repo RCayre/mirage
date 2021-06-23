@@ -4,9 +4,9 @@ import mirage.libs.io as io
 from mirage.libs.wireless_utils.packets import *
 from mirage.libs.wireless_utils.packetQueue import PacketQueue,StoppableThread
 from mirage.libs.wireless_utils.callbacks import Callback
-from mirage.libs.wireless_utils.device import Device
+from mirage.libs.wireless_utils.device import Device,SDRDevice
 from mirage.libs.wireless_utils.pcapDevice import PCAPDevice
-
+from mirage.libs.wireless_utils.butterfly import ButterflyDevice
 
 class Emitter(PacketQueue):
 	'''
@@ -22,7 +22,7 @@ class Emitter(PacketQueue):
 	  * `deviceType` : indicating the child class of Device to instanciate
 
 	A `_task` method is implemented by default. It gets a Mirage Packet from the queue, calls the convert method on it and calls the send method of a Device on the result. If you want to customize this behaviour, you can overload this method.
-	
+
 	'''
 	def __init__(self,interface,packetType=Packet, deviceType=Device):
 		self.interface = interface
@@ -31,11 +31,19 @@ class Emitter(PacketQueue):
 		self.device = self.deviceType.get(self.interface)
 		self.transmitting = False
 		super().__init__(waitEmpty=False)
-		
+
+	def updateSDRConfig(self,sdrConfig):
+		'''
+		This method updates the SDR configuration if the corresponding device is an SDR Device.
+		'''
+		if isinstance(self.device,SDRDevice):
+			self.device.updateSDRConfig(sdrConfig)
+
+
 	def isTransmitting(self):
 		'''
 		This method indicates if the Emitter is actually transmitting.
-		
+
 		:return: boolean indicating if the Emitter is actually transmitting
 		:rtype: bool
 
@@ -54,7 +62,7 @@ class Emitter(PacketQueue):
 	def convert(self,packet):
 		'''
 		This method converts a Mirage Packet into a raw Packet (e.g. bytes array or scapy frame). It must be overloaded by child classes.
-		
+
 		:param packet: Mirage Packet to convert
 		:type packet: mirage.libs.wireless_utils.packets.Packet
 		:return: raw representation of a packet
@@ -68,7 +76,7 @@ class Emitter(PacketQueue):
 	def convertMiragePacketToRaw(self,data):
 		'''
 		This method is an alias for the convert method of an emitter.
-		
+
 		:param data: raw representation of a packet
 		:return: Mirage packet
 		:rtype: mirage.libs.wireless_utils.packets.Packet
@@ -89,12 +97,12 @@ class Emitter(PacketQueue):
 			self.transmitting = not self.isEmpty()
 		else:
 			time.sleep(0.005)
-		
+
 
 	def send(self,*packets):
 		'''
 		This method allows to send a Mirage Packet.
-		
+
 		:param `*packets`: packets to send
 		:type `*packets`: mirage.libs.wireless_utils.packets.Packet (multiple)
 
@@ -120,7 +128,7 @@ class Emitter(PacketQueue):
 			>>> emitter.sendp(packet1)
 		'''
 		self.send(*packets)
-	
+
 	def stop(self):
 		'''
 		Stops the Emitter and the associated device
@@ -147,7 +155,7 @@ class Receiver(PacketQueue):
 	  * `deviceType` : indicating the child class of Device to instanciate
 
 	A `_task` method is implemented by default. It calls the recv method of a Device, converts the result (if it is not None) to a Mirage Packet and adds it to the queue. If you want to customize this behaviour, you can overload this method.
-	
+
 	'''
 	def __init__(self,interface,packetType=Packet, deviceType=Device):
 		self.interface = interface
@@ -159,6 +167,14 @@ class Receiver(PacketQueue):
 		self.callbacksQueue = Queue()
 		self.callbacksActiveListening = False
 		super().__init__(waitEmpty=False, autoStart=True)
+
+	def updateSDRConfig(self,sdrConfig):
+		'''
+		This method updates the SDR configuration if the corresponding device is an SDR Device.
+		'''
+		if isinstance(self.device,SDRDevice):
+			self.device.updateSDRConfig(sdrConfig)
+
 
 	def convert(self,data):
 		'''
@@ -173,7 +189,7 @@ class Receiver(PacketQueue):
 	def convertRawToMiragePacket(self,data):
 		'''
 		This method is an alias for the convert method of a receiver.
-		
+
 		:param data: raw representation of a packet
 		:return: Mirage packet
 		:rtype: mirage.libs.wireless_utils.packets.Packet
@@ -190,7 +206,7 @@ class Receiver(PacketQueue):
 	def isReceiving(self):
 		'''
 		This method indicates if the Receiver is actually receiving.
-		
+
 		:return: boolean indicating if the Receiver is actually receiving
 		:rtype: bool
 
@@ -211,7 +227,7 @@ class Receiver(PacketQueue):
 		This method removes every Mirage Packets stored in the queue.
 
 		:Example:
-			
+
 			>>> receiver.clean()
 
 		'''
@@ -226,7 +242,7 @@ class Receiver(PacketQueue):
 		:type timeout: float
 
 		:Example:
-			
+
 			>>> receiver.skip(timeout=1.0)
 
 		'''
@@ -240,16 +256,16 @@ class Receiver(PacketQueue):
 		:type timeout: float
 
 		:Example:
-			
+
 			>>> packet = receiver.next(timeout=1.0)
-			
+
 		'''
 		return next(self.receive(timeout=timeout))
 
 	def receive(self,nb=1,loop=False,timeout=None):
 		'''
 		This method provide a generator allowing to iterate on the incoming Mirage Packets.
-		
+
 		:param nb: number of packets to receive in the iterator
 		:type nb: int
 		:param loop: boolean indicating if the packets must be continuously received
@@ -259,7 +275,7 @@ class Receiver(PacketQueue):
 		:return: generator of Mirage Packets (``mirage.libs.wireless_utils.packets.Packet``)
 
 		:Example:
-	
+
 			>>> for packet in receiver.receive(nb=5):
 			... 	packet.show()
 			<< Packet >>
@@ -382,7 +398,7 @@ class Receiver(PacketQueue):
 		Remove the callbacks attached to the Receiver.
 		'''
 		self.callbacks = []
-	
+
 	def stop(self):
 		'''
 		Stops the Receiver and the associated device

