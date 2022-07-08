@@ -15,6 +15,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 				"INTERFACE":"hci0",
 				"SCENARIO":""
 			}
+		self.dynamicArgs = True
 
 	def prerun(self):
 		interpreter.Interpreter.__init__(self)
