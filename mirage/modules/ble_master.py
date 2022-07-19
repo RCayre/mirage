@@ -12,6 +12,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		self.args = {
 				"TARGET":"",
 				"CONNECTION_TYPE":"public",
+				"CHANNEL_MAP":"0x0000000003", 
 				"INTERFACE":"hci0",
 				"SCENARIO":""
 			}
@@ -318,6 +319,7 @@ class ble_master(module.WirelessModule, interpreter.Interpreter):
 		self.receiver = self.getReceiver(interface=self.args['INTERFACE'])
 		self.initializeCallbacks()
 		if self.checkCommunicationCapabilities():
+			self.emitter.setChannelMap(utils.integerArg(self.args["CHANNEL_MAP"]))
 			if self.loadScenario():
 				io.info("Scenario loaded !")
 				self.startScenario()

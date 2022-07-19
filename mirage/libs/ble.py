@@ -84,7 +84,8 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		"getManufacturer",
 		"isAddressChangeable",
 		"encryptLink",
-		"updateConnectionParameters"
+		"updateConnectionParameters", 
+		"setChannelMap"
 		]
 
 
@@ -217,6 +218,25 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			self._setOperationMode(BLEOperationMode.NORMAL)
 			return rValue
 
+	def setChannelMap(self, channelMap=0x1fffffffff):
+		'''
+		This method allows to select an arbitrary channel map.
+		
+		:param channelMap: integer indicating the channel to use.
+		:type channelMap: int
+		:Example:
+		
+			>>> device.setChannelMap(0x0000000003)
+			>>> device.setChannelMap(0x1fffffffff)
+		
+		.. note::
+		
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+		'''
+		self._enterCommandMode()
+		self._internalCommand(HCI_Cmd_LE_Set_Host_Channel_Classification(chM=channelMap))
+		self._exitCommandMode()
+		
 	def setScan(self,enable=True, passive=False):
 		'''
 		This method enables or disables the scanning mode.

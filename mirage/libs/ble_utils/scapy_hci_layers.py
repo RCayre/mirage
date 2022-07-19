@@ -10,6 +10,12 @@ class HCI_Cmd_LE_Rand(Packet):
 	name = "HCI Command LE Rand"
 	fields_desc = []
 
+class HCI_Cmd_LE_Set_Host_Channel_Classification(Packet):
+	name = "HCI Command LE Set Host Channel Classification"
+	fields_desc = [
+		BTLEChanMapField("chM" ,None)
+	]
+	
 class HCI_LE_Meta_Enhanced_Connection_Complete(Packet):
     name = "Enhanced Connection Complete"
     fields_desc = [ByteEnumField("status", 0, {0: "success"}),
@@ -84,6 +90,7 @@ class ATT_Handle_Value_Confirmation(Packet):
     fields_desc = []
 
 bind_layers(HCI_Command_Hdr, HCI_Cmd_LE_Rand, opcode=0x2018)
+bind_layers(HCI_Command_Hdr, HCI_Cmd_LE_Set_Host_Channel_Classification, opcode=0x2014)
 bind_layers(HCI_Event_LE_Meta, HCI_LE_Meta_Enhanced_Connection_Complete, event = 0xa)
 bind_layers(SM_Hdr, SM_Security_Request, sm_command=0xb)
 
