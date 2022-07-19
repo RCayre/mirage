@@ -11,7 +11,7 @@ class ble_basic_master_encrypted(scenario.Scenario):
 		return True
 		
 	def onSlaveConnect(self):
-		self.module.discover()
 		if self.emitter.encryptLink(rand=bytes.fromhex(self.args["RAND"]), ediv=utils.integerArg(self.args["EDIV"]), ltk = bytes.fromhex(self.args["LTK"])[::-1]):
 			io.success("Encryption successfully enabled =)")
-			self.module.discover()
+		self.module.read("0x01")
+		self.emitter.sendp(ble.BLEDisconnect())
