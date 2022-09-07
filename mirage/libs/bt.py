@@ -19,7 +19,7 @@ class BtHCIDevice(wireless.Device):
 		"getConnections",
 		"switchConnection",
 		"getCurrentConnection",
-		"getAddressByHandle", 
+		"getAddressByHandle",
 		"getCurrentHandle",
 		"isConnected",
 		"setLocalName",
@@ -32,6 +32,7 @@ class BtHCIDevice(wireless.Device):
 
 	def __init__(self,interface):
 		super().__init__(interface=interface)
+		self.pendingQueue = Queue()
 		self.initializeBluetooth = True
 
 	def _initBT(self):
@@ -89,9 +90,12 @@ class BtHCIDevice(wireless.Device):
 		self.socket.send(data)
 
 	def _recv(self):
-		self.recvLock.acquire()
-		recv = self.socket.recv()
-		self.recvLock.release()
+		if not self.pendingQueue.empty():
+			recv = self.pendingQueue.get(block=True)
+		else:
+			self.recvLock.acquire()
+			recv = self.socket.recv()
+			self.recvLock.release()
 		return recv
 
 
@@ -126,7 +130,7 @@ class BtHCIDevice(wireless.Device):
 		while not self._commandModeEnabled():
 			utils.wait(seconds=0.05)
 		self._flushCommandResponses()
-		
+
 		self.send(cmd)
 		if not noResponse:
 			if self._isListening():
@@ -186,7 +190,7 @@ class BtHCIDevice(wireless.Device):
 		:rtype: list of dict
 
 		:Example:
-			
+
 			>>> device.getConnections()
 			[{'handle':72, 'address':'AA:BB:CC:DD:EE:FF'},{'handle':73, 'address':'11:22:33:44:55:66'}]
 
@@ -200,14 +204,14 @@ class BtHCIDevice(wireless.Device):
 	def getAddressByHandle(self,handle):
 		'''
 		This method returns the BD address associated to the provided connection handle if a corresponding connection is established. If no connection uses this handle, it returns `None`.
-	
+
 		:param handle: connection handle
 		:type handle: int
 		:return: address of the corresponding connection
 		:rtype: str
 
 		:Example:
-		
+
 			>>> device.getAddressByHandle(72)
 			'AA:BB:CC:DD:EE:FF'
 			>>> device.getAddressByHandle(4)
@@ -231,13 +235,13 @@ class BtHCIDevice(wireless.Device):
 		:rtype: str
 
 		:Example:
-		
+
 			>>> device.getCurrentConnection()
 			'AA:BB:CC:DD:EE:FF'
 			>>> device.send(HCI_Hdr()/HCI_Command_Hdr()/HCI_Cmd_Disconnect())
 			>>> device.getCurrentConnection()
 			None
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -255,13 +259,13 @@ class BtHCIDevice(wireless.Device):
 		:rtype: bool
 
 		:Example:
-		
+
 			>>> device.getCurrentConnection()
 			'AA:BB:CC:DD:EE:FF'
 			>>> device.switchConnection('11:22:33:44:55:66')
 			>>> device.getCurrentConnection()
 			'11:22:33:44:55:66'
-			
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
@@ -302,7 +306,7 @@ class BtHCIDevice(wireless.Device):
 		:rtype: bool
 
 		:Example:
-		
+
 			>>> device.isConnected()
 			True
 
@@ -319,9 +323,9 @@ class BtHCIDevice(wireless.Device):
 
 		:param name: new name
 		:type name: str
-		
+
 		:Example:
-		
+
 			>>> device.setLocalName("toto")
 
 		.. note::
@@ -339,9 +343,9 @@ class BtHCIDevice(wireless.Device):
 
 		:return: name
 		:rtype: str
-		
+
 		:Example:
-		
+
 			>>> device.getLocalName()
 			'toto'
 
@@ -369,9 +373,9 @@ class BtHCIDevice(wireless.Device):
 
 		:return: manufacturer's name
 		:rtype: str
-		
+
 		:Example:
-		
+
 			>>> device.getManufacturer()
 			'Realtek Semiconductor Corporation'
 
@@ -389,9 +393,9 @@ class BtHCIDevice(wireless.Device):
 
 		:return: boolean indicating if the BD address can be changed
 		:rtype: bool
-		
+
 		:Example:
-		
+
 			>>> device.isAddressChangeable()
 			True
 			>>> device2.isAddressChangeable()
@@ -410,16 +414,16 @@ class BtHCIDevice(wireless.Device):
 
 		:return: str indicating the BD address
 		:rtype: str
-		
+
 		:Example:
-		
+
 			>>> device.getAddress()
 			'1A:2B:3C:4D:5E:6F'
 
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
-	
+
 		'''
 		self._enterCommandMode()
 		response = self._internalCommand(HCI_Cmd_Read_BD_Addr())
@@ -437,7 +441,7 @@ class BtHCIDevice(wireless.Device):
 		:rtype: bool
 
 		:Example:
-	
+
 			>>> device.getAddress()
 			'1A:2B:3C:4D:5E:6F'
 			>>> device.setAddress('11:22:33:44:55:66')
@@ -446,11 +450,11 @@ class BtHCIDevice(wireless.Device):
 			True
 			>>> device.getAddress()
 			'11:22:33:44:55:66'
-		
+
 		.. note::
 
 			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
-	
+
 		'''
 		address = address.upper()
 		success = False
@@ -459,7 +463,7 @@ class BtHCIDevice(wireless.Device):
 			io.info("Changing HCI Device ("+self.interface+") Address to : "+address)
 			response = self._internalCommand(HCI_Cmd_Read_Local_Version_Information())
 			manufacturer = response.manufacturer
-			
+
 			if manufacturer not in COMPATIBLE_VENDORS:
 				io.fail("The vendor has not provided a way to modify the BD Address.")
 				success = False
@@ -467,14 +471,14 @@ class BtHCIDevice(wireless.Device):
 				self._internalCommand(HCI_Cmd_CSR_Write_BD_Address(addr=address),noResponse=True)
 				io.success("BD Address successfully modified !")
 				self._internalCommand(HCI_Cmd_CSR_Reset(),noResponse=True)
-				
+
 				self.socket.close()
 				utils.wait(seconds=1)
 				self._createSocket()
 
 				success = True
 			else:
-				modificationPackets = { 
+				modificationPackets = {
 							0 : HCI_Cmd_Ericsson_Write_BD_Address,
 							13 : HCI_Cmd_TI_Write_BD_Address,
 							15 : HCI_Cmd_BCM_Write_BD_Address,
@@ -501,7 +505,7 @@ class BluetoothEmitter(wireless.Emitter):
 	'''
 	def __init__(self,interface="hci0"):
 		super().__init__(interface=interface,packetType=BluetoothPacket, deviceType=BtHCIDevice)
-	
+
 	def convert(self,p):
 		if isinstance(p,BluetoothConnect):
 			p.packet = HCI_Hdr()/HCI_Command_Hdr()/HCI_Cmd_Create_Connection(addr=p.address,packet_type=p.packetType, page_scan_repetition_mode=p.pageScanRepetitionMode, clock_offset=p.clockOffset,allow_role_switch=p.allowRoleSwitch)
