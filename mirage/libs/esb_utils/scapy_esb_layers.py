@@ -154,9 +154,9 @@ class Logitech_Unifying_Hdr(Packet):
 class Logitech_Wake_Up(Packet):
 	name = "Logitech Wake Up Payload"
 	fields_desc = [ XByteField("dev_index",0x00),
-			ByteField("???(1)",  0x00),
-			ByteField("???(2)",  0x00),
-			X3BytesField("???(3)",  "\x01\x01\x01"),
+			ByteField("unknown_field1",  0x00),
+			ByteField("unknown_field2",  0x00),
+			X3BytesField("unknown_field3",  "\x01\x01\x01"),
 			ByteField("unused", 13)
 			]
 
