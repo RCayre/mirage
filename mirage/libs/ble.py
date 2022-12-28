@@ -18,6 +18,7 @@ from mirage.libs.ble_utils.crypto import *
 from mirage.libs.ble_utils.scapy_link_layers import *
 from mirage.libs.ble_utils.dissectors import *
 from mirage.libs.ble_utils.att_server import *
+from mirage.libs.bt_utils.scapy_vendor_specific import *
 from mirage.libs import wireless,bt,io
 
 
@@ -31,19 +32,19 @@ class BLEHCIDevice(bt.BtHCIDevice):
 	+-----------------------------------+----------------+
 	| Capability                        | Available ?    |
 	+===================================+================+
-	| SCANNING                          | yes            |
+	| SCANNING						    | yes			 |
 	+-----------------------------------+----------------+
-	| ADVERTISING                       | yes            |
+	| ADVERTISING					    | yes			 |
 	+-----------------------------------+----------------+
-	| SNIFFING_ADVERTISEMENTS           | no             |
+	| SNIFFING_ADVERTISEMENTS		    | no			 |
 	+-----------------------------------+----------------+
-	| SNIFFING_NEW_CONNECTION           | no             |
+	| SNIFFING_NEW_CONNECTION		    | no			 |
 	+-----------------------------------+----------------+
-	| SNIFFING_EXISTING_CONNECTION      | no             |
+	| SNIFFING_EXISTING_CONNECTION	    | no			 |
 	+-----------------------------------+----------------+
-	| JAMMING_CONNECTIONS               | no             |
+	| JAMMING_CONNECTIONS			    | no			 |
 	+-----------------------------------+----------------+
-	| JAMMING_ADVERTISEMENTS            | no             |
+	| JAMMING_ADVERTISEMENTS			| no			 |
 	+-----------------------------------+----------------+
 	| HIJACKING_MASTER                  | no             |
 	+-----------------------------------+----------------+
@@ -53,15 +54,17 @@ class BLEHCIDevice(bt.BtHCIDevice):
 	+-----------------------------------+----------------+
 	| MITMING_EXISTING_CONNECTION       | no             |
 	+-----------------------------------+----------------+
-	| INITIATING_CONNECTION             | yes            |
+	| HIJACKING_CONNECTIONS			    | no			 |
 	+-----------------------------------+----------------+
-	| RECEIVING_CONNECTION              | yes            |
+	| INITIATING_CONNECTION			    | yes			 |
 	+-----------------------------------+----------------+
-	| COMMUNICATING_AS_MASTER           | yes            |
+	| RECEIVING_CONNECTION			    | yes			 |
 	+-----------------------------------+----------------+
-	| COMMUNICATING_AS_SLAVE            | yes            |
+	| COMMUNICATING_AS_MASTER		    | yes			 |
 	+-----------------------------------+----------------+
-	| HCI_MONITORING                    | no             |
+	| COMMUNICATING_AS_SLAVE			| yes			 |
+	+-----------------------------------+----------------+
+	| HCI_MONITORING					| no			 |
 	+-----------------------------------+----------------+
 
 	'''
@@ -85,7 +88,10 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		"isAddressChangeable",
 		"encryptLink",
 		"updateConnectionParameters",
-		"setChannelMap"
+		"setChannelMap",
+		"setZephyrMITMFlag",
+		"setBlockedCtrlPDU",
+		"enableMitM"
 		]
 
 
@@ -98,6 +104,7 @@ class BLEHCIDevice(bt.BtHCIDevice):
 			if not found:
 				self.handles.append({"address":address.upper() if address is not None else "", "handle":handle, "mode":mode})
 		self.currentHandle = handle
+		self._setOperationMode(BLEOperationMode.NORMAL)
 
 	def getCurrentConnectionMode(self):
 		'''
@@ -125,14 +132,48 @@ class BLEHCIDevice(bt.BtHCIDevice):
 	def _initBLE(self):
 		self.operationMode = BLEOperationMode.NORMAL
 		self._enterCommandMode()
+		response = self._internalCommand(HCI_Cmd_Read_Local_Version_Information())
+		manufacturer = response.manufacturer
 		self._internalCommand(HCI_Cmd_Reset())
-		self._internalCommand(HCI_Cmd_Set_Event_Filter())
-		self._internalCommand(HCI_Cmd_Connect_Accept_Timeout())
+		# Not supported by nRF Zephyr controller
+		if manufacturer!=1521:
+			self._internalCommand(HCI_Cmd_Set_Event_Filter())
+			self._internalCommand(HCI_Cmd_Connect_Accept_Timeout())
 		self._internalCommand(HCI_Cmd_Set_Event_Mask())
-		self._internalCommand(HCI_Cmd_LE_Host_Supported())
+		# Not supported by nRF Zephyr controller
+		if manufacturer!=1521:
+			self._internalCommand(HCI_Cmd_LE_Host_Supported())
 		self._exitCommandMode()
 
 		self.capabilities = ["SCANNING", "ADVERTISING", "INITIATING_CONNECTION", "RECEIVING_CONNECTION", "COMMUNICATING_AS_MASTER", "COMMUNICATING_AS_SLAVE"]
+
+
+	def setZephyrMITMFlag(self, flag=0x1):
+		self._enterCommandMode()
+		response = self._internalCommand(HCI_Cmd_Read_Local_Version_Information())
+		manufacturer = response.manufacturer
+		# Only use for nRF Zephyr controller
+		if manufacturer==1521:
+			response = self._internalCommand(HCI_Cmd_ZEPHYR_Set_MITM_Flag(mitm_flag=flag))
+		else:
+			io.warning("MitM mode can only be used with nRF Zephyr controller!")
+		self._exitCommandMode()
+		return response
+
+	def setBlockedCtrlPDU(self, blocked_ctrl_pdu):
+		self._enterCommandMode()
+		response = self._internalCommand(HCI_Cmd_Read_Local_Version_Information())
+		manufacturer = response.manufacturer
+		# Only use for nRF Zephyr controller
+		if manufacturer==1521:
+			response = self._internalCommand(HCI_Cmd_ZEPHYR_Set_Blocked_Ctrl_PDU(blocked_ctrl_pdu=blocked_ctrl_pdu))
+		else:
+			io.warning("Blocked PDUs can only be used with nRF Zephyr controller!")
+		self._exitCommandMode()
+		return response
+
+	def enableMitM(self, flag):
+		super().enableMitM(flag)
 
 	def _setOperationMode(self,value):
 		self.operationMode = value
@@ -206,10 +247,11 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		'''
 		if random:
 			self.addressMode = "random"
+			self.randomAddress = address
 			self._enterCommandMode()
 			io.info("Changing HCI Device ("+str(self.interface)+") Random Address to : "+address)
 			self._internalCommand(HCI_Cmd_LE_Set_Random_Address(address=address))
-			io.success("BD Address successfully modified !")
+			io.info("BD Address successfully modified !")
 			self._exitCommandMode()
 			return True
 		else:
@@ -435,11 +477,31 @@ class BLEHCIDevice(bt.BtHCIDevice):
 		'''
 		return self.addressMode
 
+	def getAddress(self):
+		'''
+		This method returns the address currently in use.
+
+		:return: address
+		:rtype: str
+
+		:Example:
+
+			>>> device.getAddressMode()
+			'00:11:22:33:44:55:66'
+
+		.. note::
+
+			This method is a **shared method** and can be called from the corresponding Emitters / Receivers.
+	
+		'''
+		return self.randomAddress if self.addressMode == "random" else super().getAddress()
+
 	def init(self):
 		self.initializeBluetooth = False
 		super().init()
 		if self.ready:
 			self.addressMode = "public"
+			self.randomAddress = "00:00:00:00:00:00"
 			self._initBLE()
 
 
@@ -547,9 +609,93 @@ class BLEEmitter(wireless.Emitter):
 						packet.packet /= HCI_Command_Hdr()/HCI_Cmd_LE_Create_Connection(
 											paddr=packet.dstAddr,
 											patype=packet.type,
-											atype=packet.initiatorType)
+											atype=packet.initiatorType,
+											window=96,
+											min_interval=24,
+											max_interval=40,)
 					elif isinstance(packet,BLEConnectionCancel):
 						packet.packet /= HCI_Command_Hdr()/HCI_Cmd_LE_Create_Connection_Cancel()
+					elif isinstance(packet, BLEStartEncryption):
+						packet.packet /= HCI_Command_Hdr()/HCI_Cmd_LE_Start_Encryption_Request(
+									handle=self.device.getCurrentHandle(),
+									rand=packet.rand,
+									ediv=packet.ediv,
+									ltk=packet.ltk
+						)
+					# Do not forward a packet already send, 1 == transmitted
+					elif isinstance(packet, BLELLPacket) and packet.direction == 1:
+						return None
+					elif isinstance(packet, BLELLPacket):
+						packetOpcode = -1
+						if isinstance(packet, BLELLConnUpdateInd):
+							packetOpcode = 0x00
+						elif isinstance(packet, BLELLChanMapInd):
+							packetOpcode = 0x01
+						elif isinstance(packet, BLELLTerminateInd):
+							packetOpcode = 0x02
+						elif isinstance(packet, BLELLEncReq):
+							packetOpcode = 0x03
+						elif isinstance(packet, BLELLEncRsp):
+							packetOpcode = 0x04
+						elif isinstance(packet, BLELLStartEncReq):
+							packetOpcode = 0x05
+						elif isinstance(packet, BLELLStartEncRsp):
+							packetOpcode = 0x06
+						elif isinstance(packet, BLELLUnknownRsp):
+							packetOpcode = 0x07
+						elif isinstance(packet, BLELLFeatureReq):
+							packetOpcode = 0x08
+						elif isinstance(packet, BLELLFeatureRsp):
+							packetOpcode = 0x09
+						elif isinstance(packet, BLELLPauseEncReq):
+							packetOpcode = 0x0A
+						elif isinstance(packet, BLELLPauseEncRsp):
+							packetOpcode = 0x0B
+						elif isinstance(packet, BLELLVersionInd):
+							packetOpcode = 0x0C
+						elif isinstance(packet, BLELLRejectInd):
+							packetOpcode = 0x0D
+						elif isinstance(packet, BLELLSlaveFeatureReq):
+							packetOpcode = 0x0F
+						elif isinstance(packet, BLELLConnParamReq):
+							packetOpcode = 0x10
+						elif isinstance(packet, BLELLRejectExtInd):
+							packetOpcode = 0x11
+						elif isinstance(packet, BLELLPingReq):
+							packetOpcode = 0x12
+						elif isinstance(packet, BLELLPingRsp):
+							packetOpcode = 0x13
+						elif isinstance(packet, BLELLDataLenReq):
+							packetOpcode = 0x14
+						elif isinstance(packet, BLELLDataLenRsp):
+							packetOpcode = 0x15
+						elif isinstance(packet, BLELLPHYReq):
+							packetOpcode = 0x16
+						elif isinstance(packet, BLELLPHYReq):
+							packetOpcode = 0x17
+						elif isinstance(packet, BLELLUpdPHYInd):
+							packetOpcode = 0x18
+						elif isinstance(packet, BLELLMinUsedChann):
+							packetOpcode = 0x19
+						elif isinstance(packet, BLELLEncCtrl):
+							# Encrypted, set to FF
+							packetOpcode = 0xFF
+
+						if packetOpcode != -1:
+							opcode = (0x13) | ((0x3F) << 10)
+							packet.packet /= HCI_Command_Hdr() / Raw(
+								bytes([packetOpcode]) + bytes([packet.getPayloadLength()]) + packet.getPayload()
+							)
+							packet.packet[HCI_Command_Hdr].opcode = opcode
+							packet.packet[HCI_Command_Hdr].len = 29
+						else:
+							return None
+					# Handle encrypted Data PDUs
+					elif isinstance(packet, BLELLEncData):
+						packet.packet /= HCI_ACL_Hdr() / Raw(packet.payload)
+						packet.packet[HCI_ACL_Hdr].len = packet.length
+						packet.packet[HCI_ACL_Hdr].PB = 0x0
+						return packet.packet
 					else:
 						handle = (packet.connectionHandle if packet.connectionHandle != -1
 										else self.device.getCurrentHandle())
@@ -668,7 +814,7 @@ class BLEEmitter(wireless.Emitter):
 
 					if (
 						isinstance(packet,BLEConnectionParameterUpdateRequest) or
-					     	isinstance(packet,BLEConnectionParameterUpdateResponse)
+							 isinstance(packet,BLEConnectionParameterUpdateResponse)
 					   ):
 							packet.packet /= L2CAP_Hdr()/L2CAP_CmdHdr(id=packet.l2capCmdId)
 					elif (
@@ -678,6 +824,8 @@ class BLEEmitter(wireless.Emitter):
 						isinstance(packet,BLEPairingFailed) or
 						isinstance(packet,BLEPairingConfirm) or
 						isinstance(packet,BLEPairingRandom) or
+						isinstance(packet,BLEPublicKey) or
+						isinstance(packet,BLEDHKeyCheck) or
 						isinstance(packet,BLEEncryptionInformation) or
 						isinstance(packet,BLEMasterIdentification) or
 						isinstance(packet,BLEIdentityInformation) or
@@ -702,6 +850,7 @@ class BLEEmitter(wireless.Emitter):
 
 					elif isinstance(packet,BLESecurityRequest):
 						packet.packet /= SM_Security_Request(authentication=packet.authentication)
+						packet.packet[SM_Hdr].sm_command = 0x0B
 
 					elif isinstance(packet,BLEPairingRequest):
 						packet.packet /= SM_Pairing_Request(
@@ -711,6 +860,7 @@ class BLEEmitter(wireless.Emitter):
 								max_key_size = packet.maxKeySize,
 								initiator_key_distribution=packet.initiatorKeyDistribution,
 								responder_key_distribution = packet.responderKeyDistribution)
+						packet.packet[SM_Hdr].sm_command = 0x01
 
 
 					elif isinstance(packet,BLEPairingResponse):
@@ -721,33 +871,54 @@ class BLEEmitter(wireless.Emitter):
 								max_key_size = packet.maxKeySize,
 								initiator_key_distribution=packet.initiatorKeyDistribution,
 								responder_key_distribution = packet.responderKeyDistribution)
+						packet.packet[SM_Hdr].sm_command = 0x02
 
 					elif isinstance(packet,BLEPairingFailed):
 						packet.packet /= SM_Failed(reason=packet.reason)
+						packet.packet[SM_Hdr].sm_command = 0x05
 
 					elif isinstance(packet,BLEPairingConfirm):
 						packet.packet /= SM_Confirm(confirm=packet.confirm)
-
+						packet.packet[SM_Hdr].sm_command = 0x03
+					# Keypress notification not implemented
+					elif isinstance(packet, BLEPublicKey):
+						packet.packet /= SM_Public_Key(
+							key_x=packet.key_x,
+							key_y=packet.key_y,
+						)
+						packet.packet[SM_Hdr].sm_command = 0xC
+					elif isinstance(packet, BLEDHKeyCheck):
+						packet.packet /= SM_DHKey_Check(
+								dhkey_check=packet.dhkey_check,
+							)
+						packet.packet[SM_Hdr].sm_command = 0xD
 
 					elif isinstance(packet,BLEPairingRandom):
 						packet.packet /= SM_Random(random=packet.random)
+						packet.packet[SM_Hdr].sm_command = 0x04
 
 					elif isinstance(packet,BLEEncryptionInformation):
 						packet.packet /= SM_Encryption_Information(ltk=packet.ltk)
+						packet.packet[SM_Hdr].sm_command = 0x06
 
 					elif isinstance(packet,BLEMasterIdentification):
 						packet.packet /= SM_Master_Identification(ediv=packet.ediv, rand=packet.rand)
+						packet.packet[SM_Hdr].sm_command = 0x07
 
 					elif isinstance(packet,BLEIdentityInformation):
 						packet.packet /= SM_Identity_Information(irk=packet.irk)
+						packet.packet[SM_Hdr].sm_command = 0x08
 
 					elif isinstance(packet,BLEIdentityAddressInformation):
 						packet.packet /= SM_Identity_Address_Information(
 											atype=0 if packet.type=="public" else 1,
 											address=packet.address
 												)
+						packet.packet[SM_Hdr].sm_command = 0x09
+
 					elif isinstance(packet,BLESigningInformation):
 						packet.packet /= SM_Signing_Information(csrk=packet.csrk)
+						packet.packet[SM_Hdr].sm_command = 0x0A
 
 					elif isinstance(packet, BLEFindByTypeValueRequest):
 						packet.packet /= ATT_Find_By_Type_Value_Request(start=packet.startHandle,
@@ -849,6 +1020,8 @@ class BLEReceiver(wireless.Receiver):
 	def __init__(self,interface="hci0"):
 		deviceClass = None
 		self.encrypted = False
+		self.recvTransmittedLLPackets = False
+		self.backupCallbacks = []
 		if "hcidump" in interface:
 			deviceClass = BLEHcidumpDevice
 		elif "hci" in interface:
@@ -873,12 +1046,13 @@ class BLEReceiver(wireless.Receiver):
 		elif interface[-5:] == ".pcap":
 			deviceClass = BLEPCAPDevice
 		self.cryptoInstance = BLELinkLayerCrypto.getInstance()
-
-		# Fragment related
-		self.fragmentBuffer = b""
-		self.fragmentTotalSize = 0
-
 		super().__init__(interface=interface, packetType=BLEPacket, deviceType=deviceClass)
+
+	def storeCallbacks(self):
+		self.backupCallbacks = self.callbacks
+
+	def restoreCallbacks(self):
+		self.callbacks = self.backupCallbacks
 
 	def stop(self):
 		self.encrypted = False
@@ -886,6 +1060,12 @@ class BLEReceiver(wireless.Receiver):
 		if self.isDeviceUp() and "hci" in self.interface and not "hcidump" in self.interface:
 			self.device._exitListening()
 
+	def enableEnc(self, enable):
+		self.encrypted = enable
+
+	def enableRecvOfTransmittedLLPackets(self, enable):
+		self.recvTransmittedLLPackets = enable
+	
 	def convert(self,packet):
 		if "hackrf" in self.interface:
 			packet, iqSamples = packet
@@ -897,32 +1077,14 @@ class BLEReceiver(wireless.Receiver):
 		new = BLEPacket()
 		new.packet = packet
 		if "hci" in self.interface or "adb" in self.interface:
-			#packet.show()
-
-			# Here, we have a start of fragmented HCI packet (L2CAP length > HCI length)
-			if packet.type == TYPE_ACL_DATA and packet.PB == 2 and L2CAP_Hdr in packet and packet[L2CAP_Hdr].len > packet[HCI_ACL_Hdr].len:
-				# store it in the buffer
-				self.fragmentBuffer = raw(packet)
-				self.fragmentTotalSize = packet[L2CAP_Hdr].len
-				# don't return it now, it's not ready
-				return None
-
-			# Here, we have the next fragment (PB = 1)
-			if packet.type == TYPE_ACL_DATA and packet.PB == 1 and L2CAP_Hdr in packet and len(self.fragmentBuffer) > 0:
-				# We create the scapy packet before the last fragment
-				previousPacket = HCI_Hdr(self.fragmentBuffer)
-				# We concatenate it to the previous fragments
-				self.fragmentBuffer += raw(packet[L2CAP_Hdr:])
-				# If we have received all fragments
-				if len(raw(previousPacket[L2CAP_Hdr:][1:])) + len(raw(packet[L2CAP_Hdr:])) == self.fragmentTotalSize:
-					# We create the full packet and the execution flow continues to dissect it
-					packet = HCI_Hdr(self.fragmentBuffer)
-					new.packet = packet
-				else:
-					# don't return it now, it's not ready
-					return None
-
 			if packet.type == TYPE_ACL_DATA:
+				if self.encrypted and HCI_ACL_Hdr in packet:
+					hciACLHdrPayload = raw(packet[HCI_ACL_Hdr].payload)
+					return BLELLEncData(
+						length=packet[HCI_ACL_Hdr].len,
+						payload=hciACLHdrPayload,
+						PB=packet[HCI_ACL_Hdr].PB,
+					)
 				if ATT_Exchange_MTU_Request in packet:
 					return BLEExchangeMTURequest(
 						mtu = packet[ATT_Exchange_MTU_Request].mtu,
@@ -1078,7 +1240,16 @@ class BLEReceiver(wireless.Receiver):
 					return BLEEncryptionInformation(
 						connectionHandle = packet.handle,
 						ltk=packet.ltk)
-
+				elif SM_Public_Key in packet:
+					return BLEPublicKey(
+						connectionHandle = packet.handle,
+						key_x=packet.key_x,
+						key_y=packet.key_y,
+					)
+				elif SM_DHKey_Check in packet:
+					return BLEDHKeyCheck(
+						connectionHandle = packet.handle,
+						dhkey_check=packet.dhkey_check)
 				elif SM_Master_Identification in packet:
 					return BLEMasterIdentification(
 						connectionHandle = packet.handle,
@@ -1171,7 +1342,6 @@ class BLEReceiver(wireless.Receiver):
 						newHandle = packet[HCI_LE_Meta_Enhanced_Connection_Complete].handle
 						newAddress = str(packet[HCI_LE_Meta_Enhanced_Connection_Complete].paddr)
 						self.device._setCurrentHandle(newHandle,address=newAddress,mode="public" if packet.patype == 0 else "random")
-						io.info('Updating connection handle : '+str(newHandle))
 
 						return BLEConnectResponse(
 							srcAddr = packet.paddr,
@@ -1185,7 +1355,6 @@ class BLEReceiver(wireless.Receiver):
 						newHandle = packet[HCI_LE_Meta_Connection_Complete].handle
 						newAddress = str(packet[HCI_LE_Meta_Connection_Complete].paddr)
 						self.device._setCurrentHandle(newHandle,address=newAddress,mode="public" if packet.patype == 0 else "random")
-						io.info('Updating connection handle : '+str(newHandle))
 
 						return BLEConnectResponse(
 							srcAddr = packet.paddr,
@@ -1210,11 +1379,209 @@ class BLEReceiver(wireless.Receiver):
 							rand=packet.rand,
 							ediv=packet.ediv
 						)
-
+				elif HCI_Event_Encryption_Change in packet:
+					return BLEEncryptionChange(
+						connectionHandle=packet.handle,
+						status=packet.status,
+						enabled=packet.enabled
+					)
 				elif packet.code == HCI_DISCONNECTION_COMPLETE:
 					handle = packet.handle
 					self.device._removeConnectionHandle(handle)
 					return BLEDisconnect(connectionHandle=handle)
+				
+				# Handle custom HCI command from custom Zephyr controller
+				elif packet.code == 0xFF:
+					ll_raw_packet = packet.load
+					opcode = ll_raw_packet[0]
+					direction = ll_raw_packet[1]
+					payloadLen = ll_raw_packet[2]
+					sn = ll_raw_packet[3]
+					nesn = ll_raw_packet[4]
+					payload = ll_raw_packet[5:]
+					# direction = 1 => transmitted Ctrl PDU
+					# direction = 2 => received Ctrl PDU
+
+					# Transmitted data packet, ignore for the moment
+					if direction == 1 and not self.recvTransmittedLLPackets:
+						return None
+					if self.encrypted:
+						return BLELLEncCtrl(
+							encOpcode=opcode,
+							sn=sn,
+							nesn=nesn,
+							encData=payload[:payloadLen],
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_CONN_UPDATE_IND:
+						return BLELLConnUpdateInd(
+							win_size=payload[0],
+							win_offset=payload[1:3],
+							interval=payload[3:5],
+							latency=payload[5:7],
+							timeout=payload[7:9],
+							instant=payload[9:11],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_CHAN_MAP_IND:
+						return BLELLChanMapInd(
+							chm=payload[:5],
+							instant=payload[5:7],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_TERMINATE_IND:
+						return BLELLTerminateInd(
+							error_code=payload[0],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_ENC_REQ:
+						return BLELLEncReq(
+							rand=payload[:8],
+							ediv=payload[8:10],
+							skdm=payload[10:18],
+							ivm=payload[18:22],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_ENC_RSP:
+						return BLELLEncRsp(
+							skds=payload[:8],
+							ivs=payload[8:12],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_START_ENC_REQ:
+						return BLELLStartEncReq(	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_START_ENC_RSP:
+						return BLELLStartEncRsp(	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_UNKNOWN_RSP:
+						return BLELLUnknownRsp(
+							type=payload[0],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_FEATURE_REQ:
+						return BLELLFeatureReq(
+							features=payload[0:8],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_FEATURE_RSP:
+						return BLELLFeatureRsp(
+							features=payload[0:8],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_PAUSE_ENC_REQ:
+						return BLELLPauseEncReq(	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_PAUSE_ENC_RSP:
+						return BLELLPauseEncRsp(	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_VERSION_IND:
+						return BLELLVersionInd(
+							version_number=payload[0],
+							company_id=payload[1:3],
+							sub_version_number=payload[3:4],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_REJECT_IND:
+						return BLELLRejectInd(
+							error_code=payload[0],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_SLAVE_FEATURE_REQ:
+						return BLELLSlaveFeatureReq(
+							features=payload[0:8],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_CONN_PARAM_REQ:
+						return BLELLConnParamReq(
+							interval_min=payload[0:2],
+							interval_max=payload[2:4],
+							latency=payload[4:6],
+							timeout=payload[6:8],
+							preferred_periodicity=payload[8],
+							reference_conn_event_count=payload[9:11],
+							offset0=payload[11:13],
+							offset1=payload[13:15],
+							offset2=payload[15:17],
+							offset3=payload[17:19],
+							offset4=payload[19:21],
+							offset5=payload[21:23],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_CONN_PARAM_RSP:
+						return BLELLConnParamRsp(
+							interval_min=payload[0:2],
+							interval_max=payload[2:4],
+							latency=payload[4:6],
+							timeout=payload[6:8],
+							preferred_periodicity=payload[8],
+							reference_conn_event_count=payload[9:10],
+							offset0=payload[11:13],
+							offset1=payload[13:15],
+							offset2=payload[15:17],
+							offset3=payload[17:19],
+							offset4=payload[19:21],
+							offset5=payload[21:23],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_REJECT_EXT_IND:
+						return BLELLRejectExtInd(
+							opcode=payload[0],
+							error_code=payload[1],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_PING_REQ:
+						return BLELLPingReq(	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_PING_RSP:
+						return BLELLPingRsp(	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_LENGTH_REQ:
+						return BLELLDataLenReq(
+							max_rx_octets=payload[0:2],
+							max_rx_time=payload[2:4],
+							max_tx_octets=payload[4:6],
+							max_tx_time=payload[6:8],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_LENGTH_RSP:
+						return BLELLDataLenRsp(
+							max_rx_octets=payload[0:2],
+							max_rx_time=payload[2:4],
+							max_tx_octets=payload[4:6],
+							max_tx_time=payload[6:8],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_PHY_REQ:
+						return BLELLPHYReq(
+							tx_phys=payload[0],
+							rx_phys=payload[1],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_PHY_RSP:
+						return BLELLPHYReq(
+							tx_phys=payload[0],
+							rx_phys=payload[1],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_PHY_UPD_IND:
+						return BLELLUpdPHYInd(
+							m_to_s_phy=payload[0],
+							s_to_m_phy=payload[1],	
+							direction=1 if direction == 1 else 0,
+						)
+					elif opcode == LLCTRL_TYPE_MIN_USED_CHAN_IND:
+						return BLELLMinUsedChann(
+							phys=payload[0],
+							min_used_chans=payload[1],	
+							direction=1 if direction == 1 else 0,
+						)				
 				else:
 					return None
 		elif (	"hackrf" in self.interface or
@@ -1329,10 +1696,6 @@ class BLEReceiver(wireless.Receiver):
 						elif ATT_Read_Response in packet :
 							new = BLEReadResponse(
 								value = packet[ATT_Read_Response].value
-								)
-						elif ATT_Hdr in packet and packet[ATT_Hdr].opcode == 0xb:
-							new = BLEReadResponse(
-								value = b""
 								)
 						elif ATT_Read_Request in packet:
 							new = BLEReadRequest(

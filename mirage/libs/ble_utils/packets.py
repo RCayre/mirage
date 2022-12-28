@@ -162,7 +162,7 @@ class BLEConnect(BLEPacket):
 		self.name = "BLE - Connect Packet"
 
 	def toString(self):
-		return "<< "+self.name+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" | type="+self.type+" | initiatorType="+self.initiatorType+" >>"
+		return "<< "+self.name+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" | type="+self.type+" | initiatorType="+self.initiatorType+" >>"
 
 class BLEConnectResponse(BLEPacket):
 	'''
@@ -193,7 +193,7 @@ class BLEConnectResponse(BLEPacket):
 		self.name = "BLE - Connect Response Packet"
 
 	def toString(self):
-		return "<< "+self.name+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" | type="+self.type+" | role="+self.role+" | success="+("OK" if self.success else "NOK")+" >>"
+		return "<< "+self.name+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" | type="+self.type+" | role="+self.role+" | success="+("OK" if self.success else "NOK")+" >>"
 
 class BLEDisconnect(BLEPacket):
 	'''
@@ -264,7 +264,7 @@ class BLEAdvertisement(BLEPacket):
 		return data
 
 	def toString(self):
-		return "<< "+self.name+" | type="+self.type+" | addr="+self.addr+" | data="+self.getRawDatas().hex()+" >>"
+		return "<< "+self.name+" | type="+self.type+" | addr="+self.addr+" | data="+self.getRawDatas().hex()+" >>"
 
 class BLEAdvInd(BLEAdvertisement):
 	'''
@@ -312,7 +312,7 @@ class BLEAdvDirectInd(BLEAdvertisement):
 		self.dstAddrType = dstAddrType
 
 	def toString(self):
-		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" >>"
+		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" >>"
 
 class BLEAdvNonConnInd(BLEAdvertisement):
 	'''
@@ -327,7 +327,7 @@ class BLEAdvNonConnInd(BLEAdvertisement):
 		super().__init__(type="ADV_NONCONN_IND")
 
 	def toString(self):
-		return "<< "+self.name+" | type="+self.type+" >>"
+		return "<< "+self.name+" | type="+self.type+" >>"
 
 class BLEAdvScanInd(BLEAdvertisement):
 	'''
@@ -342,7 +342,7 @@ class BLEAdvScanInd(BLEAdvertisement):
 		super().__init__(type="ADV_SCAN_IND")
 
 	def toString(self):
-		return "<< "+self.name+" | type="+self.type+" >>"
+		return "<< "+self.name+" | type="+self.type+" >>"
 
 class BLEScanRequest(BLEAdvertisement):
 	'''
@@ -370,7 +370,7 @@ class BLEScanRequest(BLEAdvertisement):
 		self.dstAddrType = dstAddrType
 
 	def toString(self):
-		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" >>"
+		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" >>"
 	
 class BLEScanResponse(BLEAdvertisement):
 	'''
@@ -469,7 +469,7 @@ class BLEConnectRequest(BLEAdvertisement):
 		self.data = data
 
 	def toString(self):
-		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" | accessAddress="+"0x{:08x}".format(self.accessAddress)+"| crcInit="+"0x{:03x}".format(self.crcInit)+"| channelMap="+"0x{:10x}".format(self.channelMap)+"| hopInterval="+str(self.hopInterval)+"| hopIncrement="+str(self.hopIncrement)+" >>"	
+		return "<< "+self.name+" | type="+self.type+" | srcAddr="+self.srcAddr+" | dstAddr="+self.dstAddr+" | accessAddress="+"0x{:08x}".format(self.accessAddress)+"| crcInit="+"0x{:03x}".format(self.crcInit)+"| channelMap="+"0x{:10x}".format(self.channelMap)+"| hopInterval="+str(self.hopInterval)+"| hopIncrement="+str(self.hopIncrement)+" >>"	
 
 class BLEFindInformationRequest(BLEPacket):
 	'''
@@ -562,7 +562,7 @@ class BLEFindInformationResponse(BLEPacket):
 		self.attributes = pairs
 
 	def toString(self):
-		return "<< "+self.name+" | format="+hex(self.format)+" | data="+self.data.hex()+" >>"
+		return "<< "+self.name+" | format="+hex(self.format)+" | data="+self.data.hex()+" >>"
 
 class BLEFindByTypeValueRequest(BLEPacket):
 	'''
@@ -702,7 +702,7 @@ class BLEReadByGroupTypeResponse(BLEPacket):
 		self.attributes = pairs
 
 	def toString(self):
-		return "<< "+self.name+" | length="+str(self.length)+" | data="+self.data.hex()+" >>"
+		return "<< "+self.name+" | length="+str(self.length)+" | data="+self.data.hex()+" >>"
 
 class BLEReadByTypeRequest(BLEPacket):
 	'''
@@ -770,6 +770,7 @@ class BLEReadByTypeResponse(BLEPacket):
 
 	def build(self):
 		self.data = b""
+		length = b""
 		for att in self.attributes:
 			handle = struct.pack(">H", att["attributeHandle"])[::-1]
 			value = att["value"]
@@ -817,7 +818,7 @@ class BLEErrorResponse(BLEPacket):
 		self.name = "BLE - Error Response Packet"
 
 	def toString(self):
-		return "<< "+self.name+" | req="+hex(self.request)+" | handle="+hex(self.handle)+" | ecode="+hex(self.ecode)+" >>"
+		return "<< "+self.name+" | req="+hex(self.request)+" | handle="+hex(self.handle)+" | ecode="+hex(self.ecode)+" >>"
 
 class BLEWriteRequest(BLEPacket):
 	'''
@@ -1460,3 +1461,1416 @@ class BLELongTermKeyRequestReply(BLEPacket):
 		return "<< "+self.name+" "+("(positive) | ltk="+self.ltk.hex() if self.positive else "(negative)")+" >>"
 
 
+
+########################### Custom
+
+
+class BLEPublicKey(BLEPacket):
+	"""
+	Mirage Bluetooth Low Energy Packet - SM Public Key Exchange
+
+	:param key_x:  X Coordinate of Public Key
+	:type key_x: bytes
+	:param key_y: Y Coordinate of Public Key
+	:type key_y: bytes
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	"""
+
+	def __init__(self, connectionHandle=-1, key_x=0, key_y=0):
+		super().__init__()
+		self.key_x = key_x
+		self.key_y = key_y
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Public Key Packet"
+
+	def toString(self):
+		return "<< " + self.name + " | key_x={} | key_y={} >>".format(self.key_x, self.key_y)
+
+
+class BLEDHKeyCheck(BLEPacket):
+	"""
+	Mirage Bluetooth Low Energy Packet - SM DHKey Check Exchange
+
+	:param dhkey_check:  128-bit DHKey Check values (Ea/Eb)
+	:type dhkey_check: bytes
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	"""
+
+	def __init__(self, connectionHandle=-1, dhkey_check=0):
+		super().__init__()
+		self.dhkey_check = dhkey_check
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - DH Key Check"
+
+	def toString(self):
+		return "<< " + self.name + " | dhkey_check={} >>".format(self.dhkey_check)
+
+class BLEEncryptionChange(BLEPacket):
+	"""
+	Mirage Bluetooth Low Energy Packet - HCI_Event_Encryption_Change 
+
+	:param status:  0x00 if an encryption change has occurred
+	:type status: byte
+	:param enabled:  0x00 if Link Layer Encryption is off, 0x01 if encrypted with AES-CCM
+	:type enabled: byte
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	"""
+
+	def __init__(self, connectionHandle=-1, status=0, enabled=0):
+		super().__init__()
+		self.status = status
+		self.enabled = enabled
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - HCI Encryption Change"
+
+	def toString(self):
+		return "<< " + self.name + " | status={} | enabled={} >>".format(self.status, self.enabled)
+
+class BLEStartEncryption(BLEPacket):
+	"""
+	Mirage Bluetooth Low Energy Packet - HCI_Cmd_LE_Start_Encryption_Request
+
+	:param rand:  128-bit random number
+	:type rand: byte
+	:param ediv:  16-bit EDIV
+	:type ediv: byte
+	:param ltk:  128-bit LTK
+	:type ltk: byte
+	:param connectionHandle: connection handle associated to the connection
+	:type connectionHandle: int
+
+	"""
+
+	def __init__(self, connectionHandle=-1, rand=b"", ediv=b"", ltk=b""):
+		super().__init__()
+		self.rand = rand
+		self.ediv = ediv
+		self.ltk = ltk
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - HCI Start Encryption Request"
+
+	def toString(self):
+		return "<< " + self.name + " | rand={} | ediv={} | ltk={} >>".format(self.rand, self.ediv,self.ltk)
+
+
+# LL Packets
+
+
+class BLELLPacket(BLEPacket):
+	"""
+	Mirage Bluetooth Low Energy Link Layer Packet
+	"""
+
+	def __init__(self):
+		super().__init__()
+		self.name = "BLELL - Unknown Packet"
+
+	def generatePayload(self, listOfByteValues):
+		payload = b""
+		for byteValue in listOfByteValues:
+			payload += byteValue
+		if len(payload)<27:
+			payload += b"\x00" * (27-len(payload))
+		return payload
+
+	def calculatePayloadLength(self, listOfByteValues):
+		payload = b""
+		for byteValue in listOfByteValues:
+			payload += byteValue
+		return len(payload) + 1
+
+
+class BLELLVersionInd(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Version Ind Packet - Control PDU
+
+	:param version_number: version_number
+	:type version_number: str
+	:param company_id: company_id
+	:type company_id: str
+	:param sub_version_number: sub_version_number
+	:type sub_version_number: str
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self,
+		direction=-1,
+		version_number=b"",
+		company_id=b"",
+		sub_version_number=b"",
+	):
+		super().__init__()
+		self.direction = direction
+		self.version_number = version_number
+		self.company_id = company_id
+		self.sub_version_number = sub_version_number
+		self.name = "BLE - Link Layer Version Ind Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | version_number={} | company_id={} | sub_version_number={} >>".format(
+				self.version_number, self.company_id, self.sub_version_number
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload(
+			[self.version_number, self.company_id, self.sub_version_number]
+		)
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength(
+			[self.version_number, self.company_id, self.sub_version_number]
+		)
+
+class BLELLConnUpdateInd(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Connection Update Ind Packet - Control PDU
+
+	:param type: Window Size
+	:type win_size: int
+	:param win_offset: Window Offset
+	:type win_offset: int
+	:param interval: interval
+	:type interval: int
+	:param latency: latency
+	:type latency: int
+	:param timeout: timeout
+	:type timeout: int
+	:param instant: Instant of the connection
+	:type instant: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self,
+		direction=-1,
+		win_size=0,
+		win_offset=0,
+		interval=0,
+		latency=0,
+		timeout=0,
+		instant=0,
+	):
+		super().__init__()
+		self.direction = direction
+		self.win_size = win_size
+		self.win_offset = win_offset
+		self.interval = interval
+		self.latency = latency
+		self.timeout = timeout
+		self.instant = instant
+		self.name = "BLE - Link Layer Connection Update Ind Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | win_size={} | win_offset={} | interval={} | latency={} | timeout={} | instant={} >>".format(
+				self.win_size,
+				self.win_offset,
+				self.interval,
+				self.latency,
+				self.timeout,
+				self.instant,
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload(
+			[
+				self.win_size,
+				self.win_offset,
+				self.interval,
+				self.latency,
+				self.timeout,
+				self.instant,
+			]
+		)
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength(
+			[
+				self.win_size,
+				self.win_offset,
+				self.interval,
+				self.latency,
+				self.timeout,
+				self.instant,
+			]
+		)
+
+
+class BLELLChanMapInd(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Channel Map Ind Packet - Control PDU
+
+	:param chm: Window Size
+	:type chm: byte
+	:param instant: Instant of the connection
+	:type instant: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, chm=b"", instant=0):
+		super().__init__()
+		self.direction = direction
+		self.chm = chm
+		self.instant = instant
+		self.name = "BLE - Link Layer Channel Map Ind Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | chm={} | instant={} >>".format(
+				self.chm,
+				self.instant,
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.chm, self.instant])
+
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.chm, self.instant])
+
+
+class BLELLTerminateInd(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Terminate Ind Packet - Control PDU
+
+	:param error_code: Error Code
+	:type error_code: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, error_code=0):
+		super().__init__()
+		self.direction = direction
+		self.error_code = error_code
+		self.name = "BLE - Link Layer Terminate Ind Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | error_code={} >>".format(self.error_code)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.error_code])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.error_code])
+
+class BLELLFeatureReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Feature Request Packet - Control PDU
+
+	:param features: Features of the controller
+	:type features: byte
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, features=b""):
+		super().__init__()
+		self.direction = direction
+		self.features = features
+		self.name = "BLE - Link Layer Feature Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | features={} >>".format(self.features)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.features])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.features])
+
+class BLELLFeatureRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Feature Response Packet - Control PDU
+
+	:param features: Features of the controller
+	:type features: byte
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, features=b""):
+		super().__init__()
+		self.direction = direction
+		self.features = features
+		self.name = "BLE - Link Layer Feature Response Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | features={} >>".format(self.features)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.features])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.features])
+
+class BLELLSlaveFeatureReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Slave Feature Request Packet - Control PDU
+
+	:param features: Features of the controller
+	:type features: byte
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, features=b""):
+		super().__init__()
+		self.direction = direction
+		self.features = features
+		self.name = "BLE - Link Layer Slave Feature Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | features={} >>".format(self.features)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.features])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.features])
+
+class BLELLPingReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Ping Request Packet - Control PDU
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1):
+		super().__init__()
+		self.direction = direction
+		self.name = "BLE - Link Layer Ping Request Packet"
+
+	def toString(self):
+		return "<< " + ("recv " if self.direction == 0 else "send ") + self.name + " >>"
+
+	def getPayload(self):
+		return super().generatePayload([])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([])
+
+class BLELLPingRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Ping Response Packet - Control PDU
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1):
+		super().__init__()
+		self.direction = direction
+		self.name = "BLE - Link Layer Ping Response Packet"
+
+	def toString(self):
+		return "<< " + ("recv " if self.direction == 0 else "send ") + self.name + " >>"
+
+	def getPayload(self):
+		return super().generatePayload([])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([])
+
+class BLELLPHYReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer PHY Request Packet - Control PDU
+
+	:param tx_phys: tx_phys
+	:type tx_phys: int
+	:param rx_phys: rx_phys
+	:type rx_phys: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, tx_phys=0, rx_phys=0):
+		super().__init__()
+		self.direction = direction
+		self.tx_phys = tx_phys
+		self.rx_phys = rx_phys
+		self.name = "BLE - Link Layer PHY Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | tx_phys={} | rx_phys={} >>".format(self.tx_phys, self.rx_phys)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.tx_phys, self.rx_phys])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.tx_phys, self.rx_phys])
+
+class BLELLPHYRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer PHY Response Packet - Control PDU
+
+	:param tx_phys: tx_phys
+	:type tx_phys: int
+	:param rx_phys: rx_phys
+	:type rx_phys: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, tx_phys=0, rx_phys=0):
+		super().__init__()
+		self.direction = direction
+		self.tx_phys = tx_phys
+		self.rx_phys = rx_phys
+		self.name = "BLE - Link Layer PHY Response Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | tx_phys={} | rx_phys={} >>".format(self.tx_phys, self.rx_phys)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.tx_phys, self.rx_phys])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.tx_phys, self.rx_phys])
+
+class BLELLUpdPHYInd(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer PHY Update Ind Packet - Control PDU
+
+	:param m_to_s_phy: m_to_s_phy
+	:type m_to_s_phy: int
+	:param s_to_m_phy: s_to_m_phy
+	:type s_to_m_phy: int
+	:param instant: instant
+	:type instant: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self, direction=-1, m_to_s_phy=0, s_to_m_phy=0, instant=0
+	):
+		super().__init__()
+		self.direction = direction
+		self.m_to_s_phy = m_to_s_phy
+		self.s_to_m_phy = s_to_m_phy
+		self.instant = instant
+		self.name = "BLE - Link Layer PHY Update Ind Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | m_to_s_phy={} | s_to_m_phy={} | instant={} >>".format(
+				self.m_to_s_phy, self.s_to_m_phy, self.instant
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.m_to_s_phy, self.s_to_m_phy, self.instant])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.m_to_s_phy, self.s_to_m_phy, self.instant])
+
+class BLELLMinUsedChann(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Min Used Channel Packet - Control PDU
+
+	:param phys: phys
+	:type phys: int
+	:param min_used_chans: min_used_chans
+	:type min_used_chans: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, phys=0, min_used_chans=0):
+		super().__init__()
+		self.direction = direction
+		self.phys = phys
+		self.min_used_chans = min_used_chans
+		self.name = "BLE - Link Layer Min Used Channel Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | phys={} | min_used_chans={} >>".format(self.phys, self.min_used_chans)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.phys, self.min_used_chans])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.phys, self.min_used_chans])
+
+class BLELLEncReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Encryption Request Packet - Control PDU
+
+	:param rand: rand
+	:type rand: byte
+	:param ediv: ediv
+	:type ediv: byte
+	:param skdm: skdm
+	:type skdm: byte
+	:param ivm: ivm
+	:type ivm: byte
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self, direction=-1, rand=0, ediv=0, skdm=0, ivm=0
+	):
+		super().__init__()
+		self.direction = direction
+		self.rand = rand
+		self.ediv = ediv
+		self.skdm = skdm
+		self.ivm = ivm
+		self.name = "BLE - Link Layer Encryption Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | rand={} | ediv={} | skdm={} | ivm={} >>".format(
+				self.rand, self.ediv, self.skdm, self.ivm
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.rand, self.ediv, self.skdm, self.ivm])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.rand, self.ediv, self.skdm, self.ivm])
+
+class BLELLEncRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Encryption Response Packet - Control PDU
+
+	:param skds: skds
+	:type skds: byte
+	:param ivs: ivs
+	:type ivs: byte
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, skds=0, ivs=0):
+		super().__init__()
+		self.direction = direction
+		self.skds = skds
+		self.ivs = ivs
+		self.name = "BLE - Link Layer Encryption Reponse Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | skds={} | ivs={} >>".format(self.skds, self.ivs)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.skds, self.ivs])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.skds, self.ivs])
+
+class BLELLStartEncReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Start Encryption Request Packet - Control PDU
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1):
+		super().__init__()
+		self.direction = direction
+		self.name = "BLE - Link Layer Start Encryption Request Packet"
+
+	def toString(self):
+		return "<< " + ("recv " if self.direction == 0 else "send ") + self.name + " >>"
+
+	def getPayload(self):
+		return super().generatePayload([])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([])
+
+class BLELLStartEncRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Start Encryption Response Packet - Control PDU
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1):
+		super().__init__()
+		self.direction = direction
+		self.name = "BLE - Link Layer Start Encryption Response Packet"
+
+	def toString(self):
+		return "<< " + ("recv " if self.direction == 0 else "send ") + self.name + " >>"
+
+	def getPayload(self):
+		return super().generatePayload([])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([])
+
+class BLELLPauseEncReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Pause Encryption Request Packet - Control PDU
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1):
+		super().__init__()
+		self.direction = direction
+		self.name = "BLE - Link Layer Pause Encryption Request Packet"
+
+	def toString(self):
+		return "<< " + ("recv " if self.direction == 0 else "send ") + self.name + " >>"
+
+	def getPayload(self):
+		return super().generatePayload([])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([])
+
+class BLELLPauseEncRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Pause Encryption Response Packet - Control PDU
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1):
+		super().__init__()
+		self.direction = direction
+		self.name = "BLE - Link Layer Pause Encryption Response Packet"
+
+	def toString(self):
+		return "<< " + ("recv " if self.direction == 0 else "send ") + self.name + " >>"
+
+	def getPayload(self):
+		return super().generatePayload([])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([])
+
+class BLELLRejectExtInd(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Reject Extended Ind Packet - Control PDU
+
+	:param error_code: error_code
+	:type error_code: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, opcode=0, error_code=0):
+		super().__init__()
+		self.direction = direction
+		self.opcode = opcode
+		self.error_code = error_code
+		self.name = "BLE - Link Layer Reject Extended Ind Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | opcode={} | error_code={} >>".format(self.opcode, self.error_code)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.opcode, self.error_code])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.opcode, self.error_code])
+
+class BLELLRejectInd(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Reject Ind Packet - Control PDU
+
+	:param error_code: error_code
+	:type error_code: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, error_code=0):
+		super().__init__()
+		self.direction = direction
+		self.error_code = error_code
+		self.name = "BLE - Link Layer Reject Ind Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | error_code={} >>".format(self.error_code)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.error_code])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.error_code])
+
+class BLELLConnParamReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Connection Parameter Request Packet - Control PDU
+
+	:param interval_min: interval_min
+	:type interval_min: int
+	:param interval_max: interval_max
+	:type interval_max: int
+	:param latency: latency
+	:type latency: int
+	:param timeout: timeout
+	:type timeout: int
+	:param preferred_periodicity: preferred_periodicity
+	:type preferred_periodicity: int
+	:param reference_conn_event_count: reference_conn_event_count
+	:type reference_conn_event_count: int
+	:param timeout: timeout
+	:type timeout: int
+	:param offset0: offset0
+	:type offset0: int
+	:param offset1: offset1
+	:type offset1: int
+	:param offset2: offset2
+	:type offset2: int
+	:param offset3: offset3
+	:type offset3: int
+	:param offset4: offset4
+	:type offset4: int
+	:param offset5: offset5
+	:type offset5: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self,
+		direction=-1,
+		interval_min=0,
+		interval_max=0,
+		latency=0,
+		timeout=0,
+		preferred_periodicity=0,
+		reference_conn_event_count=0,
+		offset0=0,
+		offset1=0,
+		offset2=0,
+		offset3=0,
+		offset4=0,
+		offset5=0,
+	):
+		super().__init__()
+		self.direction = direction
+		self.interval_min = interval_min
+		self.interval_max = interval_max
+		self.latency = latency
+		self.timeout = timeout
+		self.preferred_periodicity = preferred_periodicity
+		self.reference_conn_event_count = reference_conn_event_count
+		self.offset0 = offset0
+		self.offset1 = offset1
+		self.offset2 = offset2
+		self.offset3 = offset3
+		self.offset4 = offset4
+		self.offset5 = offset5
+		self.name = "BLE - Link Layer Connection Parameter Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | interval_min={} | interval_max={} | latency={} | timeout={} | preferred_periodicity={} | reference_conn_event_count={} | offset0={} | offset1={} | offset2={} | offset3={} | offset4={} | offset5={} >>".format(
+				self.interval_min,
+				self.interval_max,
+				self.latency,
+				self.timeout,
+				self.preferred_periodicity,
+				self.reference_conn_event_count,
+				self.offset0,
+				self.offset1,
+				self.offset2,
+				self.offset3,
+				self.offset4,
+				self.offset5,
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload(
+			[
+				self.interval_min,
+				self.interval_max,
+				self.latency,
+				self.timeout,
+				self.preferred_periodicity,
+				self.reference_conn_event_count,
+				self.offset0,
+				self.offset1,
+				self.offset2,
+				self.offset3,
+				self.offset4,
+				self.offset5,
+			]
+		)
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength(
+			[
+				self.interval_min,
+				self.interval_max,
+				self.latency,
+				self.timeout,
+				self.preferred_periodicity,
+				self.reference_conn_event_count,
+				self.offset0,
+				self.offset1,
+				self.offset2,
+				self.offset3,
+				self.offset4,
+				self.offset5,
+			]
+		)
+
+class BLELLConnParamRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Connection Parameter Response Packet - Control PDU
+
+	:param interval_min: interval_min
+	:type interval_min: int
+	:param interval_max: interval_max
+	:type interval_max: int
+	:param latency: latency
+	:type latency: int
+	:param timeout: timeout
+	:type timeout: int
+	:param preferred_periodicity: preferred_periodicity
+	:type preferred_periodicity: int
+	:param reference_conn_event_count: reference_conn_event_count
+	:type reference_conn_event_count: int
+	:param timeout: timeout
+	:type timeout: int
+	:param offset0: offset0
+	:type offset0: int
+	:param offset1: offset1
+	:type offset1: int
+	:param offset2: offset2
+	:type offset2: int
+	:param offset3: offset3
+	:type offset3: int
+	:param offset4: offset4
+	:type offset4: int
+	:param offset5: offset5
+	:type offset5: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self,
+		direction=-1,
+		interval_min=0,
+		interval_max=0,
+		latency=0,
+		timeout=0,
+		preferred_periodicity=0,
+		reference_conn_event_count=0,
+		offset0=0,
+		offset1=0,
+		offset2=0,
+		offset3=0,
+		offset4=0,
+		offset5=0,
+	):
+		super().__init__()
+		self.direction = direction
+		self.interval_min = interval_min
+		self.interval_max = interval_max
+		self.latency = latency
+		self.timeout = timeout
+		self.preferred_periodicity = preferred_periodicity
+		self.reference_conn_event_count = reference_conn_event_count
+		self.offset0 = offset0
+		self.offset1 = offset1
+		self.offset2 = offset2
+		self.offset3 = offset3
+		self.offset4 = offset4
+		self.offset5 = offset5
+		self.name = "BLE - Link Layer Connection Parameter Response Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | interval_min={} | interval_max={} | latency={} | timeout={} | preferred_periodicity={} | reference_conn_event_count={} | offset0={} | offset1={} | offset2={} | offset3={} | offset4={} | offset5={} >>".format(
+				self.interval_min,
+				self.interval_max,
+				self.latency,
+				self.timeout,
+				self.preferred_periodicity,
+				self.reference_conn_event_count,
+				self.offset0,
+				self.offset1,
+				self.offset2,
+				self.offset3,
+				self.offset4,
+				self.offset5,
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload(
+			[
+				self.interval_min,
+				self.interval_max,
+				self.latency,
+				self.timeout,
+				self.preferred_periodicity,
+				self.reference_conn_event_count,
+				self.offset0,
+				self.offset1,
+				self.offset2,
+				self.offset3,
+				self.offset4,
+				self.offset5,
+			]
+		)
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength(
+			[
+				self.interval_min,
+				self.interval_max,
+				self.latency,
+				self.timeout,
+				self.preferred_periodicity,
+				self.reference_conn_event_count,
+				self.offset0,
+				self.offset1,
+				self.offset2,
+				self.offset3,
+				self.offset4,
+				self.offset5,
+			]
+		)
+
+class BLELLDataLenReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Data Length Request Packet - Control PDU
+
+	:param max_rx_octets: max_rx_octets
+	:type max_rx_octets: int
+	:param max_rx_time: max_rx_time
+	:type max_rx_time: int
+	:param max_tx_octets: max_tx_octets
+	:type max_tx_octets: int
+	:param max_tx_time: max_tx_time
+	:type max_tx_time: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self,
+		direction=-1,
+		max_rx_octets=0,
+		max_rx_time=0,
+		max_tx_octets=0,
+		max_tx_time=0,
+	):
+		super().__init__()
+		self.direction = direction
+		self.max_rx_octets = max_rx_octets
+		self.max_rx_time = max_rx_time
+		self.max_tx_octets = max_tx_octets
+		self.max_tx_time = max_tx_time
+		self.name = "BLE - Link Layer Data Length Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | max_rx_octets={} | max_rx_time={} | max_tx_octets={} | max_tx_time={} >>".format(
+				self.max_rx_octets,
+				self.max_rx_time,
+				self.max_tx_octets,
+				self.max_tx_time,
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload(
+			[self.max_rx_octets, self.max_rx_time, self.max_tx_octets, self.max_tx_time]
+		)
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength(
+			[self.max_rx_octets, self.max_rx_time, self.max_tx_octets, self.max_tx_time]
+		)
+
+class BLELLDataLenRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Data Length Response Packet - Control PDU
+
+	:param max_rx_octets: max_rx_octets
+	:type max_rx_octets: int
+	:param max_rx_time: max_rx_time
+	:type max_rx_time: int
+	:param max_tx_octets: max_tx_octets
+	:type max_tx_octets: int
+	:param max_tx_time: max_tx_time
+	:type max_tx_time: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self,
+		direction=-1,
+		max_rx_octets=0,
+		max_rx_time=0,
+		max_tx_octets=0,
+		max_tx_time=0,
+	):
+		super().__init__()
+		self.direction = direction
+		self.max_rx_octets = max_rx_octets
+		self.max_rx_time = max_rx_time
+		self.max_tx_octets = max_tx_octets
+		self.max_tx_time = max_tx_time
+		self.name = "BLE - Link Layer Data Length Response Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | max_rx_octets={} | max_rx_time={} | max_tx_octets={} | max_tx_time={} >>".format(
+				self.max_rx_octets,
+				self.max_rx_time,
+				self.max_tx_octets,
+				self.max_tx_time,
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload(
+			[self.max_rx_octets, self.max_rx_time, self.max_tx_octets, self.max_tx_time]
+		)
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength(
+			[self.max_rx_octets, self.max_rx_time, self.max_tx_octets, self.max_tx_time]
+		)
+
+class BLELLUnknownRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Unknown Response Packet - Control PDU
+
+	:param type: type
+	:type type: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, type=0):
+		super().__init__()
+		self.direction = direction
+		self.type = type
+		self.name = "BLE - Link Layer Unknown Response Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | type={} >>".format(self.type)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.type])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.type])
+
+class BLELLCTEReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Constant Tone Extension Request Packet - Control PDU
+
+	:param type: minCTELenReq
+	:type type: int
+	:param type: rfu
+	:type type: int
+	:param type: cteTypeReq
+	:type type: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(
+		self, direction=-1, minCTELenReq=0, rfu=0, cteTypeReq=0
+	):
+		super().__init__()
+		self.direction = direction
+		self.minCTELenReq = minCTELenReq
+		self.rfu = rfu
+		self.cteTypeReq = cteTypeReq
+		self.name = "BLE - Link Layer Constant Tone Extension Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | minCTELenReq={} | rfu={} | cteTypeReq={} >>".format(
+				self.minCTELenReq, self.rfu, self.cteTypeReq
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.minCTELenReq, self.rfu, self.cteTypeReq])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.minCTELenReq, self.rfu, self.cteTypeReq])
+
+class BLELLCTERsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Constant Tone Extension Response Packet - Control PDU
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1):
+		super().__init__()
+		self.direction = direction
+		self.name = "BLE - Link Layer Constant Tone Extension Response Packet"
+
+	def toString(self):
+		return "<< " + ("recv " if self.direction == 0 else "send ") + self.name + " >>"
+
+	def getPayload(self):
+		return super().generatePayload([])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([])
+
+class BLELLPhyReq(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer PHY Request Packet - Control PDU
+
+	:param type: tx_phys
+	:type type: int
+	:param type: rx_phys
+	:type type: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, tx_phys=0, rx_phys=0):
+		super().__init__()
+		self.direction = direction
+		self.tx_phys = tx_phys
+		self.rx_phys = rx_phys
+		self.name = "BLE - Link Layer PHY Request Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | tx_phys={} | rx_phys={} >>".format(self.tx_phys, self.rx_phys)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.tx_phys, self.rx_phys])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.tx_phys, self.rx_phys])
+
+class BLELLPhyRsp(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer PHY Response Packet - Control PDU
+
+	:param type: tx_phys
+	:type type: int
+	:param type: rx_phys
+	:type type: int
+
+	(Detailed description page 2895 Bluetooth Core Spec)
+
+	"""
+
+	def __init__(self, direction=-1, tx_phys=0, rx_phys=0):
+		super().__init__()
+		self.direction = direction
+		self.tx_phys = tx_phys
+		self.rx_phys = rx_phys
+		self.name = "BLE - Link Layer PHY Response Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | tx_phys={} | rx_phys={} >>".format(self.tx_phys, self.rx_phys)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.tx_phys, self.rx_phys])
+
+	def getPayloadLength(self):
+		return super().calculatePayloadLength([self.tx_phys, self.rx_phys])
+
+class BLELLEncCtrl(BLELLPacket):
+	"""
+	Mirage Bluetooth Link Layer Encrypted Ctrl Packet - Encrypted Control PDU
+
+	:param type: type
+	:type type: int
+
+	"""
+
+	def __init__(
+		self, encData=b"", sn=-1, nesn=-1, direction=-1, encOpcode=0
+	):
+		super().__init__()
+		self.encData = encData
+		self.direction = direction
+		self.encOpcode = encOpcode
+		self.sn = sn
+		self.nesn = nesn
+		self.name = "BLE - Link Layer Encrypted Ctrl Packet"
+
+	def toString(self):
+		return (
+			"<< "
+			+ ("recv " if self.direction == 0 else "send ")
+			+ self.name
+			+ " | sn={} | nesn={} | encOpcode={} | len={} >>".format(
+				self.sn, self.nesn, self.encOpcode, self.getPayloadLength()
+			)
+		)
+
+	def getPayload(self):
+		return super().generatePayload([self.encData])
+
+	def getPayloadLength(self):
+		# We have to reduce one since the opcode is contained in the encData
+		return super().calculatePayloadLength([self.encData]) - 1
+
+class BLELLEncData(BLEPacket):
+	"""
+	Mirage Bluetooth Link Layer Encrypted Data Packet - Encrypted Data PDU
+
+	:param type: type
+	:type type: int
+
+	"""
+
+	def __init__(self, PB=2, payload=b"",length=0):
+		super().__init__()
+		self.payload = payload
+		self.PB = PB
+		self.length = length
+		self.name = "BLE - Encrypted Data Packet"
+
+	def toString(self):
+		return "<< {} | payload={} | PB={} | length={} >>".format(
+			self.name, self.payload, self.PB, self.length
+		)

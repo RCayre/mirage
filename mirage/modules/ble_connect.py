@@ -1,5 +1,6 @@
 from mirage.libs import io,ble,utils
 from mirage.core import module
+from mirage.libs.ble_utils.sc_crypto import CryptoUtils
 
 class ble_connect(module.WirelessModule):
 	def init(self):
@@ -23,6 +24,12 @@ class ble_connect(module.WirelessModule):
 		self.emitter = self.getEmitter(interface=interface)
 		self.receiver = self.getReceiver(interface=interface)
 
+		# Local
+		self.localAddress = CryptoUtils.getRandomAddress()
+		# Apply new address at each start
+		self.emitter.setAddress(
+			self.localAddress, random=True
+		) 
 		if self.checkCapabilities():
 			io.info("Trying to connect to : "+self.args["TARGET"]+" (type : "+self.args["CONNECTION_TYPE"]+")")
 			self.emitter.sendp(ble.BLEConnect(self.args["TARGET"], type=self.args["CONNECTION_TYPE"]))

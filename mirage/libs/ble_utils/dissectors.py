@@ -448,7 +448,7 @@ class HIDoverGATTKeystroke(Dissector):
 		gui = self.content["gui"]
 		shift = self.content["shift"]
 		(hidCode,modifiers) = HIDMapping(locale).getHIDCodeFromKey(key=key,alt=alt,ctrl=ctrl,shift=shift,gui=gui)
-		self.data = bytes([0,modifiers,hidCode,0,0,0,0,0])
+		self.data = bytes([modifiers,hidCode,0,0,0,0,0,0,0,0,0])
 
 	def __str__(self):
 		sortie = "key="+str(self.content["key"])+",ctrl="+("yes" if self.content["ctrl"] else "no")+",alt="+("yes" if self.content["alt"] else "no")+",shift="+("yes" if self.content["shift"] else "no")+",gui="+("yes" if self.content["gui"] else "no")
