@@ -6,7 +6,7 @@ DEPRECATION WARNING
 This project is now officially deprecated, since I worked with virtualabs on the next version of Mirage since three years now: an ecosystem of tools named WHAD.
 Almost all Mirage modules have now been ported to WHAD, so if you loved Mirage for a specific feature, you should find an equivalent one in WHAD. 
 Moreover the philosophy behind the project is similar: fighting fragmentation of tools, providing user-friendly CLI tools to interact with wireless protocols, while 
-creating a powerful offensive library if you want to use it in your own projet.
+creating a powerful offensive library if you want to use it in your own project.
 
 Mirage repo will stay active since I know a lot of people are using it, but if you want to start experimenting with wireless attacks, you should definitely use WHAD instead.
 I won't maintain this repository anymore, but WHAD will be actively maintained and is evolving quickly. 
@@ -15,7 +15,7 @@ See you on the other side:
 * **WHAD repository:** [https://github.com/whad-team/whad-client](https://github.com/whad-team/whad-client)
 * **ButteRFly firmware repository (nRF52):** [https://github.com/whad-team/butterfly](https://github.com/whad-team/butterfly)
 * **WHAD website:** [https://whad.io](https://whad.io)
-* **WHAD documentation:** [https://github.com/whad-team/butterfly](https://whad.readthedocs.io/en/latest/)
+* **WHAD documentation:** [https://whad.readthedocs.io/en/latest/](https://whad.readthedocs.io/en/latest/)
  
 
 Description
