@@ -3,7 +3,7 @@ from scapy.layers.bluetooth import *
 '''
 This module contains some scapy definitions defining some vendor specific HCI packets in order to change the BD Address.
 '''
-COMPATIBLE_VENDORS = [0,10,13,15,18,48,57]
+COMPATIBLE_VENDORS = [0,10,13,15,18,48,57,1521]
 
  # Packets
  # Read Local Version Information, Command & Event
@@ -90,6 +90,18 @@ class HCI_Cmd_ST_Write_BD_Address(Packet):
 			LEMACField("addr","\x00\x01\x02\x03\x04\x05"),
 			StrField("padding","\x00"*247)]
 
+# Manufacturer : 1521
+class HCI_Cmd_ZEPHYR_Write_BD_Address(Packet):
+	name = "Zephyr Write BD Address"
+	fields_desc = [LEMACField("addr","\x00\x01\x02\x03\x04\x05")]
+
+class HCI_Cmd_ZEPHYR_Set_MITM_Flag(Packet):
+    name = "Zephyr set MITM Flag"
+    fields_desc = [ByteField("mitm_flag",0x01)]
+
+class HCI_Cmd_ZEPHYR_Set_Blocked_Ctrl_PDU(Packet):
+    name = "Zephyr set blocked Ctrl PDU"
+    fields_desc = [StrField("blocked_ctrl_pdu","\x00"*4)]
 
 # Bind it to layers
 bind_layers(HCI_Command_Hdr, HCI_Cmd_Read_Local_Version_Information, 				opcode=0x1001)
@@ -102,5 +114,8 @@ bind_layers(HCI_Command_Hdr, HCI_Cmd_Ericsson_Write_BD_Address, 				opcode=0xfc0
 bind_layers(HCI_Command_Hdr, HCI_Cmd_BCM_Write_BD_Address, 					opcode=0xfc01)
 bind_layers(HCI_Command_Hdr, HCI_Cmd_CSR_Write_BD_Address, 					opcode=0xfc00)
 bind_layers(HCI_Command_Hdr, HCI_Cmd_CSR_Reset, 						opcode=0xfc00)
+bind_layers(HCI_Command_Hdr, HCI_Cmd_ZEPHYR_Write_BD_Address, 						opcode=0xfc06)
+bind_layers(HCI_Command_Hdr, HCI_Cmd_ZEPHYR_Set_MITM_Flag, 						opcode=0xfc12)
+bind_layers(HCI_Command_Hdr, HCI_Cmd_ZEPHYR_Set_Blocked_Ctrl_PDU, 						opcode=0xfc14)
 
 

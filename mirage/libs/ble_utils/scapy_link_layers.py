@@ -19,3 +19,6 @@ class LL_ENC_RSP(Packet):
 		XLELongField("skd",None),
 		XLEIntField("iv",None)
 	]
+bind_layers(BTLE_DATA, BTLE_CTRL, LLID=3)
+bind_layers(BTLE_CTRL,LL_ENC_REQ,optcode=0x03)
+bind_layers(BTLE_CTRL,LL_ENC_RSP,optcode=0x04)
