@@ -899,30 +899,30 @@ class BLEReceiver(wireless.Receiver):
 		if "hci" in self.interface or "adb" in self.interface:
 			#packet.show()
 
-			# Here, we have a start of fragmented HCI packet (L2CAP length > HCI length)
-			if packet.type == TYPE_ACL_DATA and packet.PB == 2 and L2CAP_Hdr in packet and packet[L2CAP_Hdr].len > packet[HCI_ACL_Hdr].len:
-				# store it in the buffer
-				self.fragmentBuffer = raw(packet)
-				self.fragmentTotalSize = packet[L2CAP_Hdr].len
-				# don't return it now, it's not ready
-				return None
-
-			# Here, we have the next fragment (PB = 1)
-			if packet.type == TYPE_ACL_DATA and packet.PB == 1 and L2CAP_Hdr in packet and len(self.fragmentBuffer) > 0:
-				# We create the scapy packet before the last fragment
-				previousPacket = HCI_Hdr(self.fragmentBuffer)
-				# We concatenate it to the previous fragments
-				self.fragmentBuffer += raw(packet[L2CAP_Hdr:])
-				# If we have received all fragments
-				if len(raw(previousPacket[L2CAP_Hdr:][1:])) + len(raw(packet[L2CAP_Hdr:])) == self.fragmentTotalSize:
-					# We create the full packet and the execution flow continues to dissect it
-					packet = HCI_Hdr(self.fragmentBuffer)
-					new.packet = packet
-				else:
+			if packet.type == TYPE_ACL_DATA:
+				# Here, we have a start of fragmented HCI packet (L2CAP length > HCI length)
+				if packet.PB == 2 and L2CAP_Hdr in packet and packet[L2CAP_Hdr].len > packet[HCI_ACL_Hdr].len:
+					# store it in the buffer
+					self.fragmentBuffer = raw(packet)
+					self.fragmentTotalSize = packet[L2CAP_Hdr].len
 					# don't return it now, it's not ready
 					return None
 
-			if packet.type == TYPE_ACL_DATA:
+				# Here, we have the next fragment (PB = 1)
+				if packet.PB == 1 and len(self.fragmentBuffer) > 0:
+					# We create the scapy packet before the last fragment
+					previousPacket = HCI_Hdr(self.fragmentBuffer)
+					# We concatenate it to the previous fragments
+					self.fragmentBuffer += raw(packet[HCI_ACL_Hdr:][1:])
+					# If we have received all fragments
+					if len(raw(previousPacket[L2CAP_Hdr:][1:])) + len(raw(packet[HCI_ACL_Hdr:][1:])) == self.fragmentTotalSize:
+						# We create the full packet and the execution flow continues to dissect it
+						packet = HCI_Hdr(self.fragmentBuffer)
+						new.packet = packet
+					else:
+						# don't return it now, it's not ready
+						return None
+
 				if ATT_Exchange_MTU_Request in packet:
 					return BLEExchangeMTURequest(
 						mtu = packet[ATT_Exchange_MTU_Request].mtu,
